@@ -1,0 +1,10 @@
+{
+	"commands": {},
+	"environments": {},
+	"projects": {},
+	"overrideExistingProject": true,
+	"detailedLogs": true,
+	"port": "3001",
+	"runtime": "node22",
+	"production": true
+}

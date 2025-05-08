@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "typeGen:server": "bunx supabase gen types typescript --project-id 'qqfkxhqzsbqgydssvfss' --schema public,reporting,user_experience,taskrouter > types/supabase.ts",
+    "typeGen:local": "supabase gen types --schema public,reporting,user_experience,taskrouter --local > ./src/types/supabase.ts"
+  },
+  "devDependencies": {
+    "tailwindcss-bg-patterns": "^0.3.0"
+  }
+}

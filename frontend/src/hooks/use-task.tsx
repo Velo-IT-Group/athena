@@ -1,0 +1,173 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { createTask, duplicateTicket } from '@/lib/supabase/create';
+import { deleteTask } from '@/lib/supabase/delete';
+import { getTasks } from '@/lib/supabase/read';
+import { updateTask } from '@/lib/supabase/update';
+
+type Props = {
+	ticketId: string;
+	initialData: Task[];
+};
+
+const useTask = ({ ticketId, initialData }: Props) => {
+	const queryClient = useQueryClient();
+	const queryKey = ['tickets', ticketId];
+
+	const { data } = useQuery({
+		queryKey,
+		queryFn: () => getTasks({ data: ticketId }),
+		initialData,
+	});
+
+	const { mutate: handleTaskUpdate } = useMutation({
+		mutationFn: async ({ id, task }: { id: string; task: TaskUpdate }) => await updateTask({ data: { id, task } }),
+		onMutate: async ({ id, task }) => {
+			// Cancel any outgoing refetches
+			// (so they don't overwrite our optimistic update)
+			await queryClient.cancelQueries({
+				queryKey,
+			});
+
+			// Snapshot the previous value
+			const previousItems = queryClient.getQueryData<Task[]>(queryKey) ?? [];
+			const updatedItem = previousItems?.find((s) => s.id === id);
+
+			const newItem = { ...updatedItem, ...task };
+
+			const newItems = [...previousItems.filter((s) => s.id !== id), newItem];
+
+			// console.log(previousItems, newItem, newItems)
+
+			// Optimistically update to the new value
+			queryClient.setQueryData(queryKey, newItems);
+
+			// Return a context with the previous and new phases
+			return { previousItems, newItems };
+		},
+		// If the mutation fails,
+		// use the context returned from onMutate to roll back
+		onError: (err, newPhase, context) => {
+			queryClient.setQueryData(queryKey, context?.previousItems || []);
+		},
+		onSettled: async () => {
+			await queryClient.invalidateQueries({
+				queryKey: queryKey,
+			});
+		},
+	});
+
+	const { mutate: handleTaskInsert } = useMutation({
+		mutationFn: async ({ task }: { task: TaskInsert }) => await createTask({ data: task }),
+		onMutate: async ({ task }) => {
+			// Cancel any outgoing refetches
+			// (so they don't overwrite our optimistic update)
+			await queryClient.cancelQueries({
+				queryKey,
+			});
+
+			// Snapshot the previous value
+			const previousItems = queryClient.getQueryData<Task[]>(queryKey) ?? [];
+
+			const newItems = [...previousItems, task];
+
+			// Optimistically update to the new value
+			queryClient.setQueryData(queryKey, newItems);
+
+			// Return a context with the previous and new phases
+			return { previousItems, newItems };
+		},
+		// If the mutation fails,
+		// use the context returned from onMutate to roll back
+		onError: (err, newPhase, context) => {
+			queryClient.setQueryData(queryKey, context?.previousItems);
+		},
+		onSettled: async () => {
+			await queryClient.invalidateQueries({
+				queryKey: queryKey,
+			});
+		},
+	});
+
+	const { mutate: handleTaskDeletion } = useMutation({
+		mutationFn: async ({ id }: { id: string }) => await deleteTask({ data: id }),
+		onMutate: async ({ id }) => {
+			// Cancel any outgoing refetches
+			// (so they don't overwrite our optimistic update)
+			await queryClient.cancelQueries({
+				queryKey,
+			});
+
+			// Snapshot the previous value
+			const previousItems = queryClient.getQueryData<Task[]>(queryKey) ?? [];
+
+			const newItems = [...previousItems.filter((s) => s.id !== id)];
+
+			// Optimistically update to the new value
+			queryClient.setQueryData(queryKey, newItems);
+
+			// Return a context with the previous and new items
+			return { previousItems, newItems };
+		},
+		// If the mutation fails,
+		// use the context returned from onMutate to roll back
+		onError: (err, newTask, context) => {
+			queryClient.setQueryData(queryKey, context?.previousItems || []);
+		},
+		onSettled: async () => {
+			await queryClient.invalidateQueries({
+				queryKey: queryKey,
+			});
+		},
+	});
+
+	const { mutate: handleTaskDuplication } = useMutation({
+		mutationFn: async ({ id }: { id: string }) => await duplicateTicket({ data: id }),
+		onMutate: async ({ id }) => {
+			// Cancel any outgoing refetches
+			// (so they don't overwrite our optimistic update)
+			await queryClient.cancelQueries({
+				queryKey,
+			});
+
+			// Snapshot the previous value
+			const previousItems = queryClient.getQueryData<Task[]>(queryKey) ?? [];
+			const item = previousItems.find((s) => s.id === id);
+
+			const newItems = [
+				...previousItems.filter((s) => s.id !== id),
+				{
+					...item,
+					id: crypto.randomUUID(),
+					order: previousItems.length + 1,
+				},
+			];
+
+			// Optimistically update to the new value
+			queryClient.setQueryData(queryKey, newItems);
+
+			// Return a context with the previous and new items
+			return { previousItems, newItems };
+		},
+		// If the mutation fails,
+		// use the context returned from onMutate to roll back
+		onError: (err, newTask, context) => {
+			queryClient.setQueryData(queryKey, context?.previousItems || []);
+		},
+		onSettled: async () => {
+			await queryClient.invalidateQueries({
+				queryKey: queryKey,
+			});
+		},
+	});
+
+	return {
+		data,
+		handleTaskUpdate,
+		handleTaskInsert,
+		handleTaskDeletion,
+		handleTaskDuplication,
+	};
+};
+
+export default useTask;
