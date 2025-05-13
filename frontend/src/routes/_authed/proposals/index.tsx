@@ -2,20 +2,8 @@ import { Plus } from 'lucide-react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
 import Search from '@/components/search';
-import NewProposalForm from '@/components/new-proposal-form';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog';
-
-import { useProposals } from '@/hooks/use-proposals';
+import { buttonVariants } from '@/components/ui/button';
 
 import { Suspense } from 'react';
 import { DataTable } from '@/components/ui/data-table';

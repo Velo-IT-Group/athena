@@ -1,9 +1,8 @@
-import { getWorkerStats } from '@/lib/twilio/taskrouter/helpers';
+import { getWorkerStatsQuery } from '@/lib/twilio/api';
 import { cn } from '@/lib/utils';
 import type { ActivityDuration } from '@/types/twilio';
 import { User } from '@supabase/supabase-js';
 import { useQuery } from '@tanstack/react-query';
-import { startOfDay } from 'date-fns';
 
 type Props = {
 	user: User;
@@ -11,19 +10,7 @@ type Props = {
 };
 
 const HoursAvailableProgress = ({ user, className }: Props) => {
-	const { data: timeEntries } = useQuery({
-		queryKey: ['workers', user?.user_metadata.worker_sid, 'worker-stats'],
-		queryFn: async () =>
-			await getWorkerStats({
-				data: {
-					workerSid: user?.user_metadata.worker_sid ?? '',
-					params: {
-						startDate: startOfDay(new Date()),
-					},
-				},
-			}),
-		enabled: !!user?.user_metadata.worker_sid,
-	});
+	const { data: timeEntries } = useQuery(getWorkerStatsQuery(user?.user_metadata.worker_sid ?? ''));
 
 	const activities = timeEntries?.cumulative.activity_durations as ActivityDuration[];
 

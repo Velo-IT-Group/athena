@@ -285,7 +285,7 @@ export const createPhase = createServerFn().validator((
 	}
 
 	if (tickets.length) {
-		await Promise.all(
+		const seteteled = await Promise.allSettled(
 			tickets.map((ticket) => {
 				const ticketTasks = ticket.tasks;
 				delete ticket.tasks;
@@ -301,6 +301,12 @@ export const createPhase = createServerFn().validator((
 				});
 			}),
 		);
+
+		seteteled.map((result) => {
+			if (result.status === "rejected") {
+				throw new Error("Error creating ticket... " + result.reason);
+			}
+		});
 	}
 
 	return data;
@@ -343,7 +349,7 @@ export const createTicket = createServerFn().validator(({
 	}
 
 	if (tasks?.length) {
-		await Promise.all(
+		const seteteled = await Promise.allSettled(
 			tasks.map((task) =>
 				createTask({
 					data: {
@@ -353,6 +359,12 @@ export const createTicket = createServerFn().validator(({
 				})
 			),
 		);
+
+		seteteled.map((result) => {
+			if (result.status === "rejected") {
+				throw new Error("Error creating task... " + result.reason);
+			}
+		});
 	}
 
 	return data;

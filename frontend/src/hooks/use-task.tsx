@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { createTask, duplicateTicket } from '@/lib/supabase/create';
 import { deleteTask } from '@/lib/supabase/delete';
-import { getTasks } from '@/lib/supabase/read';
 import { updateTask } from '@/lib/supabase/update';
+import { getTasksQuery } from '@/lib/supabase/api';
 
 type Props = {
 	ticketId: string;
@@ -12,11 +12,11 @@ type Props = {
 
 const useTask = ({ ticketId, initialData }: Props) => {
 	const queryClient = useQueryClient();
-	const queryKey = ['tickets', ticketId];
+	const query = getTasksQuery(ticketId);
+	const { queryKey } = query;
 
 	const { data } = useQuery({
-		queryKey,
-		queryFn: () => getTasks({ data: ticketId }),
+		...query,
 		initialData,
 	});
 
@@ -52,7 +52,7 @@ const useTask = ({ ticketId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -84,7 +84,7 @@ const useTask = ({ ticketId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -116,7 +116,7 @@ const useTask = ({ ticketId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -156,7 +156,7 @@ const useTask = ({ ticketId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});

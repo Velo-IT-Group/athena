@@ -3,6 +3,7 @@ import { Download, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { getStorageFile, getStorageFiles } from '@/lib/supabase/read';
+import { getRecordingUrlQuery } from '@/lib/supabase/api';
 
 type Props = {
 	audioUrl: string;
@@ -10,10 +11,7 @@ type Props = {
 };
 
 const AudioPlayerToggle = ({ audioUrl, downloadUrl }: Props) => {
-	const { data: recording, isLoading } = useQuery({
-		queryKey: ['recording', audioUrl],
-		queryFn: () => getStorageFile({ data: { bucketName: 'attachments', path: audioUrl } }),
-	});
+	const { data: recording, isLoading } = useQuery(getRecordingUrlQuery(audioUrl));
 
 	const [isPlaying, setIsPlaying] = React.useState(false);
 

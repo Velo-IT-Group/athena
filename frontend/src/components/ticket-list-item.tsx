@@ -6,6 +6,8 @@ import {
 	ChevronDown,
 	CopyPlus,
 	Ellipsis,
+	Eye,
+	EyeOff,
 	GripVertical,
 	ListTodo,
 	Pencil,
@@ -29,16 +31,25 @@ import { EditableArea, EditableInput, EditablePreview, Editable, EditableTrigger
 import { Sortable, SortableContent, SortableItem, SortableItemHandle } from '@/components/ui/sortable';
 import useTask from '@/hooks/use-task';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 type Props = {
 	ticket: NestedTicket;
 	tasks: Task[];
+	parentVisible: boolean;
 	handleDeletion: () => void;
 	handleDuplication: () => void;
 	handleTicketUpdate: (ticket: TicketUpdate) => void;
 };
 
-const TicketListItem = ({ ticket, tasks, handleDeletion, handleDuplication, handleTicketUpdate }: Props) => {
+const TicketListItem = ({
+	ticket,
+	tasks,
+	parentVisible,
+	handleDeletion,
+	handleDuplication,
+	handleTicketUpdate,
+}: Props) => {
 	const [collapsibleOpen, setCollapsibleOpen] = React.useState(false);
 	const { data, handleTaskUpdate, handleTaskDeletion, handleTaskDuplication, handleTaskInsert } = useTask({
 		initialData: tasks,
@@ -73,10 +84,15 @@ const TicketListItem = ({ ticket, tasks, handleDeletion, handleDuplication, hand
 			<Collapsible
 				open={collapsibleOpen}
 				onOpenChange={setCollapsibleOpen}
-				className='border-b last:border-b-0'
+				className={cn(
+					'last:border-b-0 pr-1.5 -mr-1.5 group/ticket border border-transparent border-b-border',
+					!ticket.visible &&
+						'group-data-[visible=true]/phase:border group-data-[visible=true]/phase:border-primary group-data-[visible=true]/phase:bg-muted/50 group-data-[visible=true]/phase:border-dashed group-data-[visible=true]/phase:rounded-lg'
+				)}
+				data-visible={parentVisible ? ticket.visible : false}
 				defaultOpen
 			>
-				<div className='flex items-center group hover:bg-muted/50 py-0.5 [&[data-active=open]]:bg-blue-500'>
+				<div className='flex items-center group hover:bg-muted/50 py-0.5\ [&[data-active=open]]:bg-blue-500'>
 					<SortableItemHandle asChild>
 						<Button
 							variant='ghost'
@@ -171,7 +187,7 @@ const TicketListItem = ({ ticket, tasks, handleDeletion, handleDuplication, hand
 										</DropdownMenuItem>
 									</EditableTrigger>
 
-									<DropdownMenuSub>
+									{/* <DropdownMenuSub>
 										<DropdownMenuSubTrigger>
 											<AlignCenter className='mr-1.5 text-muted-foreground' />
 											<span>Add section</span>
@@ -190,16 +206,40 @@ const TicketListItem = ({ ticket, tasks, handleDeletion, handleDuplication, hand
 												</DropdownMenuItem>
 											</DropdownMenuGroup>
 										</DropdownMenuSubContent>
-									</DropdownMenuSub>
+									</DropdownMenuSub> */}
+
+									<DropdownMenuItem
+										disabled={!parentVisible}
+										onSelect={() =>
+											handleTicketUpdate({
+												visible: !ticket.visible,
+												summary: ticket.summary,
+												phase: ticket.phase,
+											})
+										}
+									>
+										{ticket.visible ? (
+											<EyeOff className='mr-1.5 text-muted-foreground' />
+										) : (
+											<Eye className='mr-1.5 text-muted-foreground' />
+										)}
+										<span>
+											{!parentVisible
+												? 'Hide ticket'
+												: ticket.visible
+												? 'Hide ticket'
+												: 'Show ticket'}
+										</span>
+									</DropdownMenuItem>
 
 									<DropdownMenuItem onSelect={handleDuplication}>
 										<CopyPlus className='mr-1.5 text-muted-foreground' />
-										<span>Duplicate section</span>
+										<span>Duplicate ticket</span>
 									</DropdownMenuItem>
 
 									<DropdownMenuItem onSelect={handleDeletion}>
 										<Trash2 className='mr-1.5 text-red-500' />
-										<span>Delete section</span>
+										<span>Delete ticket</span>
 									</DropdownMenuItem>
 								</DropdownMenuGroup>
 							</DropdownMenuContent>

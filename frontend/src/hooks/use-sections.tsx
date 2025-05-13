@@ -1,3 +1,4 @@
+import { getSectionsQuery } from '@/lib/supabase/api';
 import { createSection } from '@/lib/supabase/create';
 import { deleteSection } from '@/lib/supabase/delete';
 import { getSections } from '@/lib/supabase/read';
@@ -13,23 +14,23 @@ type Props = {
 };
 
 export const useSections = ({ proposalId, versionId, initialData }: Props) => {
+	const query = getSectionsQuery(proposalId, versionId);
+	const { queryKey } = query;
 	const queryClient = useQueryClient();
-	const sectionQueryKey = ['proposals', proposalId, versionId, 'sections'];
 
 	const { data: sections } = useQuery({
-		queryKey: sectionQueryKey,
-		queryFn: () => getSections({ data: versionId }) as Promise<NestedSection[]>,
+		...query,
 		initialData,
 	});
 
 	const { mutate: handleSectionInsert } = useMutation({
 		mutationFn: (section: SectionInsert) => createSection({ data: section }),
-		onMutate: async (section) => updateArrayQueryCache(queryClient, sectionQueryKey, section),
+		onMutate: async (section) => updateArrayQueryCache(queryClient, query.queryKey, section),
 		onError: (err, newTodo, context) => {
-			queryClient.setQueryData(sectionQueryKey, context?.previousItems);
+			queryClient.setQueryData(query.queryKey, context?.previousItems);
 		},
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: sectionQueryKey });
+			await queryClient.invalidateQueries({ queryKey });
 		},
 	});
 
@@ -40,18 +41,18 @@ export const useSections = ({ proposalId, versionId, initialData }: Props) => {
 			// Cancel any outgoing refetches
 			// (so they don't overwrite our optimistic update)
 			await queryClient.cancelQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 
 			// Snapshot the previous value
-			const previousItems = queryClient.getQueryData<Section[]>(sectionQueryKey) ?? [];
+			const previousItems = queryClient.getQueryData<Section[]>(query.queryKey) ?? [];
 
 			const newItems = previousItems.filter((s) => s.id !== id);
 
 			console.log(newItems);
 
 			// Optimistically update to the new value
-			queryClient.setQueryData<Section[]>(sectionQueryKey, newItems);
+			queryClient.setQueryData<Section[]>(query.queryKey, newItems);
 
 			// Return a context with the previous and new todo
 			return { previousItems, newItems };
@@ -61,7 +62,7 @@ export const useSections = ({ proposalId, versionId, initialData }: Props) => {
 		onError: (err, newTodo, context) => {
 			console.error(err);
 			console.log(newTodo);
-			queryClient.setQueryData(sectionQueryKey, context?.previousItems);
+			queryClient.setQueryData(query.queryKey, context?.previousItems);
 		},
 		onSettled: async (data, err, variables, context) => {
 			console.error(err);
@@ -70,20 +71,20 @@ export const useSections = ({ proposalId, versionId, initialData }: Props) => {
 			console.log(context);
 
 			await queryClient.invalidateQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 		},
 	});
 
 	const { mutate: handleSectionCreation } = useMutation({
 		mutationFn: (section: SectionInsert) => createSection({ data: section }),
-		onMutate: async (newSection) => updateArrayQueryCache(queryClient, sectionQueryKey, newSection),
+		onMutate: async (newSection) => updateArrayQueryCache(queryClient, query.queryKey, newSection),
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newTodo, context) => {
 			console.error(err);
 			console.log(newTodo);
-			queryClient.setQueryData(sectionQueryKey, context?.previousItems);
+			queryClient.setQueryData(query.queryKey, context?.previousItems);
 		},
 		onSettled: async (data, err, variables, context) => {
 			console.error(err);
@@ -92,7 +93,7 @@ export const useSections = ({ proposalId, versionId, initialData }: Props) => {
 			console.log(context);
 
 			await queryClient.invalidateQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 		},
 	});
@@ -101,15 +102,15 @@ export const useSections = ({ proposalId, versionId, initialData }: Props) => {
 		mutationFn: async ({ id, section }: { id: string; section: SectionUpdate }) =>
 			updateSection({ data: { id, section } }),
 		onMutate: async ({ id, section }) =>
-			updateArrayQueryCache(queryClient, sectionQueryKey, section, (s) => s.id === id),
+			updateArrayQueryCache(queryClient, query.queryKey, section, (s) => s.id === id),
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newTodo, context) => {
-			queryClient.setQueryData(sectionQueryKey, context?.previousItems);
+			queryClient.setQueryData(query.queryKey, context?.previousItems);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 		},
 	});

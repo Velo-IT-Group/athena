@@ -3,28 +3,13 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
 import type { Company, ReferenceType } from '@/types/manage';
-import { DataTableColumnHeader } from '../ui/data-table/column-header';
-import { buttonVariants } from '../ui/button';
-import { Tooltip, TooltipTrigger } from '../ui/tooltip';
+import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
+import { buttonVariants } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger } from '@/components/ui/tooltip';
 import { Link } from '@tanstack/react-router';
 // import parsePhoneNumber from 'libphonenumber-js'
 
 // 'id', 'identifier', 'name', 'phoneNumber', 'territory'
-
-import { createColumnConfigHelper } from '@/components/data-table-filter/core/filters';
-import { Heading1Icon } from 'lucide-react';
-const dtf = createColumnConfigHelper<Company>();
-
-const otherColumns = [
-	dtf
-		.text()
-		.id('identifier')
-		.accessor((row) => row.identifier)
-		.displayName('Identifier')
-		.icon(Heading1Icon),
-	dtf.text().id('name'),
-	dtf.text().id('territory'),
-];
 
 export const columns: ColumnDef<Company>[] = [
 	{

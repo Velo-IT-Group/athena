@@ -1,20 +1,17 @@
 import ActivityItem, { ActivityItemProps } from '@/components/activity-item';
-import { getAuditTrail, getTicketNotes } from '@/lib/manage/read';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import NoteItem from '@/components/note-item';
+import { getTicketNotesQuery } from '@/lib/manage/api';
 
 export default function ActivityFeed({ id }: { id: number }) {
 	const [{ data: notes }] = useSuspenseQueries({
-		queries: [
-			{
-				queryKey: ['tickets', id, 'notes'],
-				queryFn: () => getTicketNotes({ data: { id } }),
-			},
-		],
+		queries: [getTicketNotesQuery(id)],
 	});
+
+	console.log(notes);
 
 	const discussionNotes = notes?.filter((note) => note.detailDescriptionFlag && !note.detailDescriptionFlag);
 	const internalNotes = notes?.filter((note) => note.internalAnalysisFlag);

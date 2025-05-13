@@ -36,5 +36,6 @@ export default {
             32: "8rem",
         }
     }
-  }
+  },
+  plugins: [require('tailwindcss-bg-patterns')],
 }

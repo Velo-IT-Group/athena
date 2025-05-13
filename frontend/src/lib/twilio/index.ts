@@ -1,9 +1,11 @@
-import Twilio from 'twilio';
-import { env } from '../utils';
-import { createServerFn } from '@tanstack/react-start';
+import Twilio from "twilio";
+import { env } from "../utils";
+import { createServerFn } from "@tanstack/react-start";
 
 export const createAccessToken = createServerFn()
-	.validator((d: { workerSid: string; identity: string }) => d as { workerSid: string; identity: string })
+	.validator((d: { workerSid: string; identity: string }) =>
+		d as { workerSid: string; identity: string }
+	)
 	.handler(async ({ data: { workerSid, identity } }) => {
 		const AccessToken = Twilio.jwt.AccessToken;
 		const VoiceGrant = AccessToken.VoiceGrant;
@@ -18,7 +20,7 @@ export const createAccessToken = createServerFn()
 		const taskRouterGrant = new TaskRouterGrant({
 			workerSid,
 			workspaceSid,
-			role: 'supervisor',
+			role: "supervisor",
 		});
 
 		const voiceGrant = new VoiceGrant({
@@ -26,7 +28,6 @@ export const createAccessToken = createServerFn()
 			incomingAllow: true, // Optional: add to allow incoming calls
 		});
 
-		console.log(env.VITE_TWILIO_SYNC_SID);
 		const syncGrant = new SyncGrant({
 			serviceSid: env.VITE_TWILIO_SYNC_SID,
 		});
@@ -35,10 +36,15 @@ export const createAccessToken = createServerFn()
 			serviceSid: env.VITE_TWILIO_CHAT_SID,
 		});
 
-		const accessToken = new AccessToken(accountSid, signingKeySid, signingKeySecret, {
-			identity,
-			ttl: 36000,
-		});
+		const accessToken = new AccessToken(
+			accountSid,
+			signingKeySid,
+			signingKeySecret,
+			{
+				identity,
+				ttl: 36000,
+			},
+		);
 
 		accessToken.addGrant(taskRouterGrant);
 		accessToken.addGrant(voiceGrant);

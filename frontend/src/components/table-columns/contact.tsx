@@ -2,9 +2,9 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { CommunicationItem, Contact, ReferenceType } from '@/types/manage';
-import { DataTableColumnHeader } from '../ui/data-table/column-header';
+import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import { cn } from '@/lib/utils';
-import { Button, buttonVariants } from '../ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Link } from '@tanstack/react-router';
 import { ALargeSmall, Building } from 'lucide-react';
 

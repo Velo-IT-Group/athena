@@ -1,22 +1,21 @@
-import { getTemplates } from '@/lib/manage/read';
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { Skeleton } from './ui/skeleton';
-import { ProjectTemplate } from '@/types/manage';
+import { useSuspenseQuery } from '@tanstack/react-query';
+
+import { GripVertical } from 'lucide-react';
+
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Card, CardHeader } from './ui/card';
-import { Button } from './ui/button';
-import { GripVertical } from 'lucide-react';
+
+import { ProjectTemplate } from '@/types/manage';
+
+import { getTemplatesQuery } from '@/lib/manage/api';
+
+import { Card, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export const DAY_IN_MS = 86_400_000;
 
 const TemplateCatalog = () => {
-	const { data: templates } = useSuspenseQuery({
-		queryKey: ['templates'],
-		queryFn: getTemplates,
-		staleTime: Infinity,
-		networkMode: 'offlineFirst',
-	});
+	const { data: templates } = useSuspenseQuery(getTemplatesQuery());
 
 	return (
 		<>

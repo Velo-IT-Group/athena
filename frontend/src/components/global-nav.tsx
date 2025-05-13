@@ -16,22 +16,31 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { createClient } from '@/lib/supabase/server';
 import { getActivitiesQuery } from '@/lib/twilio/api';
 import { useWorker } from '@/providers/worker-provider';
 import type { Session } from '@supabase/supabase-js';
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { LogOut, Settings } from 'lucide-react';
+import { useSuspenseQueries } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import { History, LogOut, RefreshCcw, Settings } from 'lucide-react';
 import type { WorkerInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/worker';
 
 type Props = {
 	profile: Profile;
 	session: Session;
 	worker: WorkerInstance;
-	accessToken: string;
 };
 
-const GlobalNav = ({ profile, session, worker, accessToken }: Props) => {
-	const { data: activities } = useSuspenseQuery(getActivitiesQuery());
+const GlobalNav = ({ profile, session, worker }: Props) => {
+	const navigate = useNavigate();
+	const [
+		{ data: activities },
+		{
+			data: { data: reservations },
+		},
+	] = useSuspenseQueries({
+		queries: [getActivitiesQuery(), getEngagementReservationsQuery(worker.sid)],
+	});
 
 	const { updateWorkerActivity, activity } = useWorker();
 
@@ -54,7 +63,33 @@ const GlobalNav = ({ profile, session, worker, accessToken }: Props) => {
 			<GlobalSearch />
 
 			<div className='flex items-center gap-3'>
-				{/* <QueueStatus token={accessToken} /> */}
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button
+							role='combobox'
+							size='sm'
+							variant='ghost'
+							aria-label='History'
+						>
+							<History />
+							<span className='sr-only'>History</span>
+						</Button>
+					</DropdownMenuTrigger>
+
+					<DropdownMenuContent
+						className='p-0'
+						side='bottom'
+						align='end'
+					>
+						<ListSelector
+							items={reservations ?? []}
+							// currentValue={activity}
+							value={(reservation) => reservation.id}
+							onSelect={(reservation) => {}}
+							itemView={(reservation) => <HistoryListItem reservation={reservation} />}
+						/>
+					</DropdownMenuContent>
+				</DropdownMenu>
 
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
@@ -132,12 +167,11 @@ const GlobalNav = ({ profile, session, worker, accessToken }: Props) => {
 
 								<DropdownMenuGroup>
 									<DropdownMenuItem
-									// onSelect={() => {
-									// 	const supabase = createClient();
-									// 	supabase.auth.signOut().then(() => {
-									// 		redirect({ to: '/login' });
-									// 	});
-									// }}
+										onSelect={async () => {
+											const supabase = createClient();
+											await supabase.auth.signOut();
+											navigate({ to: '/login' });
+										}}
 									>
 										<LogOut className='mr-1.5' />
 										<span>Log out</span>
@@ -155,3 +189,124 @@ const GlobalNav = ({ profile, session, worker, accessToken }: Props) => {
 };
 
 export default GlobalNav;
+
+import { relativeDay } from '@/utils/date';
+import { Phone, PhoneIncoming, PhoneMissed, PhoneOutgoing } from 'lucide-react';
+import { formatDate } from 'date-fns';
+import { getEngagementReservationsQuery } from '@/lib/supabase/api';
+
+type HistoryListItemProps = {
+	reservation: EngagementReservation & {
+		engagement?: Engagement;
+	};
+};
+
+const HistoryListItem = ({ reservation }: HistoryListItemProps) => {
+	console.log(reservation.reservation_status === 'canceled');
+	// const { name } = generateCallerId(attributes);
+	// const { worker } = useWorker();
+
+	// const To = attributes.direction === Direction.Outbound ? attributes.outbound_to : attributes.from;
+
+	// const { mutate, isPending } = useMutation({
+	// 	mutationKey: ['createTask', To],
+	// 	mutationFn: async (values: z.infer<typeof outboundPhoneSchema>) => {
+	// 		// Do something with the form values.
+	// 		// ✅ This will be type-safe and validated.
+	// 		try {
+	// 			const to = values.To;
+	// 			const splitNumber: string[] = to.split(' ');
+	// 			const areaCode = splitNumber?.[1];
+	// 			const numberReturn = await lookupPhoneNumber(to);
+	// 			await worker?.createTask(
+	// 				parsePhoneNumber(to, 'US', 'E.164')?.formattedNumber ?? '',
+	// 				numbers[areaCode as string] ?? env.VITE_TWILIO_PHONE_NUMBER,
+	// 				env.VITE_TWILIO_WORKFLOW_SID!,
+	// 				env.VITE_TWILIO_TASK_QUEUE_SID!,
+	// 				{
+	// 					attributes: {
+	// 						direction: 'outbound',
+	// 						name: numberReturn?.name,
+	// 						companyId: numberReturn?.companyId,
+	// 						userId: numberReturn?.userId,
+	// 					},
+	// 					taskChannelUniqueName: 'voice',
+	// 				}
+	// 			);
+	// 		} catch (error) {
+	// 			console.error(error);
+	// 			toast.error(JSON.stringify(error));
+	// 		}
+	// 	},
+	// });
+
+	return (
+		<div
+			// value={`${reservation.id}-${reservation.engagement.contact?.name}-${reservation.engagement.attributes?.from}`}
+			className='flex items-center gap-3 w-full -ml-[19.25px]'
+		>
+			{reservation.reservation_status === 'canceled' ? (
+				<div className='text-destructive flex items-center gap-1.5 text-xs'>
+					<PhoneMissed className='text-destructive' />
+					<span className='sr-only'>Missed incoming</span>
+				</div>
+			) : (
+				<div className='text-xs flex items-center gap-1.5'>
+					{reservation.engagement?.is_inbound ? (
+						<>
+							<PhoneIncoming />
+							<span className='sr-only'>Incoming</span>
+						</>
+					) : (
+						<>
+							<PhoneOutgoing />
+							<span className='sr-only'>Outgoing</span>
+						</>
+					)}
+				</div>
+			)}
+
+			<div className='w-full text-ellipsis text-nowrap line-clamp-2'>
+				<p className='w-full leading-6 font-medium text-sm'>{reservation.engagement?.contact?.id}</p>
+
+				<p className='text-muted-foreground text-xs'>
+					{relativeDay(new Date(reservation.created_at)) === 'today' ? (
+						<p>
+							{formatDate(new Date(reservation.created_at), 'h:mm aaa')}
+							<span className='text-muted-foreground'> - </span>
+							{/* {formatDate(
+								addSeconds(
+									new Date(event.eventDate),
+									Number(event.eventData.task_age as unknown as string)
+								),
+								'h:mm aaa'
+							)} */}
+						</p>
+					) : (
+						<p>
+							{formatDate(new Date(reservation.created_at), 'P, h:mm aaa')}
+							<span className='text-muted-foreground'> - </span>
+							{/* {formatDate(
+								addSeconds(
+									new Date(reservation.created_at),
+									Number(event.eventData.task_age as unknown as string)
+								),
+								'h:mm aaa'
+							)} */}
+						</p>
+					)}
+				</p>
+			</div>
+
+			<Button
+				variant='outline'
+				size='icon'
+				className='flex-shrink-0'
+				// disabled={isPending}
+				// onClick={() => mutate({ To })}
+			>
+				<Phone />
+			</Button>
+		</div>
+	);
+};

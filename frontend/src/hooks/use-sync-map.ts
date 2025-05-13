@@ -1,6 +1,7 @@
+import { getSyncMapQuery } from "@/lib/twilio/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { SyncClient, SyncMapItem } from "twilio-sync";
+import { SyncMapItem } from "twilio-sync";
 
 /**
  * Sync map hook
@@ -9,24 +10,11 @@ import { SyncClient, SyncMapItem } from "twilio-sync";
  * @returns The sync map items.
  */
 const useSyncMap = ({ token, mapKey }: { token: string; mapKey: string }) => {
-  const syncMapClient = new SyncClient(token);
   const [items, setItems] = useState<SyncMapItem[]>([]);
 
   console.log(`fetching ${mapKey}`);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["syncMapClient", mapKey, token],
-    queryFn: async () => {
-      const map = await syncMapClient.map(mapKey);
-      const { items } = await map.getItems();
-      return { map, items };
-    },
-    refetchIntervalInBackground: true,
-    refetchOnWindowFocus: "always",
-    refetchOnMount: "always",
-    refetchOnReconnect: "always",
-    enabled: !!token && !!mapKey,
-  });
+  const { data, isLoading } = useQuery(getSyncMapQuery({ mapKey, token }));
 
   useEffect(() => {
     if (isLoading || !data) return;

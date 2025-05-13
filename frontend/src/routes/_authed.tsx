@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { createClient as createTwilioClient } from '@/utils/twilio';
-import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router';
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import {
 	SidebarGroup,
@@ -18,26 +17,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { linksConfig } from '@/config/links';
 import NavigationItem from '@/components/navigational-sidebar/navigation-item';
 import { useSuspenseQueries } from '@tanstack/react-query';
-import { getPinnedItems, getProfile, getTeams } from '@/lib/supabase/read';
-import type { Session, User } from '@supabase/supabase-js';
-import { env } from '@/lib/utils';
+import { getProfile } from '@/lib/supabase/read';
+import type { Session } from '@supabase/supabase-js';
 import GlobalNav from '@/components/global-nav';
 import { WorkerProvider } from '@/providers/worker-provider';
 import type { WorkerInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/worker';
 import TaskList from '@/components/worker-sidebar/task-list';
 import { pinnedIcons } from '@/utils/icon-sets';
-import { createAccessToken } from '@/lib/twilio';
-import { getActivitiesQuery } from '@/lib/twilio/api';
-import { DAY_IN_MS } from '@/components/template-catalog';
-
-export const getWorker = createServerFn()
-	.validator((sid: string) => sid)
-	.handler(async ({ data }) => {
-		const client = await createTwilioClient();
-		const worker = await client.taskrouter.v1.workspaces(env.VITE_TWILIO_WORKSPACE_SID).workers(data).fetch();
-
-		return worker.toJSON();
-	});
+import { getAccessTokenQuery, getActivitiesQuery, getWorkerQuery } from '@/lib/twilio/api';
+import { getPinnedItemsQuery, getTeamsQuery } from '@/lib/supabase/api';
+import OutboundDialer from '@/components/outbound-dialer';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 export const fetchSessionUser = createServerFn().handler(async () => {
 	const supabase = createClient();
@@ -52,11 +42,13 @@ export const fetchSessionUser = createServerFn().handler(async () => {
 		},
 	] = await Promise.all([supabase.auth.getSession(), supabase.auth.getUser()]);
 
-	return {
-		session: JSON.parse(JSON.stringify(session)) as Session,
-		user: JSON.parse(JSON.stringify(user)) as User,
-		error: error ?? userError,
-	};
+	return JSON.parse(
+		JSON.stringify({
+			session,
+			user,
+			error: error ?? userError,
+		})
+	);
 });
 
 export const Route = createFileRoute('/_authed')({
@@ -68,24 +60,10 @@ export const Route = createFileRoute('/_authed')({
 			throw redirect({ to: '/login', statusCode: 301, params: { error } });
 		}
 
-		const [accessToken, profile] = await Promise.all([
-			createAccessToken({
-				data: {
-					identity: user?.email ?? '',
-					workerSid:
-						user?.user_metadata.workerSid ??
-						user?.user_metadata.worker_sid ??
-						// 'WKb7a43c7e5a528bd10fae1e5dd554e16b',
-						'WK9e9f8637ee0ec4a19547fce618fd0fed',
-				},
-			}),
-			getProfile({ data: user.id }),
-		]);
+		const profile = await getProfile({ data: user.id });
 
-		return { user, session, accessToken, profile, features: { hideQueueStatus: false } };
+		return { user, session, profile, features: { hideQueueStatus: false } };
 	},
-	// staleTime: DAY_IN_MS,
-	// shouldReload: false,
 });
 
 function AuthComponent() {
@@ -94,32 +72,14 @@ function AuthComponent() {
 
 	const [{}, { data: worker }, {}, { data: pinnedItems }, { data: accessToken }] = useSuspenseQueries({
 		queries: [
-			{ queryKey: ['teams'], queryFn: getTeams, staleTime: Infinity },
-			{
-				queryKey: ['workers', 'WK9e9f8637ee0ec4a19547fce618fd0fed'],
-				queryFn: () => getWorker({ data: 'WK9e9f8637ee0ec4a19547fce618fd0fed' }),
-				staleTime: Infinity,
-			},
+			getTeamsQuery(),
+			getWorkerQuery('WK00f8c2c83262647dc5779fe20fc3220b'),
 			getActivitiesQuery(),
-			{
-				queryKey: ['pinned_items'],
-				queryFn: getPinnedItems,
-				staleTime: Infinity,
-			},
-			{
-				queryKey: ['access-token'],
-				queryFn: () =>
-					createAccessToken({
-						data: {
-							identity: user?.email ?? '',
-							workerSid:
-								user?.user_metadata.workerSid ??
-								user?.user_metadata.worker_sid ??
-								'WK9e9f8637ee0ec4a19547fce618fd0fed',
-						},
-					}),
-				staleTime: () => 1000 * 60 * 60 * 24,
-			},
+			getPinnedItemsQuery(),
+			getAccessTokenQuery({
+				identity: user?.email ?? '',
+				workerSid: 'WK00f8c2c83262647dc5779fe20fc3220b',
+			}),
 		],
 	});
 
@@ -133,47 +93,69 @@ function AuthComponent() {
 					profile={profile}
 					session={session as Session}
 					worker={worker as WorkerInstance}
-					accessToken={accessToken}
 				/>
 
 				<div className='flex flex-1'>
 					<NavigationalSidebar
 						sections={sidebarNav}
 						header={
-							<SidebarMenuItem>
-								<SidebarMenuButton className='rounded-full bg-primary text-white dark:text-black transition-all'>
-									<Plus />
-									<span>Create</span>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
+							<Dialog>
+								<SidebarMenuItem>
+									<DialogTrigger asChild>
+										<SidebarMenuButton className='rounded-full bg-primary text-white dark:text-black transition-all'>
+											<Plus />
+											<span>Create</span>
+										</SidebarMenuButton>
+									</DialogTrigger>
+								</SidebarMenuItem>
+
+								<DialogContent>
+									<OutboundDialer />
+								</DialogContent>
+
+								{/* <DropdownMenuContent
+									side='right'
+									align='start'
+									sideOffset={12}
+								>
+									<DropdownMenuItem
+										onSelect={() => {
+											toast.custom((t) => <OutboundDialer />, { duration: Infinity });
+										}}
+									>
+										<PhoneOutgoing />
+										<span>Start call</span>
+									</DropdownMenuItem>
+								</DropdownMenuContent> */}
+							</Dialog>
 						}
 						additionalContent={
 							<>
-								<SidebarGroup>
-									<SidebarGroupLabel>Pinned Items</SidebarGroupLabel>
+								{pinnedItems.length > 0 && (
+									<SidebarGroup>
+										<SidebarGroupLabel>Pinned Items</SidebarGroupLabel>
 
-									<SidebarGroupContent>
-										<SidebarMenu>
-											{/* @ts-ignore  */}
-											{pinnedItems?.map((item) => {
-												const Icon = pinnedIcons[item.record_type];
-												return (
-													<SidebarMenuItem key={item.id}>
-														<SidebarMenuButton asChild>
-															<Link
-																to={item.path ?? ''}
-																params={item.params}
-															>
-																{Icon && <Icon />}
-																<span>{item.helper_name}</span>
-															</Link>
-														</SidebarMenuButton>
-													</SidebarMenuItem>
-												);
-											})}
-										</SidebarMenu>
-									</SidebarGroupContent>
-								</SidebarGroup>
+										<SidebarGroupContent>
+											<SidebarMenu>
+												{pinnedItems?.map((item) => {
+													const Icon = pinnedIcons[item.record_type];
+
+													return (
+														<NavigationItem
+															key={item.id}
+															item={{
+																title: item.helper_name,
+																to: item.path as any,
+																params: item.params as Record<string, any>,
+																icon: Icon,
+															}}
+														/>
+													);
+												})}
+											</SidebarMenu>
+										</SidebarGroupContent>
+									</SidebarGroup>
+								)}
 
 								<TaskList />
 							</>

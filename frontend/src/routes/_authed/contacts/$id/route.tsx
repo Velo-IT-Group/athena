@@ -11,22 +11,15 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { linksConfig } from '@/config/links';
+import { getContactQuery } from '@/lib/manage/api';
 import { getContact } from '@/lib/manage/read';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router';
 import { Circle } from 'lucide-react';
 import { useState } from 'react';
 
 export const Route = createFileRoute('/_authed/contacts/$id')({
 	component: RouteComponent,
-	loader: async ({ params }) => {
-		const contact = await getContact({
-			data: {
-				id: Number(params.id),
-				conditions: { fields: ['id', 'firstName', 'lastName', 'types', 'company'] },
-			},
-		});
-		return { contact };
-	},
 });
 
 function RouteComponent() {
@@ -38,7 +31,7 @@ function RouteComponent() {
 		title: '',
 	});
 	const { id } = Route.useParams();
-	const { contact } = Route.useLoaderData();
+	const { data: contact } = useSuspenseQuery(getContactQuery(Number(id)));
 	const { contactTabs } = linksConfig;
 
 	const tabs = contactTabs.map((t) => ({ ...t, params: { id } }));

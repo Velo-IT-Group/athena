@@ -5,16 +5,14 @@ import { Plus } from 'lucide-react';
 import { useSections } from '@/hooks/use-sections';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getSections } from '@/lib/supabase/read';
+import { getSectionsQuery } from '@/lib/supabase/api';
 
 type Props = {
 	params: { id: string; version: string };
 };
 
 const SectionTabs = ({ params }: Props) => {
-	const { data: initialData } = useSuspenseQuery({
-		queryKey: ['sections', params.id, params.version],
-		queryFn: () => getSections({ data: params.version }),
-	});
+	const { data: initialData } = useSuspenseQuery(getSectionsQuery(params.id, params.version));
 
 	const { sections, handleSectionInsert, handleSectionDeletion, handleSectionUpdate } = useSections({
 		initialData,
@@ -22,7 +20,7 @@ const SectionTabs = ({ params }: Props) => {
 		versionId: params.version,
 	});
 
-	const orderedSections = sections.sort((a, b) => {
+	const orderedSections = sections?.sort((a, b) => {
 		// First, compare by score in descending order
 		if (Number(a.order) > Number(b.order)) return 1;
 		if (Number(a.order) < Number(b.order)) return -1;

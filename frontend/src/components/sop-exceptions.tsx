@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Content } from '@tiptap/core';
 import { relativeDate } from '@/utils/date';
 import { toast } from 'sonner';
@@ -15,6 +15,7 @@ import { RefreshCcw, ShieldAlert } from 'lucide-react';
 import { Operation, PatchOperation } from '@/types';
 import Tiptap from '@/components/tip-tap';
 import type { CompanyNote } from '@/types/manage';
+import { getCompanyNotesQuery } from '@/lib/manage/api';
 
 type Props = {
 	note?: CompanyNote;
@@ -28,21 +29,14 @@ const SOPExceptions = ({ companyId, isEditable = false, className }: Props) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [showNew, setShowNew] = useState(false);
 
-	const { data, isLoading, refetch } = useQuery({
-		queryKey: ['companies', companyId, 'notes'],
-		queryFn: () =>
-			getCompanyNotes({
-				data: {
-					id: companyId,
-					conditions: {
-						conditions: {
-							'type/id': 6,
-						},
-						fields: ['id', 'text', '_info'],
-					},
-				},
-			}),
-	});
+	const { data, isLoading, refetch } = useSuspenseQuery(
+		getCompanyNotesQuery(companyId, {
+			conditions: {
+				'type/id': 6,
+			},
+			fields: ['id', 'text', '_info'],
+		})
+	);
 
 	const note = data?.data?.[0];
 

@@ -37,6 +37,8 @@ declare global {
 
     type Member = DB["public"]["Tables"]["profiles"]["Row"];
 
+    type ProposalTotals = DB["public"]["Views"]["proposal_totals"]["Row"];
+
     type ProposalSettings = DB["public"]["Tables"]["proposal_settings"]["Row"];
     type ProposalSettingsUpdate =
         DB["public"]["Tables"]["proposal_settings"]["Update"];

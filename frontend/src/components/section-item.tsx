@@ -27,6 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { flexRender, getExpandedRowModel, getFacetedUniqueValues } from '@tanstack/react-table';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { columns } from '@/components/table-columns/product';
+import { CommandItem } from '@/components/ui/command';
 
 type Props = {
 	section: NestedSection;
@@ -243,24 +244,69 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 					</Sortable>
 
 					<AsyncSelect<ExtendedCatalogItem>
-						fetcher={searchCatalogItems}
+						fetcher={(query, page) => {
+							return searchCatalogItems({ data: { query, page } });
+						}}
 						renderOption={(item) => (
-							<div className='flex items-center gap-2'>
-								<div className='flex flex-col'>
-									<div className='font-medium'>{item.description}</div>
-									<div className='text-xs text-muted-foreground'>
-										{item.identifier}
-										{item.productClass === 'Bundle' && (
-											<Badge
-												variant='outline'
-												className='ml-1.5'
-											>
-												Bundle
-											</Badge>
-										)}
+							<CommandItem
+								value={item.id.toString()}
+								onSelect={() => {
+									const snakedObj: ProductInsert = {
+										// @ts-ignore
+										...convertToSnakeCase(item),
+										version: params.version,
+										section: section.id,
+									};
+									const newProduct = convertToProduct(snakedObj) as ProductInsert;
+
+									console.log(newProduct);
+
+									const bundledItems = item.bundledItems?.map((b) => {
+										// @ts-ignore
+										const snakedObj = convertToSnakeCase(b);
+										// @ts-ignore
+										const snakedFixed = {
+											...snakedObj,
+											// @ts-ignore
+											id: b.catalogItem.id,
+											version: params.version,
+											// @ts-ignore
+											identifier: b.identifier,
+											section: section.id,
+										};
+										// @ts-ignore
+										const newObj = convertToProduct(snakedFixed) as ProductInsert;
+
+										return newObj;
+									});
+
+									// @ts-ignore
+									delete newProduct['bundled_items'];
+
+									console.log(newProduct, bundledItems);
+									handleProductInsert({
+										product: newProduct,
+										bundledItems,
+									});
+								}}
+							>
+								<div className='flex items-center gap-2'>
+									<div className='flex flex-col'>
+										<div className='font-medium'>{item.description}</div>
+										<div className='text-xs text-muted-foreground'>
+											{item.identifier}
+											{item.productClass === 'Bundle' && (
+												<Badge
+													variant='outline'
+													className='ml-1.5'
+												>
+													Bundle
+												</Badge>
+											)}
+										</div>
 									</div>
 								</div>
-							</div>
+							</CommandItem>
 						)}
 						getOptionValue={(item) => item.id.toString()}
 						getDisplayValue={(item) => (

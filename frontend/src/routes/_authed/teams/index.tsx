@@ -1,30 +1,25 @@
 import { activityOrder } from '@/components/activity-list';
 import ActivityListItem from '@/components/activity-list-item';
 import { ListSelector } from '@/components/status-selector';
-import { columns } from '@/components/table-columns/engagement';
 import Timer from '@/components/timer';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
-import { DataTable } from '@/components/ui/data-table';
-import { ModalPopoverContent, Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ModalPopoverContent, Popover, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useSyncMap from '@/hooks/use-sync-map';
-import { getActivitiesQuery } from '@/lib/twilio/api';
+import { getAccessTokenQuery, getActivitiesQuery } from '@/lib/twilio/api';
 import { useWorker } from '@/providers/worker-provider';
 import { getDateOffset } from '@/utils/date';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { flexRender } from '@tanstack/react-table';
 import { ChevronDown, Mic, Phone, PhoneCall, User } from 'lucide-react';
-import { Suspense, useMemo } from 'react';
-import type { SyncMapItem } from 'twilio-sync';
+import { useMemo } from 'react';
 import type { TaskInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/task';
-import type { ReservationInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/task/reservation';
 import type { WorkerInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/worker';
 
 export const Route = createFileRoute('/_authed/teams/')({
@@ -32,7 +27,8 @@ export const Route = createFileRoute('/_authed/teams/')({
 });
 
 function RouteComponent() {
-	const { accessToken: token } = Route.useRouteContext();
+	const { data: token } = useSuspenseQuery(getAccessTokenQuery({ identity: '', workerSid: '' }));
+
 	const { items: conversations } = useSyncMap({
 		token,
 		mapKey: 'SyncTaskRouterTasks',
@@ -42,7 +38,9 @@ function RouteComponent() {
 		mapKey: 'SyncTaskRouterWorkers',
 	});
 
-	// console.log(conversations);
+	const filterWorkers = workers.filter(
+		(w) => ((w.data as WorkerInstance).attributes as unknown as Record<string, any>).active
+	);
 
 	type WorkerConversation = WorkerInstance & {
 		tasks: TaskInstance[];
@@ -50,7 +48,7 @@ function RouteComponent() {
 
 	const conversationsByWorker = useMemo(
 		() =>
-			workers.map((w) => {
+			filterWorkers.map((w) => {
 				const worker = w.data as WorkerInstance;
 
 				return {
@@ -60,7 +58,7 @@ function RouteComponent() {
 						.map((c) => c.data as TaskInstance),
 				};
 			}),
-		[conversations, workers]
+		[conversations, filterWorkers]
 	);
 
 	const groupedConversationsByWorker = useMemo(() => {
@@ -79,10 +77,10 @@ function RouteComponent() {
 						([activityNameA], [activityNameB]) =>
 							activityOrder.get(activityNameA) - activityOrder.get(activityNameB)
 					)
-					.map(([activityName, workers]) => (
+					.map(([activityName, filterWorkers]) => (
 						<Collapsible
 							key={activityName}
-							defaultOpen={workers.length > 0 && activityName !== 'Offline'}
+							defaultOpen={filterWorkers.length > 0 && activityName !== 'Offline'}
 						>
 							<CollapsibleTrigger className='flex items-center gap-1.5 hover:cursor-pointer'>
 								<h2 className='text-lg font-semibold'>{activityName}</h2>
@@ -100,7 +98,7 @@ function RouteComponent() {
 									</TableHeader>
 
 									<TableBody className='overflow-x-auto'>
-										{workers
+										{filterWorkers
 											.sort((a, b) => a.friendlyName.localeCompare(b.friendlyName))
 											.map((cell) => (
 												<ContextMenu>

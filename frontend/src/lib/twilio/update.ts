@@ -5,6 +5,7 @@ import type { WorkerContextUpdateOptions } from "twilio/lib/rest/taskrouter/v1/w
 import { getWorker, getWorkers } from "./read";
 import { env } from "../utils";
 import { createServerFn } from "@tanstack/react-start";
+import type { ParticipantContextUpdateOptions } from "twilio/lib/rest/api/v2010/account/conference/participant";
 
 export const updateWorker = createServerFn().validator((
 	params: { workerSid: string; options: WorkerContextUpdateOptions },
@@ -73,3 +74,17 @@ export const updateWorker = createServerFn().validator((
 // 		attributes: JSON.stringify(newAttributes),
 // 	});
 // };
+
+export const updateParticipant = createServerFn()
+	.validator((
+		{ sid, participantSid, options }: {
+			sid: string;
+			participantSid: string;
+			options: ParticipantContextUpdateOptions;
+		},
+	) => ({ sid, participantSid, options }))
+	.handler(async ({ data: { sid, participantSid, options } }) => {
+		const client = await createClient();
+		return await client.conferences(sid).participants(participantSid)
+			.update(options);
+	});

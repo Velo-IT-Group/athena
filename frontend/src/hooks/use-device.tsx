@@ -1,4 +1,6 @@
 import { useOnInteraction } from '@/hooks/use-on-interaction';
+import { getAccessTokenQuery } from '@/lib/twilio/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { type Call, Device, TwilioError } from '@twilio/voice-sdk';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -13,6 +15,7 @@ type Props = {
 export const useDevice = ({ token, onIncomingCall, onTokenExpiring, onDeviceRegistration }: Props) => {
 	const deviceRef = useRef<Device>(null);
 	const device = deviceRef.current;
+	const queryClient = useQueryClient();
 
 	const [errors, setErrors] = useState<TwilioError.TwilioError[]>([]);
 	const [isRegistered, setIsRegistered] = useState(false);
@@ -43,7 +46,9 @@ export const useDevice = ({ token, onIncomingCall, onTokenExpiring, onDeviceRegi
 		console.log('registering device');
 
 		// Registering the device since the user has interacted with the page
-		device.register();
+		if (!isRegistered) {
+			device.register();
+		}
 
 		// Listening for incoming calls
 		device.on('incoming', handleIncomingCall);
@@ -51,6 +56,7 @@ export const useDevice = ({ token, onIncomingCall, onTokenExpiring, onDeviceRegi
 		device.on('error', (twilioError: TwilioError.TwilioError, call) => {
 			setErrors((prev) => [...prev, twilioError]);
 			toast.error(twilioError.message);
+			queryClient.refetchQueries({ queryKey: getAccessTokenQuery({ identity: '', workerSid: '' }).queryKey });
 		});
 
 		device.on('registered', () => {
@@ -59,8 +65,11 @@ export const useDevice = ({ token, onIncomingCall, onTokenExpiring, onDeviceRegi
 		});
 
 		device.on('tokenWillExpire', () => {
+			toast.warning('Token will expire', { duration: Infinity });
 			console.log('token will expire');
 			setIsTokenExpiring(true);
+
+			queryClient.refetchQueries({ queryKey: getAccessTokenQuery({ identity: '', workerSid: '' }).queryKey });
 			onTokenExpiring?.();
 			// const token = getNewTokenViaAjax();
 			// device.updateToken(token);

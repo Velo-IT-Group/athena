@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { PhoneInput } from '@/components/phone-input';
-import { Form, FormField } from './ui/form';
+import { Form, FormField } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { CreateParticipantParams } from '@/types/twilio';
 import { zodResolver } from '@hookform/resolvers/zod';

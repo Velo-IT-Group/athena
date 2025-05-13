@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { getContacts } from '@/lib/manage/read';
 import ConversationItem from './conversation-item';
 import { Activity } from 'lucide-react';
 import FullConversationHistory from './full-history';
 import { useSuspenseQueries } from '@tanstack/react-query';
-import { getConversations, getProfiles } from '@/lib/supabase/read';
+import { getConversations } from '@/lib/supabase/read';
+import { getConversationsQuery, getProfilesQuery } from '@/lib/supabase/api';
+import { getCompanyContactsQuery } from '@/lib/manage/api';
 
 type Props = {
 	contactId?: number;
@@ -22,30 +23,9 @@ const ConversationHistory = ({ contactId, companyId }: Props) => {
 		{ data: conversations },
 	] = useSuspenseQueries({
 		queries: [
-			{
-				queryKey: ['profiles'],
-				queryFn: getProfiles,
-			},
-			{
-				queryKey: ['companies', companyId, 'contacts'],
-				queryFn: () =>
-					getContacts({
-						data: {
-							conditions: {
-								'company/id': companyId,
-							},
-							orderBy: {
-								key: 'firstName',
-							},
-							pageSize: 1000,
-							fields: ['id', 'firstName', 'lastName'],
-						},
-					}),
-			},
-			{
-				queryKey: [contactId ? 'contacts' : 'companies', contactId ?? companyId, 'conversations'],
-				queryFn: () => getConversations({ data: { contactId, companyId, limit: 7 } }),
-			},
+			getProfilesQuery(),
+			getCompanyContactsQuery(companyId),
+			getConversationsQuery({ contactId, companyId }),
 		],
 	});
 
@@ -58,7 +38,7 @@ const ConversationHistory = ({ contactId, companyId }: Props) => {
 					</CardTitle>
 				</CardHeader>
 
-				<CardContent>
+				<CardContent className='h-full'>
 					{conversations && conversations.length ? (
 						<ul className='space-y-6'>
 							{conversations?.map((c) => (
@@ -71,7 +51,7 @@ const ConversationHistory = ({ contactId, companyId }: Props) => {
 							))}
 						</ul>
 					) : (
-						<div className='grid place-items-center gap-[1ch] font-medium text-muted-foreground p-[1ch]'>
+						<div className='grid place-items-center font-medium text-muted-foreground p-[1ch] h-full'>
 							<Activity className='size-7' />
 							<p>No Recent Activity</p>
 						</div>

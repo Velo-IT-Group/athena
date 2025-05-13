@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { GripVertical, ChevronDown, Plus, Ellipsis, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, ChevronDown, Plus, Ellipsis, EyeOff, Pencil, Trash2, Eye } from 'lucide-react';
 import { EditableArea, EditableInput, EditablePreview, Editable, EditableTrigger } from '@/components/ui/editable';
 import { Sortable, SortableContent, SortableItem, SortableItemHandle } from '@/components/ui/sortable';
 import {
@@ -12,17 +12,21 @@ import {
 import { useTicket } from '@/hooks/use-ticket';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import TicketListItem from './ticket-list-item';
+import { cn } from '@/lib/utils';
 
 type Props = {
 	phase: Phase;
 	tickets: NestedTicket[];
+	params: { id: string; version: string };
 	handleDeletion: () => void;
 	handleDuplication: () => void;
 	handleUpdate: (phase: PhaseUpdate) => void;
 };
 
-const PhaseListItem = ({ phase, tickets, handleDeletion, handleUpdate }: Props) => {
+const PhaseListItem = ({ phase, tickets, params, handleDeletion, handleUpdate }: Props) => {
 	const { data, handleTicketUpdate, handleTicketInsert, handleTicketDeletion, handleTicketDuplication } = useTicket({
+		proposalId: params.id,
+		versionId: params.version,
 		phaseId: phase.id,
 		initialData: tickets,
 	});
@@ -56,7 +60,11 @@ const PhaseListItem = ({ phase, tickets, handleDeletion, handleUpdate }: Props) 
 			asChild
 		>
 			<Collapsible
-				className='w-full'
+				className={cn(
+					'w-full border-b last:border-b-0 pr-1.5 -mr-1.5 group/phase border border-transparent',
+					!phase.visible && 'border-primary bg-muted/50 border-dashed rounded-lg'
+				)}
+				data-visible={phase.visible}
 				defaultOpen
 			>
 				<div className='flex items-center group h-12'>
@@ -126,6 +134,14 @@ const PhaseListItem = ({ phase, tickets, handleDeletion, handleUpdate }: Props) 
 										</DropdownMenuItem>
 									</EditableTrigger>
 
+									<DropdownMenuItem onSelect={() => handleUpdate({ visible: !phase.visible })}>
+										{!!phase.visible ? (
+											<EyeOff className='mr-1.5 text-muted-foreground' />
+										) : (
+											<Eye className='mr-1.5 text-muted-foreground' />
+										)}
+										<span>{!!phase.visible ? 'Hide phase' : 'Show phase'}</span>
+									</DropdownMenuItem>
 									{/* <DropdownMenuItem
                                         onSelect={handleDuplication}
                                     >
@@ -169,6 +185,7 @@ const PhaseListItem = ({ phase, tickets, handleDeletion, handleUpdate }: Props) 
 									<TicketListItem
 										key={ticket.id}
 										ticket={ticket}
+										parentVisible={phase.visible ?? true}
 										tasks={ticket.tasks ?? []}
 										handleDeletion={() =>
 											handleTicketDeletion({

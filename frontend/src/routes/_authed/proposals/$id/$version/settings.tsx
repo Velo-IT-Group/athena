@@ -1,8 +1,6 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { createFileRoute } from '@tanstack/react-router';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import useProposal from '@/hooks/use-proposal';
-import { getProposal } from '@/lib/supabase/read';
 import LabeledInput from '@/components/labeled-input';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, CircleX, type LucideIcon } from 'lucide-react';
@@ -13,17 +11,13 @@ import type { VariantProps } from 'class-variance-authority';
 import { ColoredBadge, type coloredBadgeVariants } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ListSelector } from '@/components/status-selector';
-import { useProposals } from '@/hooks/use-proposals';
 import { AsyncSelect } from '@/components/ui/async-select';
-import type { Contact, ServiceTicket } from '@/types/manage';
-import { searchContacts } from '@/lib/manage/read';
+import type { Contact } from '@/types/manage';
+import { getContacts, searchContacts } from '@/lib/manage/read';
+import { CommandItem } from '@/components/ui/command';
 
 export const Route = createFileRoute('/_authed/proposals/$id/$version/settings')({
 	component: RouteComponent,
-	loader: async ({ params }) => {
-		const proposal = await getProposal({ data: params.id });
-		return { proposal };
-	},
 });
 
 export const proposalStatuses: {
@@ -59,11 +53,12 @@ export const proposalStatuses: {
 ];
 
 function RouteComponent() {
-	const { proposal: initialData } = Route.useLoaderData();
 	const { id, version } = Route.useParams();
 
-	const { data: proposal, handleProposalUpdate } = useProposal({ id, version, initialData });
+	const { data: proposal, handleProposalUpdate } = useProposal({ id, version });
 	const { data: ticket } = useServiceTicket({ id: proposal?.service_ticket ?? 0 });
+
+	console.log(ticket);
 
 	const selectedStatus = proposalStatuses.find((status) => status.value === proposal.status);
 
@@ -80,9 +75,6 @@ function RouteComponent() {
 				>
 					<CardHeader>
 						<CardTitle>General Settings</CardTitle>
-						<CardDescription>
-							{/* Used to identify your Project on the Dashboard, Vercel CLI, and in the URL of your Deployments. */}
-						</CardDescription>
 					</CardHeader>
 					<CardContent className='space-y-3'>
 						<LabeledInput
@@ -171,27 +163,57 @@ function RouteComponent() {
 					</div>
 					<div className='grid gap-2'>
 						<h3 className='text-sm text-muted-foreground'>Contact</h3>
-						<AsyncSelect<Contact>
-							fetcher={searchContacts}
+						<AsyncSelect
+							fetcher={async (value, page) => {
+								const searchValue = value ?? '';
+								const splitValue = searchValue.split(' ');
+								console.log(searchValue);
+
+								const firstName = splitValue.length > 1 ? splitValue[0] : value;
+								const lastName = splitValue.length > 1 ? splitValue[1] : value;
+								const operator = splitValue.length > 1 ? 'and' : 'or';
+
+								console.log(
+									firstName,
+									lastName,
+									operator,
+									`firstName CONTAINS '${firstName}' ${operator} lastName CONTAINS '${lastName}' and company/id = ${
+										ticket?.company?.id ?? 250
+									}`
+								);
+
+								const { data } = await getContacts({
+									data: {
+										conditions: `firstName CONTAINS '${firstName}' ${operator} lastName CONTAINS '${lastName}' and company/id = ${
+											ticket?.company?.id ?? 250
+										}`,
+										fields: ['id', 'firstName', 'lastName', 'communicationItems'],
+										page,
+										orderBy: { key: 'firstName', order: 'asc' },
+									},
+								});
+
+								return data;
+							}}
 							renderOption={(item) => (
-								<div className='flex items-center gap-2'>
+								<CommandItem value={item.id.toString()}>
 									<div className='flex flex-col'>
 										<div className='font-medium'>
 											{item.firstName} {item.lastName}
 										</div>
 									</div>
-								</div>
+								</CommandItem>
 							)}
 							getOptionValue={(item) => item.id.toString()}
 							getDisplayValue={(item) => (
-								<div className='flex items-center gap-2'>
+								<CommandItem value={item.id.toString()}>
 									<div className='flex flex-col'>
 										<div className='font-medium'>
 											{item.firstName} {item.lastName}
 										</div>
 										<div className='text-xs text-muted-foreground'>{item.company?.name}</div>
 									</div>
-								</div>
+								</CommandItem>
 							)}
 							notFound={<div className='py-6 text-center text-sm'>No contacts found</div>}
 							label='Contacts'

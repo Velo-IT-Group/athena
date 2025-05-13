@@ -1,10 +1,10 @@
 'use client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createSection } from '@/lib/supabase/create';
-import { getProducts, getSection, getSections } from '@/lib/supabase/read';
 import { updateSection } from '@/lib/supabase/update';
 import { deleteSection } from '@/lib/supabase/delete';
 import { updateQueryCache } from '@/lib/utils';
+import { getProductsQuery, getSectionQuery } from '@/lib/supabase/api';
 
 type Props = {
 	initialData: NestedSection;
@@ -14,33 +14,31 @@ type Props = {
 export const useSection = ({ initialData, params }: Props) => {
 	const { id } = params;
 
+	const query = getSectionQuery(initialData.id);
+	const { queryKey } = query;
 	const queryClient = useQueryClient();
-	const sectionQueryKey = ['sections', params.id, params.version];
-	const productsQueryKey = ['products', params.id, params.version];
 
 	const { data: section } = useQuery({
-		queryKey: sectionQueryKey,
-		queryFn: () => getSection({ data: params.version }) as Promise<NestedSection>,
+		...query,
 		initialData,
 	});
 
 	const { data: products } = useQuery({
-		queryKey: productsQueryKey,
-		queryFn: () => getProducts({ data: params.version }) as Promise<NestedProduct[]>,
+		...getProductsQuery(section.id),
 		initialData: initialData.products,
 	});
 
 	const { mutate: handleSectionUpdate } = useMutation({
 		mutationFn: async (section: SectionUpdate) => updateSection({ data: { id, section } }),
-		onMutate: async (section) => updateQueryCache(queryClient, sectionQueryKey, section),
+		onMutate: async (section) => updateQueryCache(queryClient, queryKey, section),
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newTodo, context) => {
-			queryClient.setQueryData(sectionQueryKey, context?.previousItem);
+			queryClient.setQueryData(queryKey, context?.previousItem);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 		},
 	});
@@ -52,11 +50,11 @@ export const useSection = ({ initialData, params }: Props) => {
 			// Cancel any outgoing refetches
 			// (so they don't overwrite our optimistic update)
 			await queryClient.cancelQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 
 			// Snapshot the previous value
-			const previousTodo = queryClient.getQueryData<Section[]>(sectionQueryKey) ?? [];
+			const previousTodo = queryClient.getQueryData<Section[]>(queryKey) ?? [];
 
 			const newT = [...previousTodo, newSection];
 
@@ -64,7 +62,7 @@ export const useSection = ({ initialData, params }: Props) => {
 
 			// Optimistically update to the new value
 			// @ts-expect-error - Throwing error because of the type mismatch
-			queryClient.setQueryData<Section[]>(sectionQueryKey, newT);
+			queryClient.setQueryData<Section[]>(queryKey, newT);
 
 			// Return a context with the previous and new todo
 			return { previousTodo, newTodo: newT };
@@ -74,7 +72,7 @@ export const useSection = ({ initialData, params }: Props) => {
 		onError: (err, newTodo, context) => {
 			console.error(err);
 			console.log(newTodo);
-			queryClient.setQueryData(sectionQueryKey, context?.previousTodo);
+			queryClient.setQueryData(queryKey, context?.previousTodo);
 		},
 		onSettled: async (data, err, variables, context) => {
 			console.error(err);
@@ -83,7 +81,7 @@ export const useSection = ({ initialData, params }: Props) => {
 			console.log(context);
 
 			await queryClient.invalidateQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 		},
 	});
@@ -95,18 +93,18 @@ export const useSection = ({ initialData, params }: Props) => {
 			// Cancel any outgoing refetches
 			// (so they don't overwrite our optimistic update)
 			await queryClient.cancelQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 
 			// Snapshot the previous value
-			const previousTodo = queryClient.getQueryData<Section[]>(sectionQueryKey) ?? [];
+			const previousTodo = queryClient.getQueryData<Section[]>(queryKey) ?? [];
 
 			const newT = previousTodo.filter((s) => s.id !== id);
 
 			console.log(newT);
 
 			// Optimistically update to the new value
-			queryClient.setQueryData<Section[]>(sectionQueryKey, newT);
+			queryClient.setQueryData<Section[]>(queryKey, newT);
 
 			// Return a context with the previous and new todo
 			return { previousTodo, newTodo: newT };
@@ -116,7 +114,7 @@ export const useSection = ({ initialData, params }: Props) => {
 		onError: (err, newTodo, context) => {
 			console.error(err);
 			console.log(newTodo);
-			queryClient.setQueryData(sectionQueryKey, context?.previousTodo);
+			queryClient.setQueryData(queryKey, context?.previousTodo);
 		},
 		onSettled: async (data, err, variables, context) => {
 			console.error(err);
@@ -125,7 +123,7 @@ export const useSection = ({ initialData, params }: Props) => {
 			console.log(context);
 
 			await queryClient.invalidateQueries({
-				queryKey: sectionQueryKey,
+				queryKey,
 			});
 		},
 	});

@@ -14,19 +14,12 @@ import {
 import { formatDate } from 'date-fns';
 import TicketConfigurations from '@/components/ticket-properties/configurations';
 import { useSuspenseQueries } from '@tanstack/react-query';
+import { ticketConfigurationsQuery } from '@/lib/manage/api';
+import { getTicketQuery } from '@/lib/manage/api';
 
 export default function Properties({ id }: { id: number }) {
 	const [{ data: ticket }, { data: configurations }] = useSuspenseQueries({
-		queries: [
-			{
-				queryKey: ['tickets', id],
-				queryFn: () => getTicket({ data: { id } }),
-			},
-			{
-				queryKey: ['tickets', id, 'configurations'],
-				queryFn: () => getTicketConfigurations({ data: { id } }),
-			},
-		],
+		queries: [getTicketQuery(id), ticketConfigurationsQuery(id)],
 	});
 
 	return (

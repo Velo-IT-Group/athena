@@ -2,9 +2,12 @@ import {
 	Building,
 	Cable,
 	ChartBarDecreasing,
+	ClipboardList,
 	FileText,
 	Home,
+	ListChecks,
 	Settings,
+	ShoppingBag,
 	Ticket,
 	User,
 	Users,
@@ -20,6 +23,7 @@ export interface LinksConfig {
 	companyTabs: NavItem[];
 	contactTabs: NavItem[];
 	teamTabs: NavItem[];
+	proposalTabs: NavItem[];
 }
 
 export const linksConfig: LinksConfig = {
@@ -127,6 +131,23 @@ export const linksConfig: LinksConfig = {
 			title: "Configurations",
 			icon: Cable,
 			to: "/contacts/$id/configurations",
+		},
+	],
+	proposalTabs: [
+		{
+			title: "Overview",
+			icon: ClipboardList,
+			to: "/proposals/$id/$version",
+		},
+		{
+			title: "Workplan",
+			to: "/proposals/$id/$version/workplan",
+			icon: ListChecks,
+		},
+		{
+			title: "Products",
+			to: "/proposals/$id/$version/products",
+			icon: ShoppingBag,
 		},
 	],
 };

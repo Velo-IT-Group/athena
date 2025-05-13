@@ -1,3 +1,4 @@
+import { getPhasesQuery } from '@/lib/supabase/api';
 import { createPhase, newTemplate } from '@/lib/supabase/create';
 import { deletePhase } from '@/lib/supabase/delete';
 import { getPhases } from '@/lib/supabase/read';
@@ -14,15 +15,13 @@ type Props = {
 };
 
 export const usePhase = ({ params, initialData }: Props) => {
-	const { id, version } = params;
 	const queryClient = useQueryClient();
-	const queryKey = ['phases', id, version];
 
-	const { data } = useQuery({
-		queryKey,
-		queryFn: () => getPhases({ data: version }) as Promise<NestedPhase[]>,
-		initialData,
-	});
+	const { id, version } = params;
+	const query = getPhasesQuery(id, version);
+	const { queryKey } = query;
+
+	const { data } = useQuery({ ...query, initialData });
 
 	const { mutate: handlePhaseUpdate } = useMutation({
 		mutationFn: async ({ id, phase }: { id: string; phase: PhaseUpdate }) =>
@@ -36,7 +35,7 @@ export const usePhase = ({ params, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -50,7 +49,6 @@ export const usePhase = ({ params, initialData }: Props) => {
 			tickets: Array<TicketInsert>;
 			tasks?: Array<TaskInsert>;
 		}) => {
-			console.log(newPhase, tickets);
 			return await createPhase({ data: { phase: newPhase, tickets } });
 		},
 		onMutate: async ({ newPhase, tickets }) => {
@@ -85,12 +83,12 @@ export const usePhase = ({ params, initialData }: Props) => {
 		// use the context returned from onMutate to roll back
 		onError: (err, newPhase, context) => {
 			console.error(err);
-			toast.error(err.message);
+			toast.error('Error creating phase ' + err.message);
 			queryClient.setQueryData(queryKey, context?.previousPhases || []);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -120,12 +118,12 @@ export const usePhase = ({ params, initialData }: Props) => {
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newPhase, context) => {
-			toast.error(err.message);
+			toast.error('Error deleting phase ' + err.message);
 			queryClient.setQueryData(queryKey, context?.previousPhases || []);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -185,7 +183,7 @@ export const usePhase = ({ params, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});

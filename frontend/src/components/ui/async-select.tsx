@@ -1,15 +1,11 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, useMemo, Fragment } from 'react';
+import { Loader2 } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ModalPopoverContent, Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import type { Fetcher, FetchFn, CompiledFetcherFn } from '@tanstack/react-start';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import type { Serializable } from '@tanstack/react-router';
-import type { SerializerStringifyBy } from '@tanstack/react-router';
 
 export interface Option {
 	value: string;
@@ -22,29 +18,17 @@ export interface Option {
 export interface AsyncSelectProps<T> {
 	/** Async function to fetch options */
 	// fetcher: (query?: string) => Promise<T[]>;
-	fetcher: FetchFn<
-		'GET',
-		'data',
-		undefined,
-		(params: { query?: string; page?: number }) =>
-			| {
-					query?: string;
-					page?: number;
-			  }
-			| undefined,
-		T[]
-	>;
-
+	fetcher: (value?: string, page?: number) => Promise<T[]>;
 	/** Preload all data ahead of time */
 	preload?: boolean;
 	/** Function to filter options */
-	filterFn?: (option: NonNullable<SerializerStringifyBy<T, Serializable>>, query: string) => boolean;
+	filterFn?: (option: T, query: string) => boolean;
 	/** Function to render each option */
-	renderOption: (option: SerializerStringifyBy<T, Serializable>) => React.ReactNode;
+	renderOption: (option: T) => React.ReactNode;
 	/** Function to get the value from an option */
-	getOptionValue: (option: SerializerStringifyBy<T, Serializable>) => string;
+	getOptionValue: (option: T) => string;
 	/** Function to get the display value for the selected option */
-	getDisplayValue: (option: NonNullable<SerializerStringifyBy<T, Serializable>>) => React.ReactNode;
+	getDisplayValue: (option: T) => React.ReactNode;
 	/** Custom not found message */
 	notFound?: React.ReactNode;
 	/** Custom loading skeleton */
@@ -52,7 +36,7 @@ export interface AsyncSelectProps<T> {
 	/** Currently selected value */
 	value: string;
 	/** Callback when selection changes */
-	onChange: (value: NonNullable<SerializerStringifyBy<T, Serializable>> | null) => void;
+	onChange: (value: T | null) => void;
 	/** Label for the select field */
 	label: string;
 	/** Placeholder text when no selection */
@@ -71,6 +55,8 @@ export interface AsyncSelectProps<T> {
 	clearable?: boolean;
 	/** Custom children */
 	children?: React.ReactNode;
+	/** Default open */
+	defaultOpen?: boolean;
 }
 
 export function AsyncSelect<T>({
@@ -87,8 +73,9 @@ export function AsyncSelect<T>({
 	noResultsMessage,
 	clearable = true,
 	children,
+	defaultOpen = false,
 }: AsyncSelectProps<T>) {
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(defaultOpen);
 	const [selectedValue, setSelectedValue] = useState(value);
 	const [searchTerm, setSearchTerm] = useState('');
 	const debouncedSearchTerm = useDebounce(searchTerm, preload ? 0 : 300);
@@ -103,14 +90,7 @@ export function AsyncSelect<T>({
 		hasNextPage,
 	} = useInfiniteQuery({
 		queryKey: ['async-select', label, debouncedSearchTerm],
-		queryFn: ({ pageParam }) =>
-			fetcher({
-				data: { query: debouncedSearchTerm, page: pageParam },
-				method: 'GET',
-				response: 'data',
-				context: undefined,
-				signal: AbortSignal.any([]),
-			}),
+		queryFn: ({ pageParam }) => fetcher(debouncedSearchTerm, pageParam),
 		getNextPageParam: (lastPage, pages) => (lastPage.length > 0 ? pages.length + 1 : undefined),
 		initialPageParam: 1,
 		initialData: {
@@ -121,7 +101,9 @@ export function AsyncSelect<T>({
 
 	const options = useMemo(() => {
 		return data?.pages.reduce((acc, page) => {
-			return [...acc, ...page];
+			console.log(page);
+
+			return [...acc, ...(page ?? [])];
 		}, []);
 	}, [data]);
 
@@ -208,19 +190,19 @@ export function AsyncSelect<T>({
 							))}
 						<CommandGroup>
 							{options.map((option) => (
-								<CommandItem
-									key={getOptionValue(option)}
-									value={getOptionValue(option)}
-									onSelect={handleSelect}
-								>
-									{renderOption(option)}
-									<Check
-										className={cn(
-											'ml-auto h-3 w-3',
-											selectedValue === getOptionValue(option) ? 'opacity-100' : 'opacity-0'
-										)}
-									/>
-								</CommandItem>
+								<Fragment key={getOptionValue(option)}>{renderOption(option)}</Fragment>
+								// <CommandItem
+								// 	key={getOptionValue(option)}
+								// 	value={getOptionValue(option)}
+								// 	onSelect={handleSelect}
+								// >
+								// 	<Check
+								// 		className={cn(
+								// 			'ml-auto h-3 w-3',
+								// 			selectedValue === getOptionValue(option) ? 'opacity-100' : 'opacity-0'
+								// 		)}
+								// 	/>
+								// </CommandItem>
 							))}
 							<div
 								ref={loadMoreSentinelRef}

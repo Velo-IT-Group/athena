@@ -3,24 +3,74 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { createTicket, duplicateTicket } from '@/lib/supabase/create';
 
-import { getTickets } from '@/lib/supabase/read';
 import { updateTicket } from '@/lib/supabase/update';
 import { deleteTicket } from '@/lib/supabase/delete';
+import { getPhasesQuery, getProposalTotalsQuery, getSectionsQuery, getTicketsQuery } from '@/lib/supabase/api';
+import { useCallback } from 'react';
 
 type Props = {
+	proposalId: string;
+	versionId: string;
 	phaseId: string;
 	initialData: NestedTicket[];
 };
 
-export const useTicket = ({ phaseId, initialData }: Props) => {
+export const useTicket = ({ proposalId, versionId, phaseId, initialData }: Props) => {
 	const queryClient = useQueryClient();
-	const queryKey = ['phases', phaseId];
+	const query = getTicketsQuery(phaseId);
+	const { queryKey } = query;
 
-	const { data } = useQuery({
-		queryKey,
-		queryFn: () => getTickets(phaseId),
-		initialData,
-	});
+	const { data } = useQuery(query);
+
+	const updateProposalTotals = useCallback(
+		(phases: NestedPhase[]) => {
+			const previousTotals = queryClient.getQueryData<ProposalTotals>(
+				getProposalTotalsQuery(proposalId, versionId).queryKey
+			);
+
+			if (!previousTotals) return;
+
+			const laborCost = phases.reduce((acc, p) => acc + (p.hours ?? 0) * (previousTotals.labor_rate ?? 0), 0);
+
+			const newTotals: ProposalTotals = {
+				...previousTotals,
+				labor_cost: laborCost,
+				total_price:
+					(previousTotals.non_recurring_product_total ?? 0) +
+					(previousTotals.recurring_total ?? 0) +
+					(previousTotals.non_recurring_product_total ?? 0) +
+					laborCost,
+			};
+
+			queryClient.setQueryData(getProposalTotalsQuery(proposalId, versionId).queryKey, newTotals);
+		},
+		[phaseId, proposalId, versionId]
+	);
+
+	const updatePhaseHours = useCallback(
+		(newTicket: NestedTicket) => {
+			const phases = queryClient.getQueryData<NestedPhase[]>(getPhasesQuery(proposalId, versionId).queryKey);
+			const phase = phases?.find((p) => p.id === phaseId);
+			const previousTickets = phase?.tickets;
+			const updatedTickets = [...(previousTickets?.filter((t) => t.id !== newTicket.id) ?? []), newTicket];
+
+			if (!phase) return;
+
+			const updatePhase: NestedPhase = {
+				...phase,
+				hours: updatedTickets.reduce((acc, t) => acc + (t.budget_hours ?? 0), 0),
+			};
+
+			const updatedPhases = phases?.map((p) => (p.id === phaseId ? updatePhase : p));
+
+			if (!updatedPhases) return;
+
+			updateProposalTotals(updatedPhases);
+
+			queryClient.setQueryData(getPhasesQuery(proposalId, versionId).queryKey, updatedPhases);
+		},
+		[phaseId, proposalId, versionId]
+	);
 
 	const { mutate: handleTicketUpdate } = useMutation({
 		mutationFn: async ({ id, ticket }: { id: string; ticket: TicketUpdate }) =>
@@ -38,7 +88,9 @@ export const useTicket = ({ phaseId, initialData }: Props) => {
 
 			console.log(previousItems);
 
-			const newItem = { ...updatedItem, ...ticket };
+			if (!updatedItem) return;
+
+			const newItem: NestedTicket = { ...updatedItem, ...ticket };
 
 			const newItems = [...previousItems.filter((s) => s.id !== id), newItem];
 
@@ -46,6 +98,10 @@ export const useTicket = ({ phaseId, initialData }: Props) => {
 
 			// Optimistically update to the new value
 			queryClient.setQueryData(queryKey, newItems);
+
+			console.log(newItem);
+
+			updatePhaseHours(newItem);
 
 			// Return a context with the previous and new phases
 			return { previousItems, newItems };
@@ -57,7 +113,7 @@ export const useTicket = ({ phaseId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -93,7 +149,7 @@ export const useTicket = ({ phaseId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -125,7 +181,7 @@ export const useTicket = ({ phaseId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});
@@ -166,7 +222,7 @@ export const useTicket = ({ phaseId, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 		},
 	});

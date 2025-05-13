@@ -2,10 +2,27 @@ import { z } from "zod";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { QueryClient } from "@tanstack/react-query";
+import { dataTableFilterQuerySchema } from "@/components/ui/data-table";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
+
+export const sortSchema = z.object({
+	field: z.string(),
+	direction: z.enum(["asc", "desc"]).default("asc"),
+});
+
+export const paginationSchema = z.object({
+	page: z.number(),
+	pageSize: z.number(),
+});
+
+export const filterSchema = z.object({
+	filter: dataTableFilterQuerySchema.optional(),
+	pagination: paginationSchema.optional(),
+	sort: sortSchema.optional(),
+});
 
 const envSchema = z.object({
 	MODE: z.enum(["development", "production", "test"]),
@@ -116,4 +133,14 @@ export const updateQueryCache = async <T>(
 
 	/// Returning context for optimistic updates
 	return { previousItem, newItem: updatedItem };
+};
+
+export const parsePhoneNumber = (phoneNumber: string) => {
+	const regex = "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$";
+	const isValid = phoneNumber.match(regex);
+
+	return {
+		isValid,
+		formattedNumber: phoneNumber.replace(regex, "+1 \($1\) $2-$3"),
+	};
 };

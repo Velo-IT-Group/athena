@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './style.css';
-import { Separator } from '../ui/separator';
+import { Separator } from @/components/separator';
 import { useTwilio } from '@/providers/twilio-provider';
 
 const DiscoBall = () => {

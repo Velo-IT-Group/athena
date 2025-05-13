@@ -9,6 +9,161 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      goal_progress: {
+        Row: {
+          actual_value: number | null
+          goal_id: string | null
+          id: string
+          synced_at: string | null
+        }
+        Insert: {
+          actual_value?: number | null
+          goal_id?: string | null
+          id?: string
+          synced_at?: string | null
+        }
+        Update: {
+          actual_value?: number | null
+          goal_id?: string | null
+          id?: string
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_progress_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goal_sources: {
+        Row: {
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      goal_templates: {
+        Row: {
+          aggregation_method: string | null
+          auto_generate: boolean | null
+          created_at: string | null
+          field_name: string
+          id: string
+          metadata: Json | null
+          name: string
+          recurrence: string
+          source_id: string | null
+          target_value: number
+          unit: string | null
+          user_id: string | null
+        }
+        Insert: {
+          aggregation_method?: string | null
+          auto_generate?: boolean | null
+          created_at?: string | null
+          field_name: string
+          id?: string
+          metadata?: Json | null
+          name: string
+          recurrence: string
+          source_id?: string | null
+          target_value: number
+          unit?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          aggregation_method?: string | null
+          auto_generate?: boolean | null
+          created_at?: string | null
+          field_name?: string
+          id?: string
+          metadata?: Json | null
+          name?: string
+          recurrence?: string
+          source_id?: string | null
+          target_value?: number
+          unit?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_templates_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "goal_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          created_at: string | null
+          id: string
+          period_end: string
+          period_start: string
+          target_value: number
+          template_id: string | null
+          unit: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          period_end: string
+          period_start: string
+          target_value: number
+          template_id?: string | null
+          unit?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          target_value?: number
+          template_id?: string | null
+          unit?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "goal_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integrations: {
         Row: {
           auth_type: Database["public"]["Enums"]["auth_type"] | null
@@ -468,6 +623,174 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      proposal_template_phases: {
+        Row: {
+          bill_phase_separately: boolean | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          mark_as_milestone_flag: boolean
+          order: number
+          template_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          bill_phase_separately?: boolean | null
+          created_at?: string
+          created_by?: string
+          description: string
+          id?: string
+          mark_as_milestone_flag?: boolean
+          order: number
+          template_id: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          bill_phase_separately?: boolean | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          mark_as_milestone_flag?: boolean
+          order?: number
+          template_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_template_phases_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_template_tasks: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          notes: string
+          priority: number
+          summary: string
+          ticket_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes: string
+          priority: number
+          summary: string
+          ticket_id: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string
+          priority?: number
+          summary?: string
+          ticket_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_template_tasks_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_template_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_template_tickets: {
+        Row: {
+          budgetHours: number
+          created_at: string
+          created_by: string
+          id: string
+          order: number
+          phase_id: string
+          summary: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          budgetHours: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          order: number
+          phase_id: string
+          summary: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          budgetHours?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          order?: number
+          phase_id?: string
+          summary?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_template_tickets_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_template_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_templates: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          reference_id: number | null
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name: string
+          reference_id?: number | null
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          reference_id?: number | null
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
       }
       proposals: {
         Row: {

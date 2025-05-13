@@ -4,12 +4,15 @@ import { ColoredBadge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { getCompany, getConfigurations, getProjects, getTickets } from '@/lib/manage/read';
+import {
+	getCompanyBestPracticesQuery,
+	getCompanyConfigurationsQuery,
+	getCompanyProjectsQuery,
+	getCompanyQuery,
+} from '@/lib/manage/api';
 import type { Question } from '@/types/manage';
-import { useSuspenseQueries, useSuspenseQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { subDays } from 'date-fns';
-import { AppWindow, Box, Cable, CheckCircle, Circle, Server } from 'lucide-react';
+import { useSuspenseQueries } from '@tanstack/react-query';
+import { AppWindow, Box, CheckCircle, Circle, Server } from 'lucide-react';
 import { Suspense, useState } from 'react';
 
 type Props = {
@@ -31,50 +34,10 @@ const CompanyEngagementTab = ({ id }: Props) => {
 		},
 	] = useSuspenseQueries({
 		queries: [
-			{
-				queryKey: ['companies', Number(id)],
-				queryFn: () => getCompany({ data: { id: Number(id) } }),
-			},
-			{
-				queryKey: ['companies', Number(id), 'projects'],
-				queryFn: () =>
-					getProjects({
-						data: {
-							conditions: { 'company/id': Number(id), 'status/id': [1, 15, 19] },
-							// pageSize: 5,
-							orderBy: { key: 'actualStart', order: 'desc' },
-						},
-					}),
-			},
-			{
-				queryKey: ['companies', Number(id), 'configurations'],
-				queryFn: () =>
-					getConfigurations({
-						data: {
-							conditions: { 'company/id': Number(id), 'status/id': 2 },
-							pageSize: 1000,
-							orderBy: { key: 'name' },
-							fields: ['id', 'name', 'site', 'type', 'questions'],
-						},
-					}),
-			},
-			{
-				queryKey: ['tickets', 'best-practices'],
-				queryFn: () =>
-					getTickets({
-						data: {
-							conditions: {
-								closedFlag: true,
-								closedDate: subDays(new Date(), 30),
-								enteredBy: 'MyIT',
-								'board/name': 'Strength',
-								'status/name': 'Completed',
-								'company/id': Number(id),
-							},
-							fields: ['id', 'summary'],
-						},
-					}),
-			},
+			getCompanyQuery(Number(id)),
+			getCompanyProjectsQuery(Number(id)),
+			getCompanyConfigurationsQuery(Number(id)),
+			getCompanyBestPracticesQuery(Number(id)),
 		],
 	});
 

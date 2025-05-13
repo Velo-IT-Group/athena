@@ -2,7 +2,7 @@ import PhaseListItem from '@/components/phase-list-item';
 import { Button } from '@/components/ui/button';
 import { Sortable, SortableContent, SortableOverlay } from '@/components/ui/sortable';
 import { usePhase } from '@/hooks/use-phase';
-import { getPhases } from '@/lib/supabase/read';
+import { getPhasesQuery } from '@/lib/supabase/api';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Plus, PlusCircleIcon } from 'lucide-react';
 
@@ -13,10 +13,7 @@ type Props = {
 const WorkplanBuilder = ({ params }: Props) => {
 	const { id, version } = params;
 
-	const { data: initialData } = useSuspenseQuery({
-		queryKey: ['phases', id, version],
-		queryFn: () => getPhases({ data: version }) as Promise<NestedPhase[]>,
-	});
+	const { data: initialData } = useSuspenseQuery(getPhasesQuery(id, version));
 
 	const { data, handlePhaseDeletion, handlePhaseInsert, handlePhaseUpdate } = usePhase({
 		initialData,
@@ -82,6 +79,7 @@ const WorkplanBuilder = ({ params }: Props) => {
 						{sortedPhases.map((phase) => (
 							<PhaseListItem
 								key={phase.id}
+								params={params}
 								phase={phase}
 								tickets={phase.tickets ?? []}
 								handleDeletion={() =>

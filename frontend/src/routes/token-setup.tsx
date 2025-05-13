@@ -1,28 +1,44 @@
 import LabeledInput from '@/components/labeled-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { encryptToken } from '@/lib/supabase/create';
+import { env } from '@/lib/utils';
 import { createFileRoute } from '@tanstack/react-router';
+import { zodValidator } from '@tanstack/zod-adapter';
+import { SignJWT } from 'jose';
 import { Key } from 'lucide-react';
+import { z } from 'zod';
 
 export const Route = createFileRoute('/token-setup')({
 	component: RouteComponent,
-	validateSearch: (search: Record<string, unknown>): { userId: string } => {
-		// validate and parse the search params into a typed state
-		return {
-			userId: (search.userId as string) || '',
-		};
-	},
+	validateSearch: zodValidator(z.object({ user_id: z.string() })),
 });
+
+const createSignedToken = async (user_id: string) => {
+	const token = await new SignJWT({
+		user_id,
+		connect_wise: {
+			public_key: 'maaPiVTeEybbK3SX',
+			secret_key: 'eCT1NboeMrXq9P3z',
+		},
+	})
+		.setProtectedHeader({ alg: 'HS256' })
+		.setIssuedAt()
+		.setExpirationTime('2h')
+		.sign(new TextEncoder().encode(env.VITE_SECRET_KEY));
+
+	return token;
+};
 
 function RouteComponent() {
 	const params = Route.useSearch();
 	return (
 		<div className='grid h-screen w-screen place-items-center bg-muted/50 bg-gradient-to-t'>
 			<form
-				action={async (d) => {
+				onSubmit={async (d) => {
 					console.log(d);
-					await encryptToken({ data: d });
+					d.preventDefault();
+					const token = await createSignedToken('6fecc24c-9c51-44b8-a45c-739e255dd586');
+					console.log(token);
 				}}
 			>
 				<Card className='w-full max-w-sm'>
@@ -39,7 +55,7 @@ function RouteComponent() {
 						<LabeledInput
 							label='User ID'
 							name='user_id'
-							defaultValue={params.userId}
+							defaultValue={params.user_id}
 							hidden
 							className='hidden'
 							required

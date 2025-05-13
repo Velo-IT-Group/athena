@@ -1,6 +1,5 @@
-import { getTicket } from '@/lib/manage/read';
+import { getTicketQuery } from '@/lib/manage/api';
 import { updateTicket } from '@/lib/manage/update';
-// import { BOARDS_LIST } from '@/routes/_authed/tickets/$id';
 import type { PatchOperation } from '@/types';
 import type { ServiceTicket } from '@/types/manage';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,11 +12,11 @@ type Props = {
 
 const useServiceTicket = ({ id, initialData }: Props) => {
 	const queryClient = useQueryClient();
-	const queryKey = ['tickets', id];
+	const query = getTicketQuery(id);
+	const { queryKey } = query;
 
 	const { data } = useQuery({
-		queryKey,
-		queryFn: () => getTicket({ data: { id: Number(id) } }),
+		...query,
 		initialData,
 	});
 
@@ -94,7 +93,7 @@ const useServiceTicket = ({ id, initialData }: Props) => {
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: queryKey,
+				queryKey,
 			});
 
 			toast.success('Ticket updated');

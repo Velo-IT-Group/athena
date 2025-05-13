@@ -9,29 +9,22 @@ type Props = {
 };
 
 const NoteItem = ({ note }: Props) => {
+	const name = note?.member?.name ?? note.contact?.name ?? note._info?.enteredBy ?? 'Unknown';
+	const initials = name
+		?.split(' ')
+		?.map((word) => word[0])
+		?.join('')
+		?.toUpperCase();
+
 	return (
 		<Card>
 			<CardHeader className='flex flex-row items-center justify-start gap-1.5 p-3 space-y-0 group'>
 				<CardTitle className='text-sm flex items-center gap-1.5'>
 					<Avatar className='size-5'>
-						<AvatarFallback className='text-[9px] uppercase'>
-							{note.member ? (
-								<>
-									{note?.member.name.split(' ')?.[0]?.[0] && note?.member.name.split(' ')?.[0]?.[0]}
-									{note?.member.name.split(' ')?.[1]?.[0] && note?.member.name.split(' ')?.[1]?.[0]}
-								</>
-							) : (
-								<>
-									{note?.contact?.name.split(' ')?.[0]?.[0] &&
-										note?.contact.name.split(' ')?.[0]?.[0]}
-									{note?.contact?.name.split(' ')?.[1]?.[0] &&
-										note?.contact.name.split(' ')?.[1]?.[0]}
-								</>
-							)}
-						</AvatarFallback>
+						<AvatarFallback className='text-[9px] uppercase'>{initials}</AvatarFallback>
 					</Avatar>
 
-					<span>{note?.member?.name ?? note.contact?.name ?? 'Unknown'}</span>
+					<span>{name}</span>
 				</CardTitle>
 
 				<CardDescription className='text-xs'>

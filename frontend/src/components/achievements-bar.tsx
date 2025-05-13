@@ -9,7 +9,7 @@ export function AchievementsBar() {
 					justifySelf: 'center',
 				}}
 			>
-				<div className='bg-muted rounded-full h-12 pr-1.5 inline-flex transition-colors items-center'>
+				{/* <div className='bg-muted rounded-full h-12 pr-1.5 inline-flex transition-colors items-center'>
 					<div
 						className='AchievementsWidgetContent-selectMenu'
 						style={{ margin: '0px 16px' }}
@@ -670,7 +670,7 @@ export function AchievementsBar() {
 							</span>
 						</div>
 					</div>
-				</div>
+				</div> */}
 			</div>
 
 			<div

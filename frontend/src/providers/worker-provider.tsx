@@ -1,5 +1,5 @@
-import { useContext, createContext, useMemo, useCallback, useEffect, useState, useRef } from 'react';
-import { Device, type Call } from '@twilio/voice-sdk';
+import { useContext, createContext, useCallback, useState } from 'react';
+import { Device, Call } from '@twilio/voice-sdk';
 import { ConferenceInstance } from 'twilio/lib/rest/api/v2010/account/conference';
 import { Reservation, Worker, type ActivityOptions, Task, type Activity, type Supervisor } from 'twilio-taskrouter';
 import { useMutation, type UseMutateFunction, type UseMutationResult } from '@tanstack/react-query';
@@ -22,6 +22,7 @@ import {
 import { useDevice } from '@/hooks/use-device';
 import { useWorker as useWorkerHook } from '@/hooks/use-worker';
 import { toast } from 'sonner';
+import { env } from '@/lib/utils';
 interface WorkerProviderProps {
 	worker: Supervisor | null;
 	attributes: Record<string, any> | undefined;
@@ -35,6 +36,19 @@ interface WorkerProviderProps {
 	engagements: Engagement[];
 	handleComplete: UseMutationResult<void, Error, Engagement, unknown> | undefined;
 	handleWrapup: UseMutationResult<void, Error, Engagement, unknown> | undefined;
+	handleEngagementCreation:
+		| UseMutationResult<
+				string | undefined,
+				Error,
+				{
+					to: string;
+					from: string;
+					channel: string;
+					attributes: Record<string, any>;
+				},
+				unknown
+		  >
+		| undefined;
 }
 
 const initialValues: WorkerProviderProps = {
@@ -45,6 +59,7 @@ const initialValues: WorkerProviderProps = {
 	engagements: [],
 	handleComplete: undefined,
 	handleWrapup: undefined,
+	handleEngagementCreation: undefined,
 };
 
 type WithChildProps = {
@@ -72,6 +87,10 @@ export const WorkerProvider = ({ authToken, children }: WithChildProps) => {
 
 	const handleIncomingCall = useCallback(
 		(call: Call) => {
+			if (call.direction === Call.CallDirection.Outgoing) {
+				call.accept();
+			}
+			console.log(call);
 			const engagement = engagements.find((engagement) =>
 				['voice', 'default'].includes(engagement.task?.taskChannelUniqueName ?? '')
 			);
@@ -85,40 +104,34 @@ export const WorkerProvider = ({ authToken, children }: WithChildProps) => {
 		[engagements]
 	);
 
-	const handleReservationEvents = useCallback(
-		(reservation: Reservation) => {
+	const handleReservationEvents = useCallback((reservation: Reservation) => {
+		setEngagements((prev) => [
+			...prev.filter((e) => e.task?.sid !== reservation.task.sid),
+			{ reservation, task: reservation.task },
+		]);
+		if (reservation.status === 'pending') {
+			setOpenEngagementDialog(true);
+		}
+		if (reservation.task.taskChannelUniqueName === 'voice') {
+			handleConference(reservation);
+		}
+	}, []);
+
+	const handleWorkerReady = useCallback((worker: Worker) => {
+		toast.success('Worker ready');
+		Array.from(worker.reservations.values()).map((reservation) => {
 			setEngagements((prev) => [
 				...prev.filter((e) => e.task?.sid !== reservation.task.sid),
 				{ reservation, task: reservation.task },
 			]);
-			if (reservation.status === 'pending') {
-				setOpenEngagementDialog(true);
-			}
-			if (reservation.task.taskChannelUniqueName === 'voice') {
-				handleConference(reservation);
-			}
-		},
-		[engagements]
-	);
-
-	const handleWorkerReady = useCallback(
-		(worker: Worker) => {
-			toast.success('Worker ready');
-			Array.from(worker.reservations.values()).map((reservation) => {
-				setEngagements((prev) => [
-					...prev.filter((e) => e.task?.sid !== reservation.task.sid),
-					{ reservation, task: reservation.task },
-				]);
-				if (reservation.status === 'pending') {
-					setOpenEngagementDialog(true);
-				}
-				if (reservation.task.taskChannelUniqueName === 'voice') {
-					handleConference(reservation);
-				}
-			});
-		},
-		[engagements]
-	);
+			// if (reservation.status === 'pending') {
+			// 	setOpenEngagementDialog(true);
+			// }
+			// if (reservation.task.taskChannelUniqueName === 'voice') {
+			// 	handleConference(reservation);
+			// }
+		});
+	}, []);
 
 	const { device } = useDevice({
 		token: authToken,
@@ -131,134 +144,13 @@ export const WorkerProvider = ({ authToken, children }: WithChildProps) => {
 	const { worker, attributes, activity } = useWorkerHook({
 		token: authToken,
 		onReservationCreated: handleReservationEvents,
-		// onWorkerReady: handleWorkerReady,
+		onWorkerReady: handleWorkerReady,
 	});
-
-	// /// Register the device when the user first clicks the page
-	// useEffect(() => {
-	// 	const device = new Device(authToken, {
-	// 		disableAudioContextSounds: true,
-	// 		enableImprovedSignalingErrorPrecision: true,
-	// 		closeProtection: true,
-	// 		// logLevel: 1,
-	// 	});
-
-	// 	device.register();
-
-	// 	device.on('incoming', handleIncomingCall);
-
-	// 	return () => {
-	// 		device.off('incoming', handleIncomingCall);
-	// 	};
-	// }, [device, engagements]);
 
 	const { mutate: updateWorkerActivity } = useMutation({
 		mutationFn: async ({ sid, options }: { sid: string; options: ActivityOptions }) =>
 			worker?.setWorkerActivity(worker.sid, sid, options),
 	});
-
-	// const handleReservationEvents = useCallback((res: Reservation) => {
-	// 	res.on('accepted', (reservation) => {
-	// 		console.log('reservation accepted');
-	// 		setEngagements((prev) => [
-	// 			...prev.filter((e) => e.reservation?.sid !== reservation.sid),
-	// 			{ ...prev.find((e) => e.reservation?.sid === reservation.sid), reservation },
-	// 		]);
-	// 	});
-
-	// 	res.on('rescinded', (reservation) => {
-	// 		console.log('reservation rescinded');
-	// 		const engagement = engagements.find((e) => e.reservation?.sid === reservation.sid);
-	// 		if (engagement) {
-	// 			engagement.call?.reject();
-	// 			setEngagements((prev) => [...prev.filter((e) => e.reservation?.sid !== reservation.sid)]);
-	// 		}
-	// 	});
-
-	// 	res.on('rejected', (reservation) => {
-	// 		console.log('reservation rejected');
-	// 		const engagement = engagements.find((e) => e.reservation?.sid === reservation.sid);
-	// 		setEngagements((prev) => [
-	// 			...prev.filter((e) => e.reservation?.sid !== reservation.sid),
-	// 			{ ...engagement, reservation, task: reservation.task },
-	// 		]);
-	// 	});
-
-	// 	res.on('timeout', (reservation) => {
-	// 		console.log('reservation timeout');
-	// 		const engagement = engagements.find((e) => e.reservation?.sid === reservation.sid);
-	// 		if (engagement) {
-	// 			engagement.call?.reject();
-	// 			setEngagements((prev) => [...prev.filter((e) => e.reservation?.sid !== reservation.sid)]);
-	// 		}
-	// 	});
-
-	// 	res.on('canceled', (reservation) => {
-	// 		console.log('reservation canceled');
-	// 		const engagement = engagements.find(
-	// 			(engagement) => engagement.reservation?.task.taskChannelUniqueName === 'voice'
-	// 		);
-	// 		if (engagement) {
-	// 			engagement.call?.reject();
-	// 			setEngagements((prev) => [
-	// 				...prev.filter((e) => e.reservation?.sid !== reservation.sid),
-	// 				{ ...engagement, reservation, task: reservation.task },
-	// 			]);
-	// 		}
-	// 	});
-
-	// 	res.on('wrapup', (reservation) => {
-	// 		console.log('reservation wrapup');
-	// 		const engagement = engagements.find((engagement) => engagement.reservation?.sid === reservation.sid);
-	// 		if (engagement) {
-	// 			engagement.call?.reject();
-	// 			setEngagements((prev) => [
-	// 				...prev.filter((e) => e.reservation?.sid !== reservation.sid),
-	// 				{ ...engagement, reservation, task: reservation.task },
-	// 			]);
-	// 		}
-	// 	});
-	// }, []);
-
-	// useEffect(() => {
-	// 	const supervisor = new Supervisor(authToken);
-
-	// 	supervisor.on('reservationCreated', (reservation) => {
-	// setEngagements((prev) => [
-	// 	...prev.filter((e) => e.task?.sid !== reservation.task.sid),
-	// 	{ reservation, task: reservation.task },
-	// ]);
-	// if (reservation.status === 'pending') {
-	// 	setOpenEngagementDialog(true);
-	// }
-	// if (reservation.task.taskChannelUniqueName === 'voice') {
-	// 	handleConference(reservation);
-	// }
-	// handleReservationEvents(reservation);
-	// 	});
-
-	// 	supervisor.on('ready', (w) =>
-	// Array.from(w.reservations.values()).map((reservation) => {
-	// 	setEngagements((prev) => [
-	// 		...prev.filter((e) => e.task?.sid !== reservation.task.sid),
-	// 		{ reservation, task: reservation.task },
-	// 	]);
-	// 	if (reservation.status === 'pending') {
-	// 		setOpenEngagementDialog(true);
-	// 	}
-	// 	if (reservation.task.taskChannelUniqueName === 'voice') {
-	// 		handleConference(reservation);
-	// 	}
-	// 	handleReservationEvents(reservation);
-	// })
-	// 	);
-
-	// 	workerRef.current = supervisor;
-
-	// 	return () => {
-	// 		supervisor.removeAllListeners();
-	// 	};
-	// }, [authToken]);
 
 	const { mutate: handleAccept, isPending: isAccepting } = useMutation({
 		mutationFn: async ({ reservation, call }: { reservation?: Reservation; call?: Call }) => {
@@ -276,6 +168,32 @@ export const WorkerProvider = ({ authToken, children }: WithChildProps) => {
 					sid: reservation?.task?.sid ?? '',
 				},
 			});
+		},
+	});
+
+	const handleComplete = useMutation({
+		mutationFn: async (engagement: Engagement) => {
+			await engagement.reservation?.complete();
+		},
+		onSuccess(data, variables, context) {
+			setEngagements((prev) => prev.filter((e) => e.reservation?.sid !== variables.reservation?.sid));
+		},
+	});
+
+	const handleWrapup = useMutation({
+		mutationFn: async (engagement: Engagement) => {
+			await engagement.reservation?.wrap();
+			if (engagement.call) {
+				engagement.call?.disconnect();
+			}
+		},
+		onMutate(variables) {
+			const engagement = engagements.find((e) => e.reservation?.sid === variables.reservation?.sid);
+
+			setEngagements((prev) => [
+				...prev.filter((e) => e.reservation?.sid !== variables.reservation?.sid),
+				{ ...engagement, reservation: { ...variables.reservation, status: 'wrapping' } },
+			]);
 		},
 	});
 
@@ -308,32 +226,6 @@ export const WorkerProvider = ({ authToken, children }: WithChildProps) => {
 		},
 	});
 
-	const handleComplete = useMutation({
-		mutationFn: async (engagement: Engagement) => {
-			await engagement.reservation?.complete();
-		},
-		onSuccess(data, variables, context) {
-			setEngagements((prev) => prev.filter((e) => e.reservation?.sid !== variables.reservation?.sid));
-		},
-	});
-
-	const handleWrapup = useMutation({
-		mutationFn: async (engagement: Engagement) => {
-			await engagement.reservation?.wrap();
-			if (engagement.call) {
-				engagement.call?.disconnect();
-			}
-		},
-		onMutate(variables) {
-			const engagement = engagements.find((e) => e.reservation?.sid === variables.reservation?.sid);
-
-			setEngagements((prev) => [
-				...prev.filter((e) => e.reservation?.sid !== variables.reservation?.sid),
-				{ ...engagement, reservation: { ...variables.reservation, status: 'wrapping' } },
-			]);
-		},
-	});
-
 	const handleReject = useCallback(async (engagement: Engagement) => {
 		await worker?.setWorkerActivity(worker?.sid ?? '', worker?.sid ?? '', {
 			rejectPendingReservations: true,
@@ -341,6 +233,31 @@ export const WorkerProvider = ({ authToken, children }: WithChildProps) => {
 		engagement.call?.reject();
 		setEngagements((prev) => [...prev.filter((e) => e.reservation?.sid !== engagement.reservation?.sid)]);
 	}, []);
+
+	const handleEngagementCreation = useMutation({
+		mutationFn: async ({
+			to,
+			from = env.VITE_TWILIO_PHONE_NUMBER,
+			channel = 'voice',
+			attributes,
+		}: {
+			to: string;
+			from: string;
+			channel: string;
+			attributes: Record<string, any>;
+		}) =>
+			await worker?.createTask(to, from, env.VITE_TWILIO_WORKFLOW_SID!, env.VITE_TWILIO_TASK_QUEUE_SID!, {
+				attributes,
+				taskChannelUniqueName: channel,
+			}),
+		onMutate(variables) {
+			console.log(variables);
+		},
+
+		onError(error, variables) {
+			console.error(error, variables);
+		},
+	});
 
 	return (
 		<>
@@ -353,6 +270,7 @@ export const WorkerProvider = ({ authToken, children }: WithChildProps) => {
 					engagements,
 					handleComplete,
 					handleWrapup,
+					handleEngagementCreation,
 				}}
 			>
 				{children}

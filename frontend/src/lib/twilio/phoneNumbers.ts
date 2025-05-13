@@ -21,6 +21,7 @@ export const lookupPhoneNumber = createServerFn().validator((from: string) =>
 	const [{ data: contacts }, { data: companies }] = await Promise.all([
 		getContacts({
 			data: {
+				conditions: "inactiveFlag = false",
 				childConditions: { "communicationItems/value": phoneNumber },
 				fields: [
 					"id",

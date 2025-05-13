@@ -4,13 +4,20 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { EditableArea, EditableInput, EditablePreview } from '@/components/ui/editable';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { getCommunicationTypes, getContact, getContactImage } from '@/lib/manage/read';
+import { getCommunicationTypes, getContact, getContactImage, getTickets } from '@/lib/manage/read';
 import { useQuery, useSuspenseQueries } from '@tanstack/react-query';
-import { MoreHorizontal, Pen, Phone, Plus, TabletSmartphone, UserPen } from 'lucide-react';
+import { MoreHorizontal, Pen, Phone, Plus, TabletSmartphone, Tag, Tags, UserPen } from 'lucide-react';
 import { Editable, EditableLabel } from '@/components/ui/editable';
 import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ListSelector } from '@/components/status-selector';
+import {
+	getCommunicationTypesQuery,
+	getContactImageBlobQuery,
+	getContactQuery,
+	getContactTicketsQuery,
+	getTicketsQuery,
+} from '@/lib/manage/api';
 
 type Props = {
 	id: number | string;
@@ -18,56 +25,20 @@ type Props = {
 
 const ContactEngagementTab = ({ id }: Props) => {
 	const [edit, setEdit] = useState(false);
-	const [{ data: contact }, { data: communicationTypes }, { data: blob }] = useSuspenseQueries({
-		queries: [
-			{
-				queryKey: ['contacts', id],
-				queryFn: () =>
-					getContact({
-						data: {
-							id: Number(id),
-							conditions: {
-								fields: ['id', 'firstName', 'lastName', 'company', 'communicationItems'],
-							},
-						},
-					}),
-			},
-			{
-				queryKey: ['communication-items'],
-				queryFn: () =>
-					getCommunicationTypes({
-						data: {
-							orderBy: { key: 'description' },
-						},
-					}),
-				staleTime: Infinity,
-			},
-			{
-				queryKey: ['contacts', id, 'blob'],
-				queryFn: () =>
-					getContactImage({
-						data: {
-							id: Number(id),
-						},
-					}),
-			},
-		],
-	});
-
-	const { data: image } = useQuery({
-		queryKey: ['contacts', id, 'image'],
-		queryFn: async () => {
-			if (!blob) return undefined;
-			const img = new Image();
-			const imageUrl = URL.createObjectURL(blob as Blob);
-			img.src = imageUrl;
-
-			// newer promise based version of img.onload
-			await img.decode();
-
-			return imageUrl;
+	const [
+		{ data: contact },
+		{ data: communicationTypes },
+		{ data: blob },
+		{
+			data: { data: tickets },
 		},
-		enabled: !!blob,
+	] = useSuspenseQueries({
+		queries: [
+			getContactQuery(Number(id)),
+			getCommunicationTypesQuery(),
+			getContactImageBlobQuery(Number(id)),
+			getContactTicketsQuery(Number(id)),
+		],
 	});
 
 	const details = [
@@ -257,6 +228,25 @@ const ContactEngagementTab = ({ id }: Props) => {
 									<EditableInput className='px-1.5' />
 								</EditableArea>
 							</Editable>
+						</div>
+					))}
+				</CardContent>
+			</Card>
+
+			<Card className='flex flex-col'>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-1.5'>
+						<Tags className='inline-block size-5' /> Tickets
+					</CardTitle>
+				</CardHeader>
+
+				<CardContent className='grid grid-cols-2 gap-6'>
+					{tickets?.map((ticket) => (
+						<div
+							key={ticket.id}
+							className='grid grid-cols-[1fr_3fr] items-center gap-1.5'
+						>
+							<span>{ticket.summary}</span>
 						</div>
 					))}
 				</CardContent>

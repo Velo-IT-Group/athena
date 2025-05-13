@@ -4,29 +4,22 @@ import OpenProjectsSkeleton from '@/components/open-projects/skeleton';
 import Tiptap from '@/components/tip-tap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getCompanyNotes, getContact, getTickets } from '@/lib/manage/read';
-import { useSuspenseQueries } from '@tanstack/react-query';
+import { getCompanyBestPracticesQuery, getCompanyNotesQuery, getContactQuery } from '@/lib/manage/api';
+import { useSuspenseQueries, useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { subDays } from 'date-fns';
 import { CheckCircle } from 'lucide-react';
 import { Suspense } from 'react';
 
 export const Route = createFileRoute('/_authed/contacts/$id/')({
 	component: RouteComponent,
-	loader: async ({ params }) => {
-		const contact = await getContact({
-			data: {
-				id: Number(params.id),
-				conditions: { fields: ['id', 'firstName', 'lastName', 'types', 'company'] },
-			},
-		});
-		return { contact };
-	},
 });
 
 function RouteComponent() {
 	const { id } = Route.useParams();
-	const { contact } = Route.useLoaderData();
+
+	const { data: contact } = useSuspenseQuery(
+		getContactQuery(Number(id), { fields: ['id', 'firstName', 'lastName', 'types', 'company'] })
+	);
 
 	const [
 		{ data: sopExceptions },
@@ -35,37 +28,12 @@ function RouteComponent() {
 		},
 	] = useSuspenseQueries({
 		queries: [
-			{
-				queryKey: ['companies', contact.company!.id, 'notes'],
-				queryFn: () =>
-					getCompanyNotes({
-						data: {
-							id: Number(contact.company!.id),
-							conditions: {
-								conditions: {
-									'type/id': 6,
-								},
-								fields: ['id', 'text', '_info'],
-							},
-						},
-					}),
-			},
-			{
-				queryKey: ['companies', contact.company!.id, 'best-practice-implementations'],
-				queryFn: () =>
-					getTickets({
-						data: {
-							conditions: {
-								closedFlag: true,
-								closedDate: subDays(new Date(), 30),
-								enteredBy: 'MyIT',
-								'board/name': 'Strength',
-								'status/name': 'Completed',
-								'company/id': Number(contact.company!.id),
-							},
-						},
-					}),
-			},
+			getCompanyNotesQuery(contact.company!.id, {
+				conditions: {
+					'type/id': 6,
+				},
+			}),
+			getCompanyBestPracticesQuery(contact.company!.id),
 		],
 	});
 

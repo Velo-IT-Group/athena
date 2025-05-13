@@ -4,6 +4,7 @@ import { PopoverClose } from '@radix-ui/react-popover';
 import { Button } from '@/components/ui/button';
 import { Task } from 'twilio-taskrouter';
 import { useWorker } from '@/providers/worker-provider';
+import { env } from '@/lib/utils';
 
 type Props = {
 	task: Task;
@@ -48,9 +49,9 @@ const VoicemailTask = ({ task }: Props) => {
 					onClick={async () => {
 						worker?.createTask(
 							task.attributes.from,
-							task.attributes.to ?? process.env.NEXT_PUBLIC_TWILIO_PHONE_NUMBER,
-							process.env.NEXT_PUBLIC_TWILIO_WORKFLOW_SID!,
-							process.env.NEXT_PUBLIC_TWILIO_TASK_QUEUE_SID!,
+							task.attributes.to ?? env.VITE_TWILIO_PHONE_NUMBER,
+							env.VITE_TWILIO_WORKFLOW_SID!,
+							env.VITE_TWILIO_TASK_QUEUE_SID!,
 							{
 								attributes: {
 									direction: 'outbound',

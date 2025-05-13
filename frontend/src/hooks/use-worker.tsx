@@ -107,15 +107,13 @@ export const useWorker = ({
 		[onReservationFailed]
 	);
 
-	const handleWorkerReady = useCallback(
-		(worker: Worker) => {
-			onWorkerReady?.(worker);
-			setIsReady(true);
-			setReservations(Array.from(worker.reservations.values()));
-			worker.reservations.forEach(handleReservationEvents);
-		},
-		[onWorkerReady, handleReservationEvents]
-	);
+	const handleWorkerReady = useCallback((worker: Worker) => {
+		console.log('handleWorkerReady', worker);
+		onWorkerReady?.(worker);
+		setIsReady(true);
+		setReservations(Array.from(worker.reservations.values()));
+		worker.reservations.forEach(handleReservationEvents);
+	}, []);
 
 	useEffect(() => {
 		const supervisor = new Supervisor(token, { closeExistingSessions: true, setWorkerOfflineIfDisconnected: true });
@@ -133,7 +131,12 @@ export const useWorker = ({
 			supervisor.off('reservationCreated', handleReservationCreation);
 			supervisor.off('reservationFailed', handleReservationFailed);
 		};
-	}, [token, handleReservationCreation, handleReservationFailed, handleWorkerReady]);
+	}, [
+		token,
+		handleReservationCreation,
+		// handleReservationFailed,
+		// handleWorkerReady
+	]);
 
 	return {
 		worker,

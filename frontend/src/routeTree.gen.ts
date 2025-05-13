@@ -17,6 +17,7 @@ import { Route as AuthedImport } from './routes/_authed'
 import { Route as SettingsRouteImport } from './routes/settings/route'
 import { Route as SettingsIndexImport } from './routes/settings/index'
 import { Route as AuthedIndexImport } from './routes/_authed/index'
+import { Route as AuthAuthCodeErrorImport } from './routes/auth/auth-code-error'
 import { Route as SettingsMembersIndexImport } from './routes/settings/members/index'
 import { Route as AuthedTicketsIndexImport } from './routes/_authed/tickets/index'
 import { Route as AuthedTeamsIndexImport } from './routes/_authed/teams/index'
@@ -84,6 +85,12 @@ const AuthedIndexRoute = AuthedIndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedRoute,
+} as any)
+
+const AuthAuthCodeErrorRoute = AuthAuthCodeErrorImport.update({
+  id: '/auth/auth-code-error',
+  path: '/auth/auth-code-error',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const SettingsMembersIndexRoute = SettingsMembersIndexImport.update({
@@ -313,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/token-setup'
       fullPath: '/token-setup'
       preLoaderRoute: typeof TokenSetupImport
+      parentRoute: typeof rootRoute
+    }
+    '/auth/auth-code-error': {
+      id: '/auth/auth-code-error'
+      path: '/auth/auth-code-error'
+      fullPath: '/auth/auth-code-error'
+      preLoaderRoute: typeof AuthAuthCodeErrorImport
       parentRoute: typeof rootRoute
     }
     '/_authed/': {
@@ -699,6 +713,7 @@ export interface FileRoutesByFullPath {
   '': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/token-setup': typeof TokenSetupRoute
+  '/auth/auth-code-error': typeof AuthAuthCodeErrorRoute
   '/': typeof AuthedIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/companies/$id': typeof AuthedCompaniesIdRouteRouteWithChildren
@@ -737,6 +752,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/token-setup': typeof TokenSetupRoute
+  '/auth/auth-code-error': typeof AuthAuthCodeErrorRoute
   '/': typeof AuthedIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/engagements/$sid': typeof AuthedEngagementsSidRoute
@@ -773,6 +789,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/login': typeof LoginRoute
   '/token-setup': typeof TokenSetupRoute
+  '/auth/auth-code-error': typeof AuthAuthCodeErrorRoute
   '/_authed/': typeof AuthedIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/_authed/companies/$id': typeof AuthedCompaniesIdRouteRouteWithChildren
@@ -815,6 +832,7 @@ export interface FileRouteTypes {
     | ''
     | '/login'
     | '/token-setup'
+    | '/auth/auth-code-error'
     | '/'
     | '/settings/'
     | '/companies/$id'
@@ -852,6 +870,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/token-setup'
+    | '/auth/auth-code-error'
     | '/'
     | '/settings'
     | '/engagements/$sid'
@@ -886,6 +905,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/login'
     | '/token-setup'
+    | '/auth/auth-code-error'
     | '/_authed/'
     | '/settings/'
     | '/_authed/companies/$id'
@@ -927,6 +947,7 @@ export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
   LoginRoute: typeof LoginRoute
   TokenSetupRoute: typeof TokenSetupRoute
+  AuthAuthCodeErrorRoute: typeof AuthAuthCodeErrorRoute
   ReviewIdVersionIndexRoute: typeof ReviewIdVersionIndexRoute
 }
 
@@ -935,6 +956,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
   TokenSetupRoute: TokenSetupRoute,
+  AuthAuthCodeErrorRoute: AuthAuthCodeErrorRoute,
   ReviewIdVersionIndexRoute: ReviewIdVersionIndexRoute,
 }
 
@@ -952,6 +974,7 @@ export const routeTree = rootRoute
         "/_authed",
         "/login",
         "/token-setup",
+        "/auth/auth-code-error",
         "/review/$id/$version/"
       ]
     },
@@ -987,6 +1010,9 @@ export const routeTree = rootRoute
     },
     "/token-setup": {
       "filePath": "token-setup.tsx"
+    },
+    "/auth/auth-code-error": {
+      "filePath": "auth/auth-code-error.tsx"
     },
     "/_authed/": {
       "filePath": "_authed/index.tsx",

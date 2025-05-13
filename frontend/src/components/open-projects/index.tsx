@@ -3,6 +3,7 @@ import { Progress } from '@/components/ui/progress';
 import { getProjects } from '@/lib/manage/read';
 import { Box } from 'lucide-react';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { getCompanyProjectsQuery } from '@/lib/manage/api';
 
 type Props = {
 	companyId: number;
@@ -11,16 +12,8 @@ type Props = {
 const OpenProjects = ({ companyId }: Props) => {
 	const {
 		data: { data: projects },
-	} = useSuspenseQuery({
-		queryKey: ['companies', companyId, 'projects'],
-		queryFn: () =>
-			getProjects({
-				data: {
-					conditions: { 'company/id': companyId, 'status/id': [1, 15, 19] },
-					orderBy: { key: 'actualStart', order: 'desc' },
-				},
-			}),
-	});
+	} = useSuspenseQuery(getCompanyProjectsQuery(companyId));
+
 	return (
 		<Card className='flex flex-col'>
 			<CardHeader>

@@ -7,10 +7,9 @@ import { zodValidator } from '@tanstack/zod-adapter';
 import { z } from 'zod';
 import { Suspense } from 'react';
 import { DataTable, dataTableFilterQuerySchema } from '@/components/ui/data-table';
-import { getEngagementsQuery } from '@/lib/supabase/api';
+import { getEngagementsQuery, getEngagementSummaryByPeriodQuery } from '@/lib/supabase/api';
 import TableSkeleton from '@/components/ui/data-table/skeleton';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { getEngagementSummaryByPeriod } from '@/lib/supabase/read';
 
 const coordinatorViewSearchParams = z.object({
 	startDate: z.string().optional(),
@@ -27,13 +26,7 @@ function RouteComponent() {
 
 	const queryFilter = { call_date: filter?.find((f) => f.id === 'created_at')?.value.values };
 
-	const { data: engagements } = useSuspenseQuery({
-		queryKey: ['engagements', 'call_summary_by_period', queryFilter],
-		queryFn: () =>
-			getEngagementSummaryByPeriod({
-				data: queryFilter,
-			}),
-	});
+	const { data: engagements } = useSuspenseQuery(getEngagementSummaryByPeriodQuery(queryFilter));
 
 	const totalCalls = engagements.reduce((acc, engagement) => {
 		return acc + (engagement.total_engagements ?? 0);

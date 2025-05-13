@@ -6,6 +6,7 @@ import {
 	Clock,
 	Flame,
 	Hash,
+	Heading1Icon,
 	SquareKanban,
 	User,
 } from 'lucide-react';
@@ -17,7 +18,8 @@ import { filterFn } from '@/lib/filters';
 import { Link } from '@tanstack/react-router';
 
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { getContactsQuery } from '@/lib/manage/api';
 
 const columnHelper = createColumnHelper<ServiceTicket>();
 
@@ -29,7 +31,6 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 			<DataTableColumnHeader
 				column={column}
 				title='Ticket'
-				setSort={table.setSort}
 			/>
 		),
 		cell: ({ row }) => {
@@ -104,9 +105,11 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 			icon: ALargeSmall,
 			type: 'text',
 			filterKey: 'summary',
+			sortKey: 'summary',
 		},
 	},
 	{
+		id: 'status',
 		accessorKey: 'status',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -137,6 +140,7 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 		},
 	},
 	{
+		id: 'slaStatus',
 		accessorKey: 'slaStatus',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -163,6 +167,7 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 		},
 	},
 	{
+		id: 'contact',
 		accessorKey: 'contact',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -175,31 +180,22 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 			const reference = row.getValue('contact') as ReferenceType;
 
 			return (
-				<Button
-					variant='link'
-					onClick={(e) => {
-						if (e.altKey) {
-							window.open(
-								// @ts-ignore
-								`https://manage.velomethod.com/v4_6_release/services/system_io/router/openrecord.rails?locale=en_US&recordType=ContactFV&companyName=velo&recid=${reference.id}`,
-								'_blank'
-							);
-						} else {
-							// addView({
-							// 	name: reference?.name || 'Unknown',
-							// 	companyId: row.original.company!.id,
-							// 	contactId: reference?.id,
-							// });
-							const searchParams = new URLSearchParams();
-							searchParams.set('companyId', String(row.original.company!.id));
-							searchParams.set('contactId', String(row.original.contact!.id));
-							// redirect(`/?${searchParams.toString()}`);
-						}
-					}}
-					className='flex items-center px-0 hover:bg-transparent'
-				>
-					<span>{reference?.name}</span>
-				</Button>
+				<>
+					{reference?.id ? (
+						<Link
+							to='/contacts/$id'
+							params={{ id: reference.id.toString() }}
+							className={cn(
+								buttonVariants({ variant: 'link' }),
+								'flex items-center px-0 hover:bg-transparent'
+							)}
+						>
+							<span>{reference?.name}</span>
+						</Link>
+					) : (
+						<span>{reference?.name}</span>
+					)}
+				</>
 			);
 		},
 		filterFn: (row, id, value) => {
@@ -209,12 +205,14 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 		},
 		meta: {
 			filterKey: 'contact/name',
+			sortKey: 'contact/name',
 			displayName: 'Contact',
 			icon: User,
-			type: 'text',
+			type: 'multiOption',
 		},
 	},
 	{
+		id: 'board',
 		accessorKey: 'board',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -292,6 +290,7 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 		},
 	},
 	{
+		id: 'priority',
 		accessorKey: 'priority',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -321,12 +320,14 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 		},
 		meta: {
 			filterKey: 'priority/name',
+			sortKey: 'priority/name',
 			displayName: 'Priority',
 			icon: ChartNoAxesColumnIncreasing,
 			type: 'text',
 		},
 	},
 	{
+		id: 'owner',
 		accessorKey: 'owner',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -357,12 +358,14 @@ export const columns: ColumnDef<ServiceTicket>[] = [
 		},
 		meta: {
 			filterKey: 'owner/name',
+			sortKey: 'owner/name',
 			displayName: 'Owner',
 			icon: User,
 			type: 'text',
 		},
 	},
 	{
+		id: '_info',
 		accessorKey: '_info',
 		header: ({ column }) => (
 			<DataTableColumnHeader

@@ -25,7 +25,7 @@ const NewProposalForm = () => {
 				required
 			>
 				<AsyncSelect<ServiceTicket>
-					fetcher={searchServiceTickets}
+					fetcher={(value) => searchServiceTickets({ data: { query: value ?? '' } })}
 					renderOption={(item) => (
 						<div className='flex items-center gap-2'>
 							<div className='flex flex-col'>

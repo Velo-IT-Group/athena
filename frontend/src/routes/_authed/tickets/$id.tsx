@@ -135,7 +135,9 @@ function RouteComponent() {
 
 					{ticket?.hasChildTicket && <Suspense>{/* <ChildTickets ticketId={ticket.id} /> */}</Suspense>}
 
-					<ActivityFeed id={Number(id)} />
+					<Suspense>
+						<ActivityFeed id={Number(id)} />
+					</Suspense>
 				</div>
 			</ScrollArea>
 

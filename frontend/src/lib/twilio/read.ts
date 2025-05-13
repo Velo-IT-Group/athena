@@ -17,20 +17,24 @@ export const getWorkers = createServerFn()
 export const getWorker = createServerFn()
 	.validator((sid: string) => sid)
 	.handler(async ({ data }) => {
-		const res = await fetch(
-			`https://taskrouter.twilio.com/v1/Workspaces/${env.VITE_TWILIO_WORKSPACE_SID}/Workers/${data}`,
-			{
-				headers: {
-					Authorization:
-						`Basic ${env.VITE_TWILIO_API_KEY_SID}:${env.VITE_TWILIO_API_KEY_SECRET}`,
-				},
-			},
+		const client = await createClient();
+		return (await client.taskrouter.v1.workspaces(
+			env.VITE_TWILIO_WORKSPACE_SID!,
+		).workers(data).fetch()).toJSON();
+	});
+
+export const getConference = createServerFn()
+	.validator((sid: string) => sid)
+	.handler(async ({ data }) => {
+		const client = await createClient();
+		return (await client.conferences(data).fetch()).toJSON();
+	});
+
+export const getConferenceParticipants = createServerFn()
+	.validator((sid: string) => sid)
+	.handler(async ({ data }) => {
+		const client = await createClient();
+		return (await client.conferences(data).participants.list()).map((p) =>
+			p.toJSON()
 		);
-		// const client = await createClient();
-
-		// const worker = await client.taskrouter.v1.workspaces(
-		// 	env.VITE_TWILIO_WORKSPACE_SID!,
-		// ).workers(data).fetch();
-
-		return await res.json();
 	});

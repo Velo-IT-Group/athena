@@ -1,16 +1,12 @@
-import { getDocuments } from '@/lib/manage/read';
+import { getTicketDocumentsQuery } from '@/lib/manage/api';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
 
 type Props = {
 	id: number;
 };
 
 const TicketDocuments = ({ id }: Props) => {
-	const { data: documents } = useSuspenseQuery({
-		queryKey: ['tickets', id, 'documents'],
-		queryFn: () => getDocuments('Ticket', id),
-	});
+	const { data: documents } = useSuspenseQuery(getTicketDocumentsQuery(id));
 
 	return (
 		<section>
@@ -19,21 +15,14 @@ const TicketDocuments = ({ id }: Props) => {
 			</div>
 
 			{documents.map((document) => (
-				<Link
+				<a
 					key={document.id}
 					href={document.fileName ?? '#'}
+					target='_blank'
 				>
 					{document.title}
-				</Link>
+				</a>
 			))}
-
-			{/* <Suspense fallback={<Skeleton className='w-full h-9' />}>
-                    <ConfigurationsList
-                        id={ticket.id}
-                        type='combobox'
-                        defaultValue={configurations}
-                    />
-                </Suspense> */}
 		</section>
 	);
 };

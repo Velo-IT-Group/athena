@@ -7,6 +7,8 @@ import { updateProduct } from '@/lib/supabase/update';
 
 import { getSectionProducts } from '@/lib/supabase/read';
 import { updateArrayQueryCache } from '@/lib/utils';
+import { getProposalTotalsQuery, getSectionProductsQuery, getSectionsQuery } from '@/lib/supabase/api';
+import { useCallback } from 'react';
 
 type Props = {
 	initialData: NestedProduct[];
@@ -15,26 +17,62 @@ type Props = {
 };
 
 export const useProduct = ({ initialData, params, sectionId }: Props) => {
-	const queryClient = useQueryClient();
-	const productQueryKey = ['proposals', params.id, params.version, 'sections', sectionId, 'products'];
-
-	const { data } = useQuery({
-		queryKey: productQueryKey,
-		queryFn: async () =>
-			getSectionProducts({ data: { id: sectionId, version: params.version } }) as Promise<NestedProduct[]>,
-		initialData,
+	const query = getSectionProductsQuery({
+		proposalId: params.id,
+		versionId: params.version,
+		sectionId,
 	});
+	const { queryKey } = query;
+	const queryClient = useQueryClient();
+
+	const { data } = useQuery(query);
+
+	const updateProposalTotals = useCallback((newProduct: NestedProduct) => {
+		const previousTotals = queryClient.getQueryData<ProposalTotals>(
+			getProposalTotalsQuery(params.id, params.version).queryKey
+		);
+		const proposalSections = queryClient.getQueryData<NestedSection[]>(
+			getSectionsQuery(params.id, params.version).queryKey
+		);
+
+		const products = proposalSections?.flatMap((s) => s.products ?? []);
+		const allProducts = [...(products?.filter((p) => p.unique_id !== newProduct.unique_id) ?? []), newProduct];
+
+		const recurringProducts = allProducts?.filter((p) => p.recurring_flag && p.recurring_bill_cycle === 2);
+		const nonRecurringProducts = allProducts?.filter((p) => !p.recurring_flag);
+
+		const recurringTotal = recurringProducts?.reduce((acc, p) => acc + (p.extended_price ?? 0), 0);
+		const nonRecurringTotal = nonRecurringProducts?.reduce((acc, p) => acc + (p.extended_price ?? 0), 0);
+		const recurringCost = recurringProducts?.reduce((acc, p) => acc + (p.extended_cost ?? 0), 0);
+		const nonRecurringCost = nonRecurringProducts?.reduce((acc, p) => acc + (p.extended_cost ?? 0), 0);
+		if (!previousTotals) return;
+
+		const newTotals: ProposalTotals = {
+			...previousTotals,
+			non_recurring_product_total: nonRecurringTotal ?? 0,
+			non_recurring_product_cost: nonRecurringCost ?? 0,
+			recurring_total: recurringTotal ?? 0,
+			recurring_cost: recurringCost ?? 0,
+			total_price:
+				(previousTotals?.labor_cost ? previousTotals?.labor_cost ?? 0 : 0) +
+				(nonRecurringTotal ?? 0) +
+				(recurringTotal ?? 0),
+		};
+
+		queryClient.setQueryData(getProposalTotalsQuery(params.id, params.version).queryKey, newTotals);
+	}, []);
 
 	const { mutate: handleProductUpdate } = useMutation({
 		mutationFn: async ({ id, product }: { id: string; product: ProductUpdate }) =>
 			updateProduct({ data: { id, product } }),
 		onMutate: async ({ id, product }) => {
-			const previousTodo = queryClient.getQueryData<NestedProduct[]>(productQueryKey) ?? [];
+			const previousTodo = queryClient.getQueryData<NestedProduct[]>(queryKey) ?? [];
+
 			const updatedProduct = previousTodo?.find((s) => s.unique_id === id);
 
 			// @ts-expect-error types are seperate
 			const newProduct: Product = {
-				// ...updatedProduct,
+				...updatedProduct,
 				...product,
 				extended_price:
 					(product.quantity ?? updatedProduct?.quantity ?? 0) * (product.price ?? updatedProduct?.price ?? 0),
@@ -46,18 +84,18 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 					(product.quantity ?? updatedProduct?.quantity ?? 0) * (product.cost ?? updatedProduct?.cost ?? 0),
 			};
 
-			console.log(newProduct);
+			updateProposalTotals(newProduct);
 
-			return updateArrayQueryCache(queryClient, productQueryKey, newProduct, (p) => p.unique_id === id);
+			return updateArrayQueryCache(queryClient, queryKey, newProduct, (p) => p.unique_id === id);
 		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newTodo, context) => {
-			queryClient.setQueryData(productQueryKey, context?.previousItems);
+			queryClient.setQueryData(queryKey, context?.previousItems);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: productQueryKey,
+				queryKey,
 			});
 		},
 	});
@@ -66,18 +104,18 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		mutationFn: async ({ product, bundledItems }: { product: ProductInsert; bundledItems?: ProductInsert[] }) =>
 			createProduct({ data: { product, bundledItems } }),
 		onMutate: async ({ product, bundledItems }) =>
-			updateArrayQueryCache(queryClient, productQueryKey, {
+			updateArrayQueryCache(queryClient, queryKey, {
 				...product,
 				products: bundledItems,
 			}),
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newProduct, context) => {
-			queryClient.setQueryData([productQueryKey], context?.previousItems);
+			queryClient.setQueryData([queryKey], context?.previousItems);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: productQueryKey,
+				queryKey,
 			});
 		},
 	});
@@ -88,16 +126,16 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 			// Cancel any outgoing refetches
 			// (so they don't overwrite our optimistic update)
 			await queryClient.cancelQueries({
-				queryKey: productQueryKey,
+				queryKey,
 			});
 
 			// Snapshot the previous value
-			const previousItems = queryClient.getQueryData<NestedProduct[]>(productQueryKey) ?? [];
+			const previousItems = queryClient.getQueryData<NestedProduct[]>(queryKey) ?? [];
 
 			const newItems: NestedProduct[] = [...previousItems.filter((p) => p.unique_id !== id)];
 
 			// Optimistically update to the new value
-			queryClient.setQueryData(productQueryKey, newItems);
+			queryClient.setQueryData(queryKey, newItems);
 
 			// Return a context with the previous and new items
 			return { previousItems, newItems };
@@ -105,11 +143,11 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newProduct, context) => {
-			queryClient.setQueryData(productQueryKey, context?.previousItems);
+			queryClient.setQueryData(queryKey, context?.previousItems);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
-				queryKey: productQueryKey,
+				queryKey,
 			});
 		},
 	});

@@ -2,18 +2,9 @@ import { CommandMenu } from '@/components/command-menu';
 import CompanyEngagementTab from '@/components/engagement-tabs/company-enagagement-tab';
 import ContactEngagementTab from '@/components/engagement-tabs/contact-engagement-tab';
 import EngagementTab from '@/components/engagement-tabs/engagment-tab';
-import { InfiniteList } from '@/components/infinite-list';
-import { RealtimeChat } from '@/components/realtime-chat';
 import Timer from '@/components/timer';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceEngagement from '@/components/engagement-tabs/voice-engagement';
@@ -21,22 +12,18 @@ import { useWorker } from '@/providers/worker-provider';
 import { getDateOffset } from '@/utils/date';
 import { createFileRoute } from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
-import { formatDate } from 'date-fns';
-import {
-	ArrowLeft,
-	ArrowRightToLine,
-	ListStart,
-	Loader2,
-	MessageSquareShare,
-	MoreHorizontal,
-	Phone,
-} from 'lucide-react';
-import { Suspense, useMemo } from 'react';
+import { ChevronsUpDown, Loader2, MessageSquareShare } from 'lucide-react';
+import { Suspense, useMemo, useState } from 'react';
 import { z } from 'zod';
 import ChatEngagement from '@/components/engagement-tabs/chat-engagement';
 import type { User } from '@supabase/supabase-js';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Tiptap from '@/components/tip-tap';
+import { AsyncSelect } from '@/components/ui/async-select';
+import { searchContacts, searchServiceTickets } from '@/lib/manage/read';
+import type { Contact, ServiceTicket } from '@/types/manage';
+import HistoryEngagmentTab from '@/components/engagement-tabs/history-engagment-tab';
+import { cn, parsePhoneNumber } from '@/lib/utils';
 
 const schema = z.object({
 	edit: z.boolean().optional(),
@@ -51,7 +38,7 @@ const tabs = ['Company', 'Contact', 'Engagement', 'History'];
 
 function RouteComponent() {
 	const { sid } = Route.useParams();
-	const { accessToken, user } = Route.useRouteContext();
+	const { user } = Route.useRouteContext();
 
 	const { engagements, handleComplete, handleWrapup } = useWorker();
 	const engagement = engagements.find((engagement) => engagement.task?.sid === sid);
@@ -69,8 +56,9 @@ function RouteComponent() {
 	}
 
 	const { task, reservation } = engagement;
+	const [selectedTickets, setSelectedTicket] = useState<number[]>(task.attributes.ticketIds ?? []);
 
-	const parsedAttributes = useMemo(() => task?.attributes, [task?.attributes]);
+	let parsedAttributes = task.attributes;
 
 	const offsetTimestamp = useMemo(
 		() => getDateOffset(task?.dateUpdated ? new Date(task?.dateUpdated) : new Date()),
@@ -81,7 +69,7 @@ function RouteComponent() {
 
 	return (
 		<main className='grid grid-cols-[4fr_5fr]'>
-			<div className='border-r flex flex-col h-[calc(100svh-var(--navbar-height))]'>
+			<div className='border-r h-[calc(100svh-var(--navbar-height))]'>
 				<header className='flex items-center justify-between p-3 border-b'>
 					<Button
 						variant='ghost'
@@ -116,7 +104,9 @@ function RouteComponent() {
 
 				{reservation.status === 'wrapping' ? (
 					<div className='p-6 space-y-6'>
-						<h2 className='text-xl font-semibold'>Wrapup Notes</h2>
+						<h2 className='text-xl font-semibold'>
+							Wrapup Notes {parsePhoneNumber(task.attributes.from).formattedNumber}
+						</h2>
 
 						<div className='w-full border rounded-lg'>
 							<Tiptap
@@ -130,7 +120,7 @@ function RouteComponent() {
 
 						<Button
 							className='w-full'
-							onClick={() => handleComplete?.mutate(reservation)}
+							onClick={() => handleComplete?.mutate(engagement)}
 						>
 							Complete
 						</Button>
@@ -140,7 +130,7 @@ function RouteComponent() {
 						{taskChannel === 'voice' && (
 							<VoiceEngagement
 								engagement={engagement}
-								accessToken={accessToken}
+								accessToken={''}
 							/>
 						)}
 
@@ -148,7 +138,6 @@ function RouteComponent() {
 							<ChatEngagement
 								engagement={engagement}
 								user={user as User}
-								accessToken={accessToken}
 							/>
 						)}
 					</>
@@ -158,7 +147,7 @@ function RouteComponent() {
 			</div>
 
 			<ScrollArea className='h-[calc(100svh-var(--navbar-height))]'>
-				<div className='container mx-auto p-6 flex flex-col items-center w-full '>
+				<div className='container mx-auto p-6 flex flex-col items-center w-full'>
 					<Tabs
 						defaultValue={
 							parsedAttributes.contact ? 'Contact' : parsedAttributes.company ? 'Company' : 'Engagement'
@@ -229,7 +218,47 @@ function RouteComponent() {
 									</div>
 								}
 							>
-								<ContactEngagementTab id={parsedAttributes?.contactId ?? 32569} />
+								{parsedAttributes?.contactId && typeof parsedAttributes?.contactId === 'number' ? (
+									<>
+										<ContactEngagementTab id={parsedAttributes.contactId} />
+									</>
+								) : (
+									<div>
+										<AsyncSelect<Contact>
+											label='Contact'
+											fetcher={searchContacts}
+											getDisplayValue={(item) => (
+												<div>
+													{item.firstName} {item.lastName}
+												</div>
+											)}
+											getOptionValue={(item) => item.id.toString()}
+											renderOption={(item) => (
+												<div>
+													{item.firstName} {item.lastName}
+												</div>
+											)}
+											value={parsedAttributes?.contactId}
+											onChange={async (value) => {
+												if (!value) return;
+												parsedAttributes = {
+													...parsedAttributes,
+													contactId: value?.id,
+													companyId: value?.company?.id,
+													name: value?.firstName + ' ' + value?.lastName,
+												};
+												await task.setAttributes({
+													...parsedAttributes,
+													contactId: value?.id,
+													companyId: value?.company?.id,
+													name: value?.firstName + ' ' + value?.lastName,
+												});
+											}}
+										>
+											<Button variant='outline'>Select Contact</Button>
+										</AsyncSelect>
+									</div>
+								)}
 							</Suspense>
 						</TabsContent>
 
@@ -237,70 +266,84 @@ function RouteComponent() {
 							value='Engagement'
 							asChild
 						>
-							<EngagementTab />
+							<Suspense fallback={<div>Loading...</div>}>
+								{selectedTickets.length > 0 ? (
+									<EngagementTab
+										ticketIds={selectedTickets}
+										handleTicketChange={async (value) => {
+											setSelectedTicket(value);
+											await task.setAttributes({
+												...parsedAttributes,
+												ticketIds: value,
+											});
+										}}
+									/>
+								) : (
+									<AsyncSelect<ServiceTicket>
+										fetcher={searchServiceTickets}
+										renderOption={(item) => (
+											<div className='flex items-center gap-2'>
+												<div className='flex flex-col'>
+													<div className='font-medium'>{item.summary}</div>
+													{/* <div className='text-xs text-muted-foreground'>
+									{item.identifier}
+									{item.productClass === 'Bundle' && (
+										<Badge
+											variant='outline'
+											className='ml-1.5'
+										>
+											Bundle
+										</Badge>
+									)}
+								</div> */}
+												</div>
+											</div>
+										)}
+										getOptionValue={(item) => item.id.toString()}
+										getDisplayValue={(item) => (
+											<div className='flex items-center gap-2'>
+												<div className='flex flex-col'>
+													<div className='font-medium'>{item.summary}</div>
+													<div className='text-xs text-muted-foreground'>{item.id}</div>
+												</div>
+											</div>
+										)}
+										notFound={<div className='py-6 text-center text-sm'>No tickets found</div>}
+										label='Tickets'
+										placeholder='Search tickets...'
+										value={''}
+										onChange={async (value) => {
+											if (!value) {
+												return;
+											}
+											setSelectedTicket((prev) => [...prev, value.id]);
+											await task.setAttributes({
+												...parsedAttributes,
+												ticketIds: [value.id],
+											});
+										}}
+										className='w-[var(--radix-popover-trigger-width)]'
+									>
+										<Button
+											variant='outline'
+											role='combobox'
+											className={cn(
+												'justify-between',
+												!selectedTickets && 'text-muted-foreground'
+											)}
+										>
+											{selectedTickets ? `#` : 'Select a ticket...'}
+											<ChevronsUpDown className='opacity-50' />
+										</Button>
+									</AsyncSelect>
+								)}
+							</Suspense>
 						</TabsContent>
 
-						<TabsContent
-							value='History'
-							className='space-y-3'
-						>
-							<h2 className='text-2xl font-semibold'>History</h2>
-							<InfiniteList
-								tableName='engagements'
-								renderItem={(item) => (
-									<li
-										key={item.id}
-										className='relative flex gap-3 group mt-3 first:mt-0'
-									>
-										<div className='absolute top-0 -bottom-6 left-0 flex w-6 justify-center'>
-											<div className='w-[1px] group-last:hidden bg-muted-foreground' />
-										</div>
-
-										<div className='relative flex size-6 flex-none items-center justify-center bg-background'>
-											<div className='size-1.5 rounded-full bg-muted-foreground'>
-												{/* {item.contact?.id} */}
-											</div>
-										</div>
-
-										<Card className='w-full'>
-											<CardContent className='flex items-start gap-6'>
-												<time
-													dateTime={item.date}
-													className='flex-none px-0.5 text-xs text-muted-foreground'
-												>
-													{item.date && formatDate(new Date(item.date), 'hh:mm:ss b')}
-												</time>
-
-												<div>
-													<h3 className='font-semibold'>Agent Outbound</h3>
-													<p>Channel Type: sms</p>
-													<p>Agent: Ana Agent</p>
-												</div>
-											</CardContent>
-										</Card>
-										<p className='flex-auto py-0.5 text-xs text-muted-foreground leading-5'></p>
-										{/* <span className='text-foreground font-medium'>{user}</span>
-
-										{isVoicemail ? (
-											<span> left a voicemail</span>
-										) : (
-											<span>
-												{' '}
-												talked to <span className='text-foreground font-medium'>
-													{agent}
-												</span>{' '}
-												for {minutes}m {seconds}s
-											</span>
-										)}
-									</p>
-									<time
-										dateTime={conversation.date}
-										className='flex-none px-0.5 text-xs text-muted-foreground'
-									>
-										{conversation.date && relativeDate(new Date(conversation.date))} */}
-										{/* </time> */}
-									</li>
-								)}
+						<TabsContent value='History'>
+							<HistoryEngagmentTab
+								contactId={parsedAttributes.contactId}
+								companyId={parsedAttributes.companyId}
 							/>
 						</TabsContent>
 					</Tabs>

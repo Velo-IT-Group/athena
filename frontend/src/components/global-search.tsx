@@ -9,6 +9,7 @@ import { search } from '@/lib/manage/read';
 import { useDebouncer } from '@tanstack/react-pacer/debouncer';
 import { Separator } from '@/components/ui/separator';
 import { Link } from '@tanstack/react-router';
+import { getGlobalSearchQuery } from '@/lib/manage/api';
 
 const GlobalSearch = () => {
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -49,10 +50,7 @@ const GlobalSearch = () => {
 		return () => document.removeEventListener('keydown', down);
 	}, []);
 
-	const { data, isLoading } = useQuery({
-		queryKey: ['global-search', debouncedValue],
-		queryFn: async () => await search({ data: { value: debouncedValue, pageParam: 1 } }),
-	});
+	const { data, isLoading } = useQuery(getGlobalSearchQuery(debouncedValue));
 
 	return (
 		<Popover

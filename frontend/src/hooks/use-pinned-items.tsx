@@ -1,20 +1,13 @@
-import { createPinnedItem, createVersion } from '@/lib/supabase/create';
+import { getPinnedItemsQuery } from '@/lib/supabase/api';
+import { createPinnedItem } from '@/lib/supabase/create';
 import { deletePinnedItem } from '@/lib/supabase/delete';
-import { getPinnedItems } from '@/lib/supabase/read';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React from 'react';
 
-type Props = {};
-
-export const usePinnedItems = (props: Props) => {
+export const usePinnedItems = () => {
 	const queryClient = useQueryClient();
 	const queryKey = ['pinned_items'];
 
-	const { data } = useQuery({
-		queryKey,
-		queryFn: () => getPinnedItems() as Promise<PinnedItem[]>,
-		staleTime: Infinity,
-	});
+	const { data } = useQuery(getPinnedItemsQuery());
 
 	const handlePinnedItemCreation = useMutation({
 		mutationKey: ['pinned_items', 'create'],
@@ -72,7 +65,7 @@ export const usePinnedItems = (props: Props) => {
 	});
 
 	return {
-		pinnedItems: data,
+		data,
 		handlePinnedItemCreation,
 		handlePinnedItemDeletion,
 	};

@@ -12,14 +12,38 @@ import { createClient } from "@/lib/supabase/server";
 import type { PatchOperation } from "@/types";
 import { createServerFn } from "@tanstack/react-start";
 import { baseHeaders } from "@/utils/manage/params";
-import type { CompanyNote } from "@/types/manage";
+import { getCookie } from "@tanstack/start/server";
+import { jwtVerify } from "jose";
+import type { WebToken } from "@/types/crypto";
 
 export const updateTicket = createServerFn().validator((
 	{ id, operation }: { id: number; operation: PatchOperation[] },
 ) => ({ id, operation })).handler(async ({ data: { id, operation } }) => {
 	const headers = new AxiosHeaders(baseHeaders);
-	// headers.set("clientId", env.VITE_CONNECT_WISE_CLIENT_ID!);
-	// headers.set("Content-Type", "application/json");
+	const auth = getCookie("connect_wise:auth");
+
+	if (!auth) throw new Error("Not authroized");
+
+	const token = await jwtVerify(
+		auth,
+		new TextEncoder().encode(
+			env.VITE_SECRET_KEY,
+		),
+	);
+
+	const { connect_wise } = token.payload as WebToken;
+
+	headers.set("clientId", env.VITE_CONNECT_WISE_CLIENT_ID!);
+	headers.set(
+		"Authorization",
+		"Basic " +
+			btoa(
+				"velo+" +
+					connect_wise.public_key +
+					":" +
+					connect_wise.secret_key,
+			),
+	);
 
 	const config: AxiosRequestConfig = {
 		headers,

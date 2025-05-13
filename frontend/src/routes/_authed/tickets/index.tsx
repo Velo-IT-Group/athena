@@ -2,15 +2,16 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Suspense } from 'react';
 import TableSkeleton from '@/components/ui/data-table/skeleton';
 import { columns } from '@/components/table-columns/ticket';
-import { DataTable, dataTableFilterQuerySchema } from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/data-table';
 import { zodValidator } from '@tanstack/zod-adapter';
-import { z } from 'zod';
 import { getTicketsQuery } from '@/lib/manage/api';
 import { psaConfig } from '@/utils/manage/params';
+import { filterSchema } from '@/lib/utils';
+import type { ServiceTicket } from '@/types/manage';
 
 export const Route = createFileRoute('/_authed/tickets/')({
 	component: RouteComponent,
-	validateSearch: zodValidator(z.object({ filter: dataTableFilterQuerySchema.optional() })),
+	validateSearch: zodValidator(filterSchema),
 });
 
 function RouteComponent() {
@@ -21,18 +22,6 @@ function RouteComponent() {
 		parentTicketId: null,
 		'board/id': [22, 26, 30, 31],
 	};
-
-	// if (params.search && isNaN(Number(params.search))) {
-	// 	const summary = {
-	// 		value: `'${params.search}'`,
-	// 		comparison: params.search.includes('*') ? 'like' : 'contains',
-	// 	};
-
-	// 	conditions = Object.assign(conditions, { summary });
-	// } else if (params.search && !isNaN(Number(params.search))) {
-	// 	const numSearch = Number(params.search);
-	// 	conditions = Object.assign(conditions, { id: numSearch });
-	// }
 
 	params?.filter?.forEach((f) => {
 		const column = columns.find((c) => c.id === f.id);
@@ -54,7 +43,7 @@ function RouteComponent() {
 		// }
 	});
 
-	console.log(conditions);
+	const columnSort = columns.find((c) => c.id === params.sort?.field);
 
 	return (
 		<main className='p-3 space-y-1.5'>
@@ -65,7 +54,15 @@ function RouteComponent() {
 			<Suspense fallback={<TableSkeleton columns={columns.length} />}>
 				<DataTable
 					columns={columns}
-					options={getTicketsQuery({ conditions })}
+					options={getTicketsQuery({
+						conditions,
+						page: params.pagination?.page,
+						pageSize: params.pagination?.pageSize,
+						orderBy: {
+							key: (columnSort?.meta?.sortKey as keyof ServiceTicket) ?? 'slaStatus',
+							order: params.sort?.direction,
+						},
+					})}
 				/>
 			</Suspense>
 		</main>

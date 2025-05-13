@@ -10,10 +10,15 @@ import {
 	CommandList,
 	CommandSeparator,
 } from '@/components/ui/command';
-import { useQuery, type DefinedInitialDataOptions, type UndefinedInitialDataOptions } from '@tanstack/react-query';
+import {
+	useQuery,
+	type DefinedInitialDataOptions,
+	type UndefinedInitialDataOptions,
+	type UseSuspenseQueryOptions,
+} from '@tanstack/react-query';
 
 export type DataFetcher = {
-	options: DefinedInitialDataOptions | UndefinedInitialDataOptions;
+	options: UseSuspenseQueryOptions;
 	itemView: (item: any) => React.ReactNode;
 	// onSelect?: ((value: string) => void) | undefined;
 };

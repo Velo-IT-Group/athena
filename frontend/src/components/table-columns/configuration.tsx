@@ -1,11 +1,11 @@
 'use client';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { Configuration, ReferenceType } from '@/types/manage';
-import { DataTableColumnHeader } from '../ui/data-table/column-header';
+import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import { Link } from '@tanstack/react-router';
 import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { buttonVariants } from '../ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 export const columns: ColumnDef<Configuration>[] = [
 	{
@@ -49,9 +49,6 @@ export const columns: ColumnDef<Configuration>[] = [
 
 			return value.includes(String(referenceRow.id));
 		},
-		meta: {
-			filterKey: 'status/id',
-		},
 	},
 	{
 		accessorKey: 'company',
@@ -74,9 +71,6 @@ export const columns: ColumnDef<Configuration>[] = [
 
 			return value.includes(String(referenceRow.id));
 		},
-		meta: {
-			filterKey: 'company/id',
-		},
 	},
 	{
 		accessorKey: 'type',
@@ -98,9 +92,6 @@ export const columns: ColumnDef<Configuration>[] = [
 			if (!referenceRow) return false;
 
 			return value.includes(String(referenceRow.id));
-		},
-		meta: {
-			filterKey: 'type/id',
 		},
 	},
 	{
@@ -152,9 +143,6 @@ export const columns: ColumnDef<Configuration>[] = [
 			if (!referenceRow) return false;
 
 			return value.includes(String(referenceRow.id));
-		},
-		meta: {
-			filterKey: 'contact/id',
 		},
 	},
 	{

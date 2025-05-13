@@ -3,9 +3,9 @@ import { CalendarDays, Phone, PhoneIncoming, PhoneMissed, PhoneOutgoing, User, V
 import type { ColumnDef } from '@tanstack/react-table';
 import { Direction, type Event } from '@/types/twilio';
 import { formatRelative } from 'date-fns';
-import { DataTableColumnHeader } from '../ui/data-table/column-header';
+import { DataTableColumnHeader } from @/components/data-table/column-header';
 import type { DateRange } from 'react-day-picker';
-import { Button } from '../ui/button';
+import { Button } from @/components/button';
 import { Link } from '@tanstack/react-router';
 import { workers } from '@/utils/data';
 import { filterFn } from '@/lib/filters';

@@ -1,4 +1,4 @@
-import { Ellipsis, GripVertical, CopyPlus, Trash2 } from 'lucide-react';
+import { Ellipsis, GripVertical, CopyPlus, Trash2, EyeOff, Eye } from 'lucide-react';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -9,21 +9,30 @@ import {
 import { Button } from '@/components/ui/button';
 import { EditableArea, EditableInput, EditablePreview, Editable } from '@/components/ui/editable';
 import { SortableItem, SortableItemHandle } from '@/components/ui/sortable';
+import { cn } from '@/lib/utils';
 
 type Props = {
 	task: Task;
+	parentVisible?: boolean;
 	handleDeletion: () => void;
 	handleDuplication: () => void;
 	handleUpdate: (task: TaskUpdate) => void;
 };
 
-const TaskListItem = ({ task, handleUpdate, handleDeletion, handleDuplication }: Props) => (
+const TaskListItem = ({ task, parentVisible, handleUpdate, handleDeletion, handleDuplication }: Props) => (
 	<SortableItem
 		key={task.id}
 		value={task.id}
 		asChild
 	>
-		<div className='flex items-center flex-1 gap-2 flex-shrink-0 flex-grow space-y-0 hover:bg-muted/50 border-b last:border-b-0 group'>
+		<div
+			className={cn(
+				'flex items-center flex-1 gap-2 flex-shrink-0 flex-grow space-y-0 hover:bg-muted/50 group border border-transparent border-b-border last:border-b-transparent',
+				!task.visible &&
+					'group-data-[visible=true]/ticket:border group-data-[visible=true]/ticket:border-primary group-data-[visible=true]/ticket:bg-muted/50 group-data-[visible=true]/ticket:border-dashed group-data-[visible=true]/ticket:rounded-lg '
+			)}
+			data-visible={parentVisible ? task.visible : false}
+		>
 			<SortableItemHandle asChild>
 				<Button
 					variant='ghost'
@@ -76,6 +85,18 @@ const TaskListItem = ({ task, handleUpdate, handleDeletion, handleDuplication }:
 						<DropdownMenuItem onClick={handleDeletion}>
 							<Trash2 className='text-red-600 mr-1.5' />
 							<span>Delete task</span>
+						</DropdownMenuItem>
+
+						<DropdownMenuItem
+							onClick={() => handleUpdate({ visible: !task.visible })}
+							disabled={!parentVisible}
+						>
+							{!!task.visible ? (
+								<EyeOff className='text-muted-foreground mr-1.5' />
+							) : (
+								<Eye className='text-muted-foreground mr-1.5' />
+							)}
+							<span>{!!task.visible ? 'Hide task' : 'Show task'}</span>
 						</DropdownMenuItem>
 
 						<DropdownMenuItem onClick={handleDuplication}>

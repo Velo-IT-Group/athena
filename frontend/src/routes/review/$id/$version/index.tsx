@@ -1,6 +1,7 @@
 import LabeledInput from '@/components/labeled-input';
 import Navbar from '@/components/nav-bar';
 import ProductCard from '@/components/product-card';
+import Tiptap from '@/components/tip-tap';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,30 +15,49 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import useProposal from '@/hooks/use-proposal';
-import { getPhases, getProducts, getProposal, getProposalSettings, getSections, getVersion } from '@/lib/supabase/read';
+import { getPhases, getProposal, getProposalSettings, getProposalTotals, getSections } from '@/lib/supabase/read';
 import { updateProposal } from '@/lib/supabase/update';
 import { calculateTotals } from '@/utils/helpers';
 import { getCurrencyString } from '@/utils/money';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { useSuspenseQueries } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
 import { ClockIcon } from 'lucide-react';
 import { Fragment } from 'react/jsx-runtime';
 
 export const Route = createFileRoute('/review/$id/$version/')({
 	component: RouteComponent,
-	loader: async ({ params }) =>
-		await Promise.all([
-			getProposal({ data: params.id }),
-			getProducts({ data: params.version }),
-			getSections({ data: params.version }),
-			getPhases({ data: params.version }),
-			getVersion(params.version),
-			getProposalSettings({ data: { id: params.id, version: params.version } }),
-		]),
 });
 
 function RouteComponent() {
 	const { id, version: versionParam } = Route.useParams();
-	const [initialProposal, products, sections, phases, version, settings] = Route.useLoaderData();
+
+	const [{ data: initialProposal }, { data: sections }, { data: totals }, { data: settings }, { data: phases }] =
+		useSuspenseQueries({
+			queries: [
+				{
+					queryKey: ['proposals', id, versionParam],
+					queryFn: () => getProposal({ data: id }),
+				},
+				{
+					queryKey: ['proposals', id, versionParam, 'sections'],
+					queryFn: () => getSections({ data: { proposalId: id, versionId: versionParam } }),
+				},
+				{
+					queryKey: ['proposals', id, versionParam, 'totals'],
+					queryFn: () => getProposalTotals({ data: { id, version: versionParam } }),
+				},
+				{
+					queryKey: ['proposals', id, versionParam, 'settings'],
+					queryFn: () => getProposalSettings({ data: { id, version: versionParam } }),
+				},
+				{
+					queryKey: ['phases', id, versionParam],
+					queryFn: () =>
+						getPhases({ data: { proposalId: id, versionId: versionParam } }) as Promise<NestedPhase[]>,
+				},
+			],
+		});
+
 	const { data: proposal, handleProposalUpdate } = useProposal({
 		id,
 		version: versionParam,
@@ -47,11 +67,11 @@ function RouteComponent() {
 
 	const today = new Date(); // Get today's date
 
-	const { recurringTotal, laborTotal, totalPrice } = calculateTotals(
-		(sections as NestedSection[]).flatMap((s) => s.products).filter(Boolean) ?? [],
-		phases ?? [],
-		proposal.labor_rate
-	);
+	// const { recurringTotal, laborTotal, totalPrice } = calculateTotals(
+	// 	(sections as NestedSection[]).flatMap((s) => s.products).filter(Boolean) as NestedProduct[],
+	// 	phases ?? [],
+	// 	proposal.labor_rate
+	// );
 
 	const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 	const dateToCompareWithoutTime = new Date(
@@ -82,22 +102,6 @@ function RouteComponent() {
 
 	return (
 		<div className='relative bg-secondary/25 dark:bg-background flex-1 min-h-screen'>
-			{todayWithoutTime > dateToCompareWithoutTime && (
-				<div className='absolute p-4 z-50 grid place-items-center bg-black/25 h-screen w-screen backdrop-blur-md'>
-					<div className='flex flex-col items-center gap-2 justify-center bg-card py-16 px-8 rounded-md text-center'>
-						<div className='bg-yellow-100 p-1 rounded-full'>
-							<ClockIcon className='w-12 h-12 text-yellow-400' />
-						</div>
-						<h1 className='text-2xl font-semibold'>The proposal has expired.</h1>
-						<p className='text-muted-foreground'>
-							This proposal has expired.
-							<br />
-							Please reach out to your contact for assistance.
-						</p>
-					</div>
-				</div>
-			)}
-
 			<div className='absolute p-4 z-50 grid place-items-center bg-black/25 h-screen w-screen backdrop-blur-md sm:hidden'>
 				<div className='bg-card p-4 rounded-md text-center'>
 					<h1 className='text-lg font-semibold'>Please use computer browser</h1>
@@ -106,18 +110,6 @@ function RouteComponent() {
 			</div>
 
 			<Navbar
-				// breadcrumbs={[
-				// 	{
-				// 		title: proposal.name,
-				// 		href: `/review/${proposal.id}/${version.id}`,
-				// 		disabled: true,
-				// 	},
-				// 	{
-				// 		title: `Version ${proposal.versions?.length ?? 1}`,
-				// 		href: `/review/${proposal.id}/${version.id}`,
-				// 		disabled: true,
-				// 	},
-				// ]}
 				hideToggle
 				className='bg-background'
 			>
@@ -216,10 +208,12 @@ function RouteComponent() {
 									<h1 className='text-lg font-semibold'>Ship To</h1>
 
 									<div>
-										{/* <div className='font-medium'>{ticket?.contactName}</div>
+										<div className='font-medium'>
+											{(proposal?.contact as Record<string, string>)?.name}
+										</div>
 										<div className='text-muted-foreground text-sm'>
-											{ticket?.contactEmailAddress}
-										</div> */}
+											{(proposal?.contact as Record<string, string>)?.name}
+										</div>
 									</div>
 								</div>
 
@@ -228,12 +222,8 @@ function RouteComponent() {
 
 									<div>
 										<div className='font-medium'>
-											{
-												// @ts-ignore
-												proposal?.created_by?.first_name
-											}{' '}
-											{/* @ts-ignore */}
-											{proposal?.created_by?.last_name}
+											{(proposal?.created_by as unknown as Record<string, string>)?.first_name}{' '}
+											{(proposal?.created_by as unknown as Record<string, string>)?.last_name}
 										</div>
 									</div>
 								</div>
@@ -312,7 +302,7 @@ function RouteComponent() {
 													/mo
 												</p>
 												<p className='text-sm text-muted-foreground text-right col-span-2'>
-													{getCurrencyString(laborTotal ?? 1)}
+													{getCurrencyString(totals.labor_cost ?? 0)}
 												</p>
 											</div>
 										</div>
@@ -324,12 +314,14 @@ function RouteComponent() {
 											<div className='grid gap-2 justify-items-end grid-cols-3 col-span-3'>
 												<p className='text-sm text-muted-foreground text-right'>
 													<span className='font-medium'>
-														{getCurrencyString(recurringTotal)}
+														{getCurrencyString(totals.recurring_total ?? 0)}
 														/mo
 													</span>
 												</p>
 												<p className='text-sm text-muted-foreground text-right col-span-2'>
-													<span className='font-medium'>{getCurrencyString(totalPrice)}</span>
+													<span className='font-medium'>
+														{getCurrencyString(totals.total_price ?? 0)}
+													</span>
 												</p>
 											</div>
 										</div>
@@ -348,11 +340,10 @@ function RouteComponent() {
 						{settings?.description && (
 							<>
 								<h2 className='text-lg font-semibold'>Summary</h2>
-								<div
-									className='text-sm pr-4 [&>p]:my-5 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0'
-									dangerouslySetInnerHTML={{
-										__html: settings?.description ?? '',
-									}}
+								<Tiptap
+									editable={false}
+									content={settings?.description}
+									className='p-0'
 								/>
 							</>
 						)}
@@ -362,9 +353,10 @@ function RouteComponent() {
 						<Card>
 							<CardContent className='p-4'>
 								<div className='space-y-4'>
-									{phases?.map((phase) => (
-										<Fragment key={phase.id}>
-											{!phase.description.includes('Backoffice Coordination') && (
+									{phases
+										?.sort((a, b) => a.order - b.order)
+										.map((phase) => (
+											<Fragment key={phase.id}>
 												<div
 													className='space-y-4'
 													key={phase.id}
@@ -373,51 +365,54 @@ function RouteComponent() {
 														<h3 className='font-medium tracking-tight'>
 															{phase.description}
 															{phase.hours > 0 &&
-																`- ${phase.hours}${phase.hours > 1 ? 'hrs' : 'hr'}`}
+																` - ${phase.hours}${phase.hours > 1 ? 'hrs' : 'hr'}`}
 														</h3>
 													</div>
 
 													<ul className='list-disc list-inside px-4'>
-														{phase.tickets?.map((ticket) => (
-															<>
-																<li
-																	key={ticket.id}
-																	className='text-sm'
-																>
-																	{ticket.summary}
-																</li>
-																{ticket.tasks.some((t) => t.visibile) && (
-																	<ul className='list-disc list-inside pl-6'>
-																		{ticket.tasks
-																			.filter((t) => !!t.visibile)
-																			.map((task) => (
-																				<li
-																					key={task.id}
-																					className='text-xs'
-																				>
-																					{task.summary}
-																				</li>
-																			))}
-																	</ul>
-																)}
-															</>
-														))}
+														{phase.tickets
+															?.sort((a, b) => a.order - b.order)
+															.map((ticket) => (
+																<>
+																	<li
+																		key={ticket.id}
+																		// className='text-sm'
+																	>
+																		{ticket.summary}
+																	</li>
+																	{ticket?.tasks && ticket?.tasks?.length > 0 && (
+																		<ul className='list-disc list-inside pl-6'>
+																			{ticket.tasks
+																				?.sort((a, b) => a.order - b.order)
+																				.map((task) => (
+																					<li
+																						key={task.id}
+																						className='text-sm'
+																					>
+																						{task.notes}
+																					</li>
+																				))}
+																		</ul>
+																	)}
+																</>
+															))}
 													</ul>
 												</div>
-											)}
-										</Fragment>
-									))}
+												{/* {!phase.description.includes('Backoffice Coordination') && (
+													
+												)} */}
+											</Fragment>
+										))}
 								</div>
 							</CardContent>
 						</Card>
 
 						<h2 className='font-semibold'>Assumptions</h2>
 
-						<div
-							className='tiptap ProseMirror prose marker:font-semibold text-sm dark:text-white p-0'
-							dangerouslySetInnerHTML={{
-								__html: settings?.assumptions ?? '',
-							}}
+						<Tiptap
+							editable={false}
+							content={settings?.assumptions ?? ''}
+							className='p-0'
 						/>
 					</div>
 				</div>

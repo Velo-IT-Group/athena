@@ -1,4 +1,4 @@
-import { useSuspenseQuery, type UseSuspenseQueryOptions } from '@tanstack/react-query';
+import { useQuery, type UseMutateFunction, type UseQueryOptions } from '@tanstack/react-query';
 import { DataTableFilter } from '@/components/data-table-filter';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
@@ -22,12 +22,12 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, paginationSchema, sortSchema } from '@/lib/utils';
 import { DataTablePagination } from '@/components/ui/data-table/pagination';
 import { z } from 'zod';
 import { parseAsJson, useQueryState } from 'nuqs';
 import type { LinkOptions } from '@tanstack/react-router';
-import DataTableDisplay from '@/components/ui/data-table/display';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const dataTableFilterQuerySchema = z
 	.object({
@@ -77,14 +77,34 @@ function initializeFiltersFromQuery<TData, TValue>(
 declare module '@tanstack/react-table' {
 	interface TableMeta<TData extends RowData> {
 		rowLink?: LinkOptions;
+		updateProduct?: UseMutateFunction<
+			void,
+			Error,
+			{
+				id: string;
+				product: ProductUpdate;
+			},
+			{
+				previousItems: NestedProduct[] | undefined;
+				newItems: NestedProduct[];
+			}
+		>;
+		deleteProduct?: UseMutateFunction<
+			void,
+			Error,
+			{
+				id: string;
+			},
+			{
+				previousItems: NestedProduct[];
+				newItems: NestedProduct[];
+			}
+		>;
 	}
 }
 
 export interface DataTableProps<TData, TValue> {
-	options: UseSuspenseQueryOptions<{
-		data: TData[];
-		count: number;
-	}>;
+	options: UseQueryOptions<{ data: TData[]; count: number }>;
 	columns: ColumnDef<TData, TValue>[];
 	getSubRows?: ((originalRow: TData, index: number) => TData[] | undefined) | undefined;
 	className?: string;
@@ -108,25 +128,35 @@ export function DataTable<TData, TValue>({
 		'filter',
 		parseAsJson(dataTableFilterQuerySchema.parse).withDefault([])
 	);
+	const [queryPagination, setQueryPagination] = useQueryState(
+		'pagination',
+		parseAsJson(paginationSchema.parse).withDefault({ page: 0, pageSize: 25 })
+	);
+	const [querySort, setQuerySort] = useQueryState(
+		'sort',
+		parseAsJson(sortSchema.parse).withDefault({ field: '', direction: 'asc' })
+	);
+
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
 		// Replace `Issue` with your data type
 		() => initializeFiltersFromQuery(queryFilters, columns as ColumnDef<TData, TValue>[])
 	);
 	const [pagination, onPaginationChange] = useState<PaginationState>({
-		pageSize: 25,
-		pageIndex: 0,
+		pageSize: queryPagination.pageSize,
+		pageIndex: queryPagination.page,
 	});
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [grouping, setGrouping] = useState<string[]>([]);
 	const [expanded, setExpanded] = useState<ExpandedState>({});
-	const {
-		data: { data, count: rowCount },
-	} = useSuspenseQuery(options);
+
+	const { data: initialData, isLoading } = useQuery(options);
+
+	console.log(initialData);
 
 	// Step 5: Create our TanStack Table instance
 	const table = useReactTable({
-		data,
+		data: initialData?.data ?? [],
 		columns,
 		onSortingChange: setSorting,
 		enableGrouping: true,
@@ -147,7 +177,8 @@ export function DataTable<TData, TValue>({
 		getFacetedUniqueValues: getFacetedUniqueValues(),
 		manualPagination: true,
 		manualFiltering: true,
-		rowCount,
+		manualSorting: true,
+		rowCount: initialData?.count ?? 0,
 		state: {
 			sorting,
 			columnVisibility,
@@ -167,6 +198,22 @@ export function DataTable<TData, TValue>({
 			}))
 		);
 	}, [columnFilters, setQueryFilters]);
+
+	useEffect(() => {
+		if (hidePagination) return;
+		setQueryPagination({
+			page: pagination.pageIndex,
+			pageSize: pagination.pageSize,
+		});
+	}, [pagination, setQueryPagination, hidePagination]);
+
+	useEffect(() => {
+		if (hideHeader) return;
+		setQuerySort({
+			field: sorting[0]?.id ?? '',
+			direction: sorting[0]?.desc ? 'desc' : 'asc',
+		});
+	}, [sorting, setQuerySort, hideHeader]);
 
 	return (
 		<section className={cn('space-y-3 overflow-x-auto p-[4px]', className)}>
@@ -197,32 +244,50 @@ export function DataTable<TData, TValue>({
 					)}
 
 					<TableBody className='overflow-x-auto'>
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow
-									key={row.id}
-									data-state={row.getIsSelected() && 'selected'}
-									className={cn(row.depth ? 'bg-muted/50' : '', 'relative')}
-								>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell
-											key={cell.id}
-											className='text-sm'
-										>
-											{flexRender(cell.column.columnDef.cell, cell.getContext())}
-										</TableCell>
-									))}
-								</TableRow>
-							))
+						{isLoading ? (
+							<>
+								{new Array(10).fill(null).map((_, index) => (
+									<TableRow key={index}>
+										{new Array(10).fill(null).map((_, index) => (
+											<TableCell key={index}>
+												<div className='h-9 flex items-center'>
+													<Skeleton className='h-5 w-3/4' />
+												</div>
+											</TableCell>
+										))}
+									</TableRow>
+								))}
+							</>
 						) : (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length}
-									className='h-24 text-center'
-								>
-									No results.
-								</TableCell>
-							</TableRow>
+							<>
+								{table.getRowModel().rows?.length ? (
+									table.getRowModel().rows.map((row) => (
+										<TableRow
+											key={row.id}
+											data-state={row.getIsSelected() && 'selected'}
+											className={cn(row.depth ? 'bg-muted/50' : '', 'relative')}
+										>
+											{row.getVisibleCells().map((cell) => (
+												<TableCell
+													key={cell.id}
+													className='text-sm'
+												>
+													{flexRender(cell.column.columnDef.cell, cell.getContext())}
+												</TableCell>
+											))}
+										</TableRow>
+									))
+								) : (
+									<TableRow>
+										<TableCell
+											colSpan={columns.length}
+											className='h-24 text-center'
+										>
+											No results.
+										</TableCell>
+									</TableRow>
+								)}
+							</>
 						)}
 					</TableBody>
 				</Table>

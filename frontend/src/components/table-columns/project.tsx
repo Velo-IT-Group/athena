@@ -2,7 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import type { Project, ReferenceType } from '@/types/manage';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import Link from 'next/link';
-import { Progress } from '../ui/progress';
+import { Progress } from @/components/progress';
 
 export const columns: ColumnDef<Project>[] = [
 	{

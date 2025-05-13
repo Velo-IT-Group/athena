@@ -679,7 +679,7 @@ export const getSystemMembers = createServerFn().validator((
 		);
 	}
 
-	return await response.json();
+	return await response.json() as SystemMember[];
 });
 
 export const getStatuses = async (
@@ -930,11 +930,13 @@ export const getAuditTrail = createServerFn().validator(
 	},
 );
 
-export const getDocuments = async (
-	recordType: RecordType,
-	id: number,
-	conditions?: Conditions<Document>,
-): Promise<Document[]> => {
+export const getDocuments = createServerFn().validator((
+	params: {
+		recordType: RecordType;
+		id: number;
+		conditions?: Conditions<Document>;
+	},
+) => params).handler(async ({ data: { recordType, id, conditions } }) => {
 	const response = await fetch(
 		`${env.VITE_CONNECT_WISE_URL}/system/documents?recordType=${recordType}&recordId=${id}${
 			generateParams(
@@ -948,8 +950,8 @@ export const getDocuments = async (
 
 	if (!response.ok) throw Error("Error fetching documents...");
 
-	return await response.json();
-};
+	return await response.json() as Document[];
+});
 
 export const getSchedule = async (
 	id: number = 2,
@@ -1055,7 +1057,7 @@ export const getActivities = async (
 };
 
 export const getTemplates = createServerFn().validator((
-	conditions?: Conditions<ProjectTemplate> = {
+	conditions: Conditions<ProjectTemplate> = {
 		fields: ["id", "name", "description"],
 		orderBy: { key: "name" },
 	},

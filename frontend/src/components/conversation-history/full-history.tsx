@@ -2,6 +2,8 @@ import { getContacts } from '@/lib/manage/read';
 import ConversationItem from './conversation-item';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { getConversations, getProfiles } from '@/lib/supabase/read';
+import { getCompanyContactsQuery, getContactsQuery } from '@/lib/manage/api';
+import { getConversationsQuery, getProfilesQuery } from '@/lib/supabase/api';
 
 type Props = {
 	contactId?: number;
@@ -17,30 +19,9 @@ const FullConversationHistory = ({ contactId, companyId }: Props) => {
 		{ data: conversations },
 	] = useSuspenseQueries({
 		queries: [
-			{
-				queryKey: ['profiles'],
-				queryFn: getProfiles,
-			},
-			{
-				queryKey: ['companies', companyId, 'contacts'],
-				queryFn: () =>
-					getContacts({
-						data: {
-							conditions: {
-								'company/id': companyId,
-							},
-							orderBy: {
-								key: 'firstName',
-							},
-							pageSize: 1000,
-							fields: ['id', 'firstName', 'lastName'],
-						},
-					}),
-			},
-			{
-				queryKey: ['companies', companyId, 'conversations'],
-				queryFn: () => getConversations({ data: { contactId, companyId, limit: 1000 } }),
-			},
+			getProfilesQuery(),
+			getCompanyContactsQuery(companyId),
+			getConversationsQuery({ contactId, companyId, limit: 1000 }),
 		],
 	});
 

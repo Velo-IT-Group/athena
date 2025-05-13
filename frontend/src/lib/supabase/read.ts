@@ -3,12 +3,11 @@ import type { UseSupabaseUploadOptions } from "@/hooks/use-supabase-upload";
 import { createClient } from "@/lib/supabase/server";
 import { createServerFn } from "@tanstack/react-start";
 
-interface PinnedItemOptions {
-	record_type: string;
-	params: Record<string, string>;
-}
-
-export type EngagementQueryOptions = { call_date?: string | string[] };
+export type EngagementQueryOptions = {
+	call_date?: string | string[];
+	contactId?: number;
+	companyId?: number;
+};
 
 export const getEngagementSummaryByPeriod = createServerFn()
 	.validator((options?: EngagementQueryOptions) => options)
@@ -49,6 +48,36 @@ export const getEngagementSummaryByPeriod = createServerFn()
 		return data;
 	});
 
+export const getEngagementReservations = createServerFn()
+	.validator((sid: string) => sid)
+	.handler(async ({ data: sid }) => {
+		const supabase = createClient();
+
+		const { data, error, count } = await supabase
+			.schema("reporting")
+			.from("engagement_reservations")
+			.select(
+				"*, engagement:enagement_id(*)",
+				{ count: "exact" },
+			)
+			.eq("worker_sid", sid)
+			.order("created_at", { ascending: false })
+			.range(0, 25);
+
+		if (error) {
+			throw new Error(
+				"Error in getting engagement reservations " + error.message,
+				{
+					cause: error,
+				},
+			);
+		}
+
+		return JSON.parse(
+			JSON.stringify({ data: data ?? [], count: count ?? 0 }),
+		);
+	});
+
 export const getEngagements = createServerFn()
 	.validator((options?: EngagementQueryOptions) => options)
 	.handler(async ({ data: options }) => {
@@ -69,6 +98,14 @@ export const getEngagements = createServerFn()
 			} else if (options.call_date) {
 				query.eq("created_at", options.call_date);
 			}
+		}
+
+		if (options?.contactId) {
+			query.eq("contact->id", options.contactId);
+		}
+
+		if (options?.companyId) {
+			query.eq("company->id", options.companyId);
 		}
 
 		query.order("created_at", { ascending: false });
@@ -181,9 +218,9 @@ export const getProposals = createServerFn()
 		}
 
 		if (data?.companyFilters?.length) {
-			proposalsQuery.in(
-				"company_id",
-				data?.companyFilters.map((u) => Number(u)),
+			proposalsQuery.eq(
+				"company->id",
+				data?.companyFilters.map((u) => Number(u)).toString(),
 			);
 		}
 
@@ -311,7 +348,9 @@ export const getProposal = createServerFn()
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 
-		const { data, error } = await supabase.from("proposals").select()
+		const { data, error } = await supabase.from("proposals").select(
+			"*, created_by(first_name, last_name)",
+		)
 			.eq("id", id).single();
 
 		if (error) {
@@ -319,6 +358,30 @@ export const getProposal = createServerFn()
 		}
 
 		return JSON.parse(JSON.stringify(data));
+	});
+
+export const getProposalTotals = createServerFn()
+	.validator(({ id, version }: { id: string; version: string }) => ({
+		id,
+		version,
+	}))
+	.handler(async ({ data: { version, id } }) => {
+		const supabase = createClient();
+
+		const { data, error } = await supabase.from("proposal_totals").select()
+			.match({
+				proposal_id: id,
+				version_id: version,
+			}).single();
+
+		if (error) {
+			throw new Error(
+				"Error in getting proposal totals " + error.message,
+				{ cause: error },
+			);
+		}
+
+		return data;
 	});
 
 export const getTeams = createServerFn().handler(async () => {
@@ -333,24 +396,25 @@ export const getTeams = createServerFn().handler(async () => {
 	return data;
 });
 
-export const getTickets = async (
-	id: string,
-): Promise<Array<Ticket & { tasks: Task[] }>> => {
-	const supabase = createClient();
+export const getTickets = createServerFn().validator((id: string) => id)
+	.handler(
+		async ({ data: id }) => {
+			const supabase = createClient();
 
-	const { data, error } = await supabase
-		.from("tickets")
-		.select("*, tasks(*)")
-		.eq("phase", id)
-		.order("order")
-		.order("order", { referencedTable: "tasks" });
+			const { data, error } = await supabase
+				.from("tickets")
+				.select("*, tasks(*)")
+				.eq("phase", id)
+				.order("order")
+				.order("order", { referencedTable: "tasks" });
 
-	if (!data || error) {
-		throw new Error("Error in getting tickets", { cause: error });
-	}
+			if (!data || error) {
+				throw new Error("Error in getting tickets", { cause: error });
+			}
 
-	return data;
-};
+			return data;
+		},
+	);
 
 export const getTasks = createServerFn().validator((id: string) => id).handler(
 	async ({ data: id }) => {
@@ -369,19 +433,48 @@ export const getTasks = createServerFn().validator((id: string) => id).handler(
 	},
 );
 
-export const getPhases = createServerFn().validator((id: string) => id).handler(
+export const getPhase = createServerFn().validator((id: string) => id).handler(
 	async ({ data: id }) => {
 		const supabase = createClient();
 
 		const { data, error } = await supabase
 			.from("phases")
 			.select("*, tickets(*, tasks(*))")
-			.eq("version", id)
+			.eq("id", id)
+			.order("order", { referencedTable: "tickets" });
+
+		if (!data || error) {
+			throw Error("Error in getting phases " + error.message, {
+				cause: error,
+			});
+		}
+
+		return data;
+	},
+);
+
+export const getPhases = createServerFn().validator((
+	{ versionId, proposalId }: { versionId: string; proposalId: string },
+) => ({
+	versionId,
+	proposalId,
+})).handler(
+	async ({ data: { versionId } }) => {
+		const supabase = createClient();
+
+		const { data, error } = await supabase
+			.from("phases")
+			.select("*, tickets(*, tasks(*))")
+			.match({
+				version: versionId,
+			})
 			.order("order")
 			.order("order", { referencedTable: "tickets" });
 
 		if (!data || error) {
-			throw Error("Error in getting phases", { cause: error });
+			throw Error("Error in getting phases " + error.message, {
+				cause: error,
+			});
 		}
 
 		return data;
@@ -389,14 +482,21 @@ export const getPhases = createServerFn().validator((id: string) => id).handler(
 );
 
 export const getSections = createServerFn()
-	.validator((id: string) => id)
-	.handler(async ({ data: id }) => {
+	.validator((
+		{ versionId, proposalId }: { versionId: string; proposalId: string },
+	) => ({
+		proposalId,
+		versionId,
+	}))
+	.handler(async ({ data: { versionId, proposalId } }) => {
 		const supabase = createClient();
 
 		const { data: sections, error } = await supabase
 			.from("sections")
 			.select("*, products(*, products(*))")
-			.eq("version", id)
+			.match({
+				version: versionId,
+			})
 			.is("products.parent", null)
 			.order("order")
 			.order("order", { referencedTable: "products" });
@@ -649,20 +749,21 @@ export const getVersions = createServerFn().validator((id: string) => id)
 		return data;
 	});
 
-export const getVersion = async (id: string) => {
-	const supabase = createClient();
+export const getVersion = createServerFn().validator((id: string) => id)
+	.handler(async ({ data: id }) => {
+		const supabase = createClient();
 
-	const { data, error } = await supabase.from("versions").select().eq(
-		"id",
-		id,
-	).single();
+		const { data, error } = await supabase.from("versions").select().eq(
+			"id",
+			id,
+		).single();
 
-	if (error || !data) {
-		throw Error("Can't fetch version...", { cause: error });
-	}
+		if (error || !data) {
+			throw Error("Can't fetch version...", { cause: error });
+		}
 
-	return data;
-};
+		return data;
+	});
 
 export const getUsers = async () => {
 	const supabase = createClient();

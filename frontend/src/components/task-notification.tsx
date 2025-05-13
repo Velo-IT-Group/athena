@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
+import { Popover, PopoverTrigger, PopoverContent } from @/components/popover';
 import { Reservation, Task } from 'twilio-taskrouter';
 import IncomingTask from '@/components/incoming-task';
 import { ActiveCall } from '@/components/active-call';

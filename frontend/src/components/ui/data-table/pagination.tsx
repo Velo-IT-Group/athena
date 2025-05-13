@@ -3,20 +3,12 @@ import type { Table } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useLocation, useNavigate, useRouter } from '@tanstack/react-router';
 
 interface DataTablePaginationProps<TData> {
 	table: Table<TData>;
 }
 
 export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
-	const pathname = useLocation({ select: (l) => l.pathname });
-
-	const navigate = useNavigate();
-	const router = useRouter();
-	const currentLocation = router;
-
-	('use no memo');
 	return (
 		<div className='flex items-center justify-between px-2'>
 			<div className='flex-1 text-sm text-muted-foreground'>
@@ -49,15 +41,15 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 				</div>
 
 				<div className='flex items-center justify-center text-sm font-medium'>
-					Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+					Page {table.getState().pagination.pageIndex} of {table.getPageCount()}
 				</div>
 
 				<div className='flex items-center space-x-1.5'>
 					<Button
 						variant='outline'
 						size='icon'
-						onClick={() => table.setPageIndex(0)}
-						disabled={!table.getCanPreviousPage()}
+						onClick={() => table.setPageIndex(1)}
+						disabled={[0, 1].includes(table.getState().pagination.pageIndex)}
 					>
 						<span className='sr-only'>Go to first page</span>
 						<ChevronsLeft />
@@ -67,7 +59,7 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 						variant='outline'
 						size='icon'
 						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
+						disabled={[0, 1].includes(table.getState().pagination.pageIndex)}
 					>
 						<span className='sr-only'>Go to previous page</span>
 						<ChevronLeftIcon />
@@ -77,7 +69,7 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 						variant='outline'
 						size='icon'
 						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
+						disabled={table.getState().pagination.pageIndex === table.getPageCount()}
 					>
 						<span className='sr-only'>Go to next page</span>
 						<ChevronRightIcon />
@@ -86,8 +78,8 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 					<Button
 						variant='outline'
 						size='icon'
-						onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-						disabled={!table.getCanNextPage()}
+						onClick={() => table.setPageIndex(table.getPageCount())}
+						disabled={table.getState().pagination.pageIndex === table.getPageCount()}
 					>
 						<span className='sr-only'>Go to last page</span>
 						<ChevronsRight />

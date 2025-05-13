@@ -6,10 +6,9 @@ import type { Engagement } from '@/providers/worker-provider';
 type Props = {
 	engagement: Engagement;
 	user?: User;
-	accessToken: string;
 };
 
-const ChatEngagement = ({ engagement, user, accessToken }: Props) => {
+const ChatEngagement = ({ engagement, user }: Props) => {
 	if (!engagement?.reservation) {
 		throw new Error('Task not found');
 	}
