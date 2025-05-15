@@ -38,6 +38,13 @@ declare global {
     type Member = DB["public"]["Tables"]["profiles"]["Row"];
 
     type ProposalTotals = DB["public"]["Views"]["proposal_totals"]["Row"];
+    type ProposalTemplate = DB["public"]["Tables"]["proposal_templates"]["Row"];
+    type AppNotification = DB["public"]["Tables"]["notifications"]["Row"];
+    type AppNotificationUpdate =
+        DB["public"]["Tables"]["notifications"]["Update"];
+    type ProposalFollower = DB["public"]["Tables"]["proposal_followers"]["Row"];
+    type ProposalFollowerInsert =
+        DB["public"]["Tables"]["proposal_followers"]["Insert"];
 
     type ProposalSettings = DB["public"]["Tables"]["proposal_settings"]["Row"];
     type ProposalSettingsUpdate =

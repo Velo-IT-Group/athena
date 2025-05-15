@@ -167,6 +167,24 @@ export const getPinnedItems = createServerFn()
 		return JSON.parse(JSON.stringify(pinnedItems));
 	});
 
+export const getNotifications = createServerFn()
+	.handler(async () => {
+		const supabase = createClient();
+
+		const { data, error } = await supabase
+			.from("notifications")
+			.select()
+			.order("created_at", { ascending: false });
+
+		if (error) {
+			throw new Error("Error in getting notifications " + error.message, {
+				cause: error,
+			});
+		}
+
+		return JSON.parse(JSON.stringify(data));
+	});
+
 export const getPinnedItem = createServerFn()
 	.validator((params: Record<string, string>) => params)
 	.handler(async ({ data }) => {
@@ -330,7 +348,9 @@ export const getProfilePhoneNumber = createServerFn()
 		return data;
 	});
 
-export const getProfiles = createServerFn().handler(async () => {
+export const getProfiles = createServerFn().validator((
+	params: { search?: string; userIds?: string[] },
+) => params).handler(async () => {
 	const supabase = createClient();
 
 	const { data, error } = await supabase.from("profiles").select();
@@ -395,6 +415,69 @@ export const getTeams = createServerFn().handler(async () => {
 
 	return data;
 });
+
+export const getTemplate = createServerFn().validator((id: string) => id)
+	.handler(async ({ data: id }) => {
+		const supabase = createClient();
+
+		const { data, error } = await supabase.from("proposal_templates")
+			.select(
+				"*, phases:phase_templates(*, tickets:ticket_templates(*, tasks:task_templates(*)))",
+			).eq("id", id).order("order", { referencedTable: "phases" }).order(
+				"order",
+				{ referencedTable: "phases.tickets" },
+			)
+			.order(
+				"priority",
+				{ referencedTable: "phases.tickets.tasks" },
+			)
+			.single();
+
+		if (error) {
+			throw new Error(
+				"Error in getting template " + id + " " + error.message,
+				{ cause: error },
+			);
+		}
+
+		return data;
+	});
+
+export const getTemplates = createServerFn().handler(async () => {
+	const supabase = createClient();
+
+	const { data, error } = await supabase.from("proposal_templates").select(
+		"*, phases:phase_templates(*, tickets:ticket_templates(*, tasks:task_templates(*)))",
+	).order("name", { ascending: true });
+
+	if (error) {
+		throw new Error("Error in getting templates " + error.message, {
+			cause: error,
+		});
+	}
+
+	return data;
+});
+
+export const getProposalFollowers = createServerFn().validator((id: string) =>
+	id
+)
+	.handler(async ({ data: id }) => {
+		const supabase = createClient();
+
+		const { data, error } = await supabase.from("proposal_followers")
+			.select(
+				"...user_id(*)",
+			).eq("proposal_id", id);
+
+		if (error) {
+			throw new Error("Error in getting templates " + error.message, {
+				cause: error,
+			});
+		}
+
+		return data;
+	});
 
 export const getTickets = createServerFn().validator((id: string) => id)
 	.handler(

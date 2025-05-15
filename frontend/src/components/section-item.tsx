@@ -243,9 +243,9 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 						</Table>
 					</Sortable>
 
-					<AsyncSelect<ExtendedCatalogItem>
-						fetcher={(query, page) => {
-							return searchCatalogItems({ data: { query, page } });
+					<AsyncSelect
+						fetcher={async (query, page) => {
+							return await searchCatalogItems({ data: { query, page } });
 						}}
 						renderOption={(item) => (
 							<CommandItem

@@ -36,6 +36,7 @@ const SettingsDialogDisplayForm = (props: Props) => {
 								items={themes.map((theme) => ({ label: theme, value: theme }))}
 								currentValue={{ label: theme, value: theme }}
 								onSelect={(value) => setTheme(value.value.toLowerCase() as Theme)}
+								itemView={(item) => <span className='capitalize'>{item.label}</span>}
 							/>
 						</PopoverContent>
 					</Popover>

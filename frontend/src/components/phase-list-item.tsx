@@ -62,7 +62,7 @@ const PhaseListItem = ({ phase, tickets, params, handleDeletion, handleUpdate }:
 			<Collapsible
 				className={cn(
 					'w-full border-b last:border-b-0 pr-1.5 -mr-1.5 group/phase border border-transparent',
-					!phase.visible && 'border-primary bg-muted/50 border-dashed rounded-lg'
+					!phase.visible && 'border-muted-foreground/25 bg-muted/50 border-dashed rounded-lg'
 				)}
 				data-visible={phase.visible}
 				defaultOpen

@@ -1,13 +1,14 @@
 import LabeledInput from '@/components/labeled-input';
 import { AsyncSelect } from '@/components/ui/async-select';
 import { Button } from '@/components/ui/button';
+import { CommandItem } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { useProposals } from '@/hooks/use-proposals';
-import { searchProjectTemplates, searchServiceTickets } from '@/lib/manage/read';
+import { getTemplates, getTickets, searchProjectTemplates, searchServiceTickets } from '@/lib/manage/read';
 import { cn } from '@/lib/utils';
 import type { ProjectTemplate, ServiceTicket } from '@/types/manage';
 import { createFileRoute } from '@tanstack/react-router';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { Building, ChevronDown, Command, Loader2, User } from 'lucide-react';
 import { useState } from 'react';
 
 export const Route = createFileRoute('/_authed/proposals/new/blank')({
@@ -55,13 +56,56 @@ function RouteComponent() {
 					required
 				>
 					<AsyncSelect<ServiceTicket>
-						fetcher={searchServiceTickets}
+						fetcher={async (query, page) => {
+							const { data } = await getTickets({
+								data: {
+									conditions: {
+										closedFlag: false,
+										'board/id': 38,
+										summary: query
+											? {
+													value: `'${query}'`,
+													comparison: 'contains',
+											  }
+											: undefined,
+									},
+									page,
+									fields: ['id', 'summary', 'company', 'contact'],
+									orderBy: { key: 'summary' },
+								},
+							});
+
+							return data;
+						}}
 						renderOption={(item) => (
-							<div className='flex items-center gap-2'>
+							<CommandItem
+								value={item.id.toString()}
+								className='flex items-center gap-1.5'
+								onSelect={() => {
+									setSelectedTicket(item);
+									if (name.length === 0) {
+										setName(`#${item.id} - ${item.summary}`);
+									}
+								}}
+							>
 								<div className='flex flex-col'>
-									<div className='font-medium'>{item.summary}</div>
+									<p className='font-medium line-clamp-1'>
+										#{item.id} - {item.summary}
+									</p>
+									<p className='text-xs text-muted-foreground flex items-center gap-1.5'>
+										<Building className='size-3' />
+										<span>{item.company?.name}</span>
+
+										{item.contact && (
+											<>
+												<span>-</span>
+												<User className='size-3' />
+												<span>{item.contact?.name}</span>
+											</>
+										)}
+									</p>
 								</div>
-							</div>
+							</CommandItem>
 						)}
 						getOptionValue={(item) => item.id.toString()}
 						getDisplayValue={(item) => (
@@ -114,8 +158,32 @@ function RouteComponent() {
 					label='Project Template'
 				>
 					<AsyncSelect<ProjectTemplate>
-						fetcher={searchProjectTemplates}
-						renderOption={(item) => <div className='font-medium'>{item.name}</div>}
+						fetcher={async (query, page) =>
+							await getTemplates({
+								data: {
+									conditions: {
+										name: query
+											? {
+													value: query,
+													comparison: 'contains',
+											  }
+											: undefined,
+									},
+									page,
+									fields: ['id', 'name', 'description'],
+									orderBy: { key: 'name' },
+								},
+							})
+						}
+						renderOption={(item) => (
+							<CommandItem
+								value={item.id.toString()}
+								onSelect={() => setSelectedTemplate(item)}
+								className='font-medium'
+							>
+								{item.name}
+							</CommandItem>
+						)}
 						getOptionValue={(item) => item.id.toString()}
 						getDisplayValue={(item) => (
 							<div className='flex flex-col'>
@@ -158,7 +226,7 @@ function RouteComponent() {
 					className='w-full'
 					disabled={!selectedTicket || name.length === 0 || handleProposalInsert.isPending}
 				>
-					{handleProposalInsert.isPending && <Loader2 className='mr-1.5' />}
+					{handleProposalInsert.isPending && <Loader2 className='mr-1.5 animate-spin' />}
 					<span>{handleProposalInsert.isPending ? 'Creating...' : 'Continue'}</span>
 				</Button>
 			</form>

@@ -34,9 +34,7 @@ function RouteComponent() {
 
 				<SidebarInset className=''>
 					<ScrollArea className='h-[calc(100vh-var(--navbar-height))] p-3'>
-						<div className='container'>
-							<Outlet />
-						</div>
+						<Outlet />
 					</ScrollArea>
 				</SidebarInset>
 			</SidebarProvider>

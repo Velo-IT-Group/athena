@@ -46,7 +46,6 @@ export const APIRoute = createAPIFileRoute("/api/auth/callback")({
 				);
 			}
 
-			deleteCookie("connect_wise:auth");
 			setCookie("connect_wise:auth", JSON.stringify(data?.key));
 			setCookie("twilio:worker_sid", user?.user_metadata?.worker_sid);
 
@@ -71,20 +70,20 @@ export const APIRoute = createAPIFileRoute("/api/auth/callback")({
 				);
 			}
 
-			try {
-				const newMetaData = await handleAuthenticatedUser(user);
-				await supabase.auth.updateUser({ data: newMetaData });
-			} catch (error) {
-				console.error("Error updating user metadata", error);
-				const urlParams = new URLSearchParams();
-				urlParams.append(
-					"error",
-					"Error updating user metadata " + (error as Error).message,
-				);
-				return Response.redirect(
-					`${origin}/auth/auth-code-error?${urlParams.toString()}`,
-				);
-			}
+			// try {
+			// 	const newMetaData = await handleAuthenticatedUser(user);
+			// 	await supabase.auth.updateUser({ data: newMetaData });
+			// } catch (error) {
+			// 	console.error("Error updating user metadata", error);
+			// 	const urlParams = new URLSearchParams();
+			// 	urlParams.append(
+			// 		"error",
+			// 		"Error updating user metadata " + (error as Error).message,
+			// 	);
+			// 	return Response.redirect(
+			// 		`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+			// 	);
+			// }
 
 			return Response.redirect(`${origin}${next ?? ""}`);
 		}

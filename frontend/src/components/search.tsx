@@ -7,6 +7,8 @@ import { SearchIcon, RefreshCcw } from 'lucide-react';
 // import { usePathname, useRouter, useSearchParams } from '@tanstack/route'
 // import { useDebounce } from 'use-debounce'
 import { Button } from '@/components/ui/button';
+import { parseAsJson, useQueryState } from 'nuqs';
+import { dataTableFilterQuerySchema } from '@/components/ui/data-table';
 
 type Props = {
 	baseUrl: string;
@@ -19,55 +21,27 @@ type Props = {
 const Search = ({ baseUrl, placeholder, className, queryParam = 'search', defaultValue }: Props) => {
 	const { pending } = useFormStatus();
 	const [text, setText] = useState(defaultValue || '');
-	// const [query] = useDebounce(text, 500)
-	// const router = useRouter()
-	// const searchParams = useSearchParams()
-	// const pathname = usePathname()
-
-	// const createQueryString = useCallback(
-	//     (name: string, value: string) => {
-	//         const params = new URLSearchParams(searchParams.toString())
-	//         params.set(name, value)
-
-	//         return params.toString()
-	//     },
-	//     [searchParams]
-	// )
-
-	// const sendQueryParams = useCallback(
-	//     (e?: React.FormEvent<HTMLFormElement>) => {
-	//         e?.preventDefault()
-	//         // debounced.cancel()
-	//         if (!text) {
-	//             router.push(`${baseUrl}`)
-	//         } else {
-	//             router.push(
-	//                 pathname + '?' + createQueryString(queryParam, text)
-	//             )
-	//         }
-	//     },
-	//     [router, baseUrl, createQueryString, pathname, text, queryParam]
-	// )
-
-	// useEffect(() => {
-	//     if (!query) return
-
-	//     sendQueryParams()
-	// }, [query, sendQueryParams])
+	const [queryFilters, setQueryFilters] = useQueryState(
+		'filter',
+		parseAsJson(dataTableFilterQuerySchema.parse).withDefault([])
+	);
 
 	useEffect(() => {
-		if (!defaultValue) return;
+		if (!queryFilters) return;
 
-		setText(defaultValue);
-	}, []);
+		// setText(queryFilters?.[0]?.value?.values?.[0] || '');
+	}, [queryFilters]);
 
 	return (
-		<div
+		<form
 			className={cn(
 				'flex h-9 items-center w-full rounded-md border border-input px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 overflow-hidden ring-0',
 				className
 			)}
-			// onSubmit={sendQueryParams}
+			onSubmit={(e) => {
+				e.preventDefault();
+				setQueryFilters([{ id: 'fts', value: { operator: 'ilike', values: [text] } }]);
+			}}
 		>
 			{pending ? (
 				<RefreshCcw className='shrink-0 animate-spin' />
@@ -78,12 +52,16 @@ const Search = ({ baseUrl, placeholder, className, queryParam = 'search', defaul
 			<Input
 				placeholder={placeholder}
 				value={text}
-				onChange={(event) => setText(event.target.value)}
+				onChange={(event) => {
+					setText(event.target.value);
+					setQueryFilters([{ id: 'fts', value: { operator: 'ilike', values: [event.target.value] } }]);
+				}}
 				className='border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent'
+				defaultValue={defaultValue}
 			/>
 
 			<Button className='hidden' />
-		</div>
+		</form>
 	);
 };
 

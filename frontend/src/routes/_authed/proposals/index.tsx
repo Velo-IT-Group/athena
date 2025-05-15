@@ -6,17 +6,21 @@ import Search from '@/components/search';
 import { buttonVariants } from '@/components/ui/button';
 
 import { Suspense } from 'react';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable, dataTableFilterQuerySchema } from '@/components/ui/data-table';
 import { getProposalsQuery } from '@/lib/supabase/api';
 import { columns } from '@/components/table-columns/proposal';
 import TableSkeleton from '@/components/ui/data-table/skeleton';
+import { zodValidator } from '@tanstack/zod-adapter';
+import { z } from 'zod';
 
 export const Route = createFileRoute('/_authed/proposals/')({
 	component: Proposals,
-	search: {},
+	validateSearch: zodValidator(z.object({ filter: dataTableFilterQuerySchema.optional() })),
 });
 
 function Proposals() {
+	const { filter } = Route.useSearch();
+
 	return (
 		<main className='p-6 space-y-6'>
 			<section className='flex items-center justify-between'>
@@ -40,7 +44,7 @@ function Proposals() {
 
 			<Suspense fallback={<TableSkeleton columns={columns.length} />}>
 				<DataTable
-					options={getProposalsQuery()}
+					options={getProposalsQuery({ searchText: filter?.[0]?.value?.values?.[0] || '' })}
 					columns={columns}
 					hideFilter
 				/>

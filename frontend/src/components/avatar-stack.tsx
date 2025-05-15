@@ -3,6 +3,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 const avatarStackVariants = cva('flex -space-x-4 -space-y-4', {
 	variants: {
@@ -21,6 +23,7 @@ export interface AvatarStackProps
 		VariantProps<typeof avatarStackVariants> {
 	avatars: { name: string; image: string }[];
 	maxAvatarsAmount?: number;
+	showDeletion?: boolean;
 	avatarSize?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
@@ -30,6 +33,7 @@ const AvatarStack = ({
 	avatars,
 	maxAvatarsAmount = 3,
 	avatarSize = 'sm',
+	showDeletion = false,
 	...props
 }: AvatarStackProps) => {
 	const shownAvatars = avatars.slice(0, maxAvatarsAmount);
@@ -49,7 +53,7 @@ const AvatarStack = ({
 					<TooltipTrigger asChild>
 						<Avatar
 							className={cn(
-								'hover:z-10 size-7',
+								'hover:z-10 size-7 group',
 								avatarSize === 'md' && 'size-9',
 								avatarSize === 'lg' && 'size-12',
 								avatarSize === 'xl' && 'size-16'

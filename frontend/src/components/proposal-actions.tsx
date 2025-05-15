@@ -1,11 +1,17 @@
 import { AvatarStack } from '@/components/avatar-stack';
 import LabeledInput from '@/components/labeled-input';
+import { AsyncSelect } from '@/components/ui/async-select';
 import { Button } from '@/components/ui/button';
 import { CollapsibleTrigger } from '@/components/ui/collapsible';
+import { CommandItem } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useCurrentUserImage } from '@/hooks/use-current-user-image';
 import { useCurrentUserName } from '@/hooks/use-current-user-name';
+import useProposal from '@/hooks/use-proposal';
+import { getProposalFollowersQuery } from '@/lib/supabase/api';
+import { getProfiles, getProposalFollowers } from '@/lib/supabase/read';
 import { getCurrencyString } from '@/utils/money';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { Building2, Check, Ellipsis, Link } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -18,6 +24,9 @@ export function ProposalActions({
 	versionId: string;
 	total: number;
 }) {
+	const { handleAddingFollower } = useProposal({ id: proposalId, version: versionId });
+	const { data: followers } = useSuspenseQuery(getProposalFollowersQuery(proposalId, versionId));
+
 	const image = useCurrentUserImage();
 	const name = useCurrentUserName();
 
@@ -49,7 +58,37 @@ export function ProposalActions({
 					justifyContent: 'start',
 				}}
 			>
-				<div
+				<AsyncSelect
+					fetcher={async (search) => await getProfiles({ data: { search: search ?? '' } })}
+					renderOption={(option: Profile) => (
+						<CommandItem
+							value={option.id}
+							onSelect={() => {
+								handleAddingFollower.mutate({ user: option });
+							}}
+						>
+							{option.first_name} {option.last_name}
+						</CommandItem>
+					)}
+					getDisplayValue={(option) => `${option.first_name} ${option.last_name}`}
+					getOptionValue={(option) => option.id}
+					onChange={(value) => {
+						console.log(value);
+					}}
+					value=''
+					label='Add members'
+				>
+					<AvatarStack
+						avatars={followers
+							.map((follower) => ({
+								name: `${follower.first_name ?? ''} ${follower.last_name ?? ''}`,
+								image: follower.image_url || image || '',
+							}))
+							.reverse()}
+						showDeletion
+					/>
+				</AsyncSelect>
+				{/* <div
 					className='FacepileButton FacepileButton--sizeSmall'
 					aria-label='Manage project members'
 					role='button'
@@ -112,6 +151,7 @@ export function ProposalActions({
 								<Ellipsis />
 							</div>
 						</li>
+
 						<li
 							className='FacepileStructure-item'
 							style={{
@@ -127,17 +167,10 @@ export function ProposalActions({
 								marginLeft: '0px',
 							}}
 						>
-							<AvatarStack
-								avatars={[
-									{
-										name,
-										image: image || '',
-									},
-								]}
-							/>
+							
 						</li>
 					</ul>
-				</div>
+				</div> */}
 
 				<Dialog>
 					<DialogTrigger asChild>

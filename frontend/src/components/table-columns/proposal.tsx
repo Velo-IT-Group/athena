@@ -3,11 +3,13 @@ import { DataTableColumnHeader } from '@/components/ui/data-table/column-header'
 import { Link } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { Badge, ColoredBadge } from '@/components/ui/badge';
-import { Building, User } from 'lucide-react';
+import { Building, SearchIcon, User } from 'lucide-react';
 import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
+import Search from '@/components/search';
 
 export const columns: ColumnDef<NestedProposal>[] = [
 	{
+		id: 'name',
 		accessorKey: 'name',
 		header: 'Name',
 		cell: ({ row }) => {
@@ -27,6 +29,7 @@ export const columns: ColumnDef<NestedProposal>[] = [
 		},
 	},
 	{
+		id: 'company',
 		accessorKey: 'company',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -42,6 +45,7 @@ export const columns: ColumnDef<NestedProposal>[] = [
 		),
 	},
 	{
+		id: 'contact',
 		accessorKey: 'contact',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -57,6 +61,7 @@ export const columns: ColumnDef<NestedProposal>[] = [
 		),
 	},
 	{
+		id: 'status',
 		accessorKey: 'status',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -78,6 +83,7 @@ export const columns: ColumnDef<NestedProposal>[] = [
 		},
 	},
 	{
+		id: 'expiration_date',
 		accessorKey: 'expiration_date',
 		header: ({ column }) => (
 			<DataTableColumnHeader
@@ -86,5 +92,15 @@ export const columns: ColumnDef<NestedProposal>[] = [
 			/>
 		),
 		cell: ({ row }) => <span>{format(new Date(row.getValue('expiration_date')), 'MM/dd/yyyy')}</span>,
+	},
+	{
+		id: 'fts',
+		// accessorKey: 'fts',
+		meta: {
+			filterKey: 'fts',
+			type: 'text',
+			displayName: 'Search',
+			icon: SearchIcon,
+		},
 	},
 ];

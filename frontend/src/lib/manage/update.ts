@@ -15,36 +15,27 @@ import { baseHeaders } from "@/utils/manage/params";
 import { getCookie } from "@tanstack/start/server";
 import { jwtVerify } from "jose";
 import type { WebToken } from "@/types/crypto";
+import type { Project } from "@/types/manage";
+
+const headers = new AxiosHeaders(baseHeaders);
+
+headers.set("clientId", env.VITE_CONNECT_WISE_CLIENT_ID!);
+headers.set("Content-Type", "application/json");
+
+headers.set(
+	"Authorization",
+	"Basic " +
+		btoa(
+			"velo+" +
+				"maaPiVTeEybbK3SX" +
+				":" +
+				"eCT1NboeMrXq9P3z",
+		),
+);
 
 export const updateTicket = createServerFn().validator((
-	{ id, operation }: { id: number; operation: PatchOperation[] },
+	{ id, operation }: { id: number; operation: PatchOperation<Ticket>[] },
 ) => ({ id, operation })).handler(async ({ data: { id, operation } }) => {
-	const headers = new AxiosHeaders(baseHeaders);
-	const auth = getCookie("connect_wise:auth");
-
-	if (!auth) throw new Error("Not authroized");
-
-	const token = await jwtVerify(
-		auth,
-		new TextEncoder().encode(
-			env.VITE_SECRET_KEY,
-		),
-	);
-
-	const { connect_wise } = token.payload as WebToken;
-
-	headers.set("clientId", env.VITE_CONNECT_WISE_CLIENT_ID!);
-	headers.set(
-		"Authorization",
-		"Basic " +
-			btoa(
-				"velo+" +
-					connect_wise.public_key +
-					":" +
-					connect_wise.secret_key,
-			),
-	);
-
 	const config: AxiosRequestConfig = {
 		headers,
 	};
@@ -128,56 +119,34 @@ export const updateTicket = createServerFn().validator((
 // 	return data.data;
 // };
 
-// export const updateManageProduct = async (
-// 	product: ManageProductUpdate,
-// ): Promise<ProductsItem | undefined> => {
-// 	const cookieStore = await cookies();
-// 	const supabase = await createClient();
-// 	const {
-// 		data: { user },
-// 	} = await supabase.auth.getUser();
+export const updateManageProject = createServerFn().validator((
+	{ id, operation }: { id: number; operation: PatchOperation<Project>[] },
+) => ({ id, operation })).handler(async (
+	{ data: { id, operation } },
+) => {
+	console.log(operation);
+	const config: AxiosRequestConfig = {
+		headers,
+		data: JSON.stringify(operation),
+	};
 
-// 	const headers = new AxiosHeaders();
-// 	headers.set("clientId", env.VITE_CONNECT_WISE_CLIENT_ID!);
-// 	headers.set("Content-Type", "application/json");
+	console.log(config);
 
-// 	const authCookie = cookieStore.get("connect_wise:auth");
+	const response = await axios.patch(
+		`${env.VITE_CONNECT_WISE_URL}/project/projects/${id}`,
+		operation,
+		config,
+	);
 
-// 	const auth = JSON.parse(authCookie?.value ?? "{}");
-// 	const token = decryptToken(auth, user?.id ?? "");
+	if (response.status !== 200) {
+		throw new Error(
+			"Error updating manage project " +
+				response.data,
+		);
+	}
 
-// 	if (authCookie) {
-// 		headers.set(
-// 			"Authorization",
-// 			"Basic " +
-// 				btoa(
-// 					"velo+" + token.connect_wise.public_key + ":" +
-// 						token.connect_wise.secret_key,
-// 				),
-// 		);
-// 	}
-
-// 	const config: AxiosRequestConfig = {
-// 		headers,
-// 		data: product.values,
-// 	};
-
-// 	console.log(config);
-
-// 	try {
-// 		const { data }: AxiosResponse<ProductsItem, Error> = await axios.patch(
-// 			`${env.VITE_CONNECT_WISE_URL}/procurement/products/${product.id}`,
-// 			"replace",
-// 			config,
-// 		);
-
-// 		console.log("SUCCESFULLY UPDATED MANAGE PRODUCT", data);
-
-// 		return data;
-// 	} catch (error) {
-// 		console.error(error);
-// 	}
-// };
+	return response.data;
+});
 
 // export const updateManageProject = async (
 // 	id: number,

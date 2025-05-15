@@ -4,6 +4,7 @@ import {
 	ChartBarDecreasing,
 	ClipboardList,
 	FileText,
+	Folders,
 	Home,
 	ListChecks,
 	Settings,
@@ -75,11 +76,18 @@ export const linksConfig: LinksConfig = {
 			items: [{ title: "Settings", icon: Settings, to: "/settings" }],
 		},
 		{
-			items: [{
-				title: "Members",
-				icon: Users2,
-				to: "/settings/members",
-			}],
+			items: [
+				{
+					title: "Members",
+					icon: Users2,
+					to: "/settings/members",
+				},
+				{
+					title: "Templates",
+					icon: Folders,
+					to: "/settings/templates",
+				},
+			],
 		},
 	],
 	companyTabs: [

@@ -7,11 +7,70 @@ import {
 	SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Link, useLocation } from '@tanstack/react-router';
+import type { LucideIcon } from 'lucide-react';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 
-type Props = { item: NavItemWithChildren };
+type Props = {
+	item: NavItemWithChildren;
+	actions?: {
+		label: string;
+		icon: LucideIcon;
+		action: () => void;
+	}[];
+};
 
-const NavigationItem = ({ item }: Props) => {
+const NavigationItem = ({ item, actions }: Props) => {
 	const { href } = useLocation();
+
+	if (actions)
+		return (
+			<ContextMenu>
+				<ContextMenuTrigger asChild>
+					<SidebarMenuItem>
+						<SidebarMenuButton
+							tooltip={item.title}
+							isActive={href === item.href}
+							asChild
+						>
+							<Link {...item}>
+								{item.icon && <item.icon />}
+								<span>{item.title}</span>
+							</Link>
+						</SidebarMenuButton>
+
+						{item.items && item.items.length > 0 && (
+							<SidebarMenuSub>
+								{item.items.map((subItem) => (
+									<SidebarMenuSubItem key={subItem.href}>
+										<SidebarMenuSubButton
+											isActive={href === subItem.href}
+											asChild
+										>
+											<Link {...subItem}>
+												{subItem.icon && <subItem.icon />}
+												<span>{subItem.title}</span>
+											</Link>
+										</SidebarMenuSubButton>
+									</SidebarMenuSubItem>
+								))}
+							</SidebarMenuSub>
+						)}
+					</SidebarMenuItem>
+				</ContextMenuTrigger>
+
+				<ContextMenuContent>
+					{actions.map((action) => (
+						<ContextMenuItem
+							key={action.label}
+							onSelect={action.action}
+						>
+							<action.icon />
+							<span>{action.label}</span>
+						</ContextMenuItem>
+					))}
+				</ContextMenuContent>
+			</ContextMenu>
+		);
 
 	return (
 		<SidebarMenuItem>

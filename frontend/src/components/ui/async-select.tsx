@@ -180,35 +180,18 @@ export function AsyncSelect<T>({
 					<CommandList ref={scrollContainerRef}>
 						{error && <div className='p-4 text-destructive text-center'>{error.message}</div>}
 						{loading && options.length === 0 && (loadingSkeleton || <DefaultLoadingSkeleton />)}
-						{!loading &&
-							!isRefetching &&
-							!isFetching &&
-							!error &&
-							options.length === 0 &&
-							(notFound || (
-								<CommandEmpty>{noResultsMessage ?? `No ${label.toLowerCase()} found.`}</CommandEmpty>
-							))}
+						{!isFetching && notFound && (
+							<CommandEmpty>{noResultsMessage ?? `No ${label.toLowerCase()} found.`}</CommandEmpty>
+						)}
 						<CommandGroup>
 							{options.map((option) => (
 								<Fragment key={getOptionValue(option)}>{renderOption(option)}</Fragment>
-								// <CommandItem
-								// 	key={getOptionValue(option)}
-								// 	value={getOptionValue(option)}
-								// 	onSelect={handleSelect}
-								// >
-								// 	<Check
-								// 		className={cn(
-								// 			'ml-auto h-3 w-3',
-								// 			selectedValue === getOptionValue(option) ? 'opacity-100' : 'opacity-0'
-								// 		)}
-								// 	/>
-								// </CommandItem>
 							))}
 							<div
 								ref={loadMoreSentinelRef}
 								style={{ height: '1px' }}
 							/>
-							{!hasNextPage && (
+							{!hasNextPage && !isFetching && (
 								<div className='text-center text-muted-foreground py-3 text-sm'>
 									You&apos;ve reached the end.
 								</div>

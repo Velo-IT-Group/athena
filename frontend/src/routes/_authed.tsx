@@ -11,7 +11,7 @@ import {
 	SidebarMenuItem,
 	SidebarProvider,
 } from '@/components/ui/sidebar';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, Trash } from 'lucide-react';
 import NavigationalSidebar from '@/components/navigational-sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { linksConfig } from '@/config/links';
@@ -28,6 +28,7 @@ import { getAccessTokenQuery, getActivitiesQuery, getWorkerQuery } from '@/lib/t
 import { getPinnedItemsQuery, getTeamsQuery } from '@/lib/supabase/api';
 import OutboundDialer from '@/components/outbound-dialer';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { usePinnedItems } from '@/hooks/use-pinned-items';
 
 export const fetchSessionUser = createServerFn().handler(async () => {
 	const supabase = createClient();
@@ -56,9 +57,9 @@ export const Route = createFileRoute('/_authed')({
 	beforeLoad: async () => {
 		const { user, session, error } = await fetchSessionUser();
 
-		if (!user || !session) {
-			throw redirect({ to: '/login', statusCode: 301, params: { error } });
-		}
+		// if (!user || !session) {
+		// 	throw redirect({ to: '/login', statusCode: 301, params: { error } });
+		// }
 
 		const profile = await getProfile({ data: user.id });
 
@@ -82,6 +83,8 @@ function AuthComponent() {
 			}),
 		],
 	});
+
+	const { handlePinnedItemDeletion } = usePinnedItems();
 
 	return (
 		<SidebarProvider
@@ -149,6 +152,15 @@ function AuthComponent() {
 																params: item.params as Record<string, any>,
 																icon: Icon,
 															}}
+															actions={[
+																{
+																	label: 'Delete',
+																	icon: Trash,
+																	action: () => {
+																		handlePinnedItemDeletion.mutate(item.id);
+																	},
+																},
+															]}
 														/>
 													);
 												})}

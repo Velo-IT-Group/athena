@@ -10,6 +10,7 @@ import {
 	PenLine,
 	Trash,
 	Undo2,
+	type Loader,
 } from 'lucide-react';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { ChevronDown, Star } from 'lucide-react';
@@ -37,6 +38,7 @@ import {
 import { useState } from 'react';
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogFooter,
@@ -59,7 +61,6 @@ import { enUS } from 'date-fns/locale/en-US';
 import { formatRelativeLocale } from '@/components/overview-right';
 import CurrencyInput from '@/components/currency-input';
 import useServiceTicket from '@/hooks/use-service-ticket';
-import ProposalDropZone from '@/components/proposals/proposal-drop-zone';
 
 export const Route = createFileRoute('/_authed/proposals/$id/$version')({
 	component: RouteComponent,
@@ -70,7 +71,7 @@ function RouteComponent() {
 
 	const [{ data: initialData }, { data: pinnedItem }, { data: versions }, { data: totals }] = useSuspenseQueries({
 		queries: [
-			getProposalQuery(id),
+			getProposalQuery(id, version),
 			getPinnedItemQuery({
 				record_type: 'proposals',
 				identifier: id,
@@ -80,7 +81,11 @@ function RouteComponent() {
 		],
 	});
 
-	const { data: proposal, handleProposalUpdate } = useProposal({ id, version, initialData });
+	const {
+		data: proposal,
+		handleProposalUpdate,
+		handleProposalConversion,
+	} = useProposal({ id, version, initialData });
 	const { data: ticket } = useServiceTicket({ id: proposal?.service_ticket ?? 0 });
 	const { handleProposalDeletion } = useProposals({ initialData: [] });
 	const navigate = Route.useNavigate();
@@ -89,10 +94,12 @@ function RouteComponent() {
 		'opportunity' | 'version' | 'revertVersion' | 'delete' | 'settings' | undefined
 	>();
 
+	const [open, setOpen] = useState(false);
+
 	const { data, handlePinnedItemDeletion, handlePinnedItemCreation } = usePinnedItems();
 
 	const { mutate: handleNewVersion, isPending: isNewVersionPending } = useMutation({
-		mutationFn: async () => await createVersion({ data: proposal.id }),
+		mutationFn: async () => await createVersion({ data: proposal?.id ?? '' }),
 		onSuccess: (newVersionId) => {
 			setDialogContent(undefined);
 			navigate({
@@ -105,12 +112,15 @@ function RouteComponent() {
 		},
 	});
 
-	const selectedStatus = proposalStatuses.find((status) => status.value === proposal.status);
+	const selectedStatus = proposalStatuses.find((status) => status.value === proposal?.status);
 
 	return (
-		<Dialog>
-			<Collapsible>
-				<header className='sticky top-0 flex min-h-16 items-center justify-start bg-background px-3 z-50 border-b'>
+		<Dialog
+			open={open}
+			onOpenChange={setOpen}
+		>
+			<Collapsible className='sticky top-0 bg-background z-50'>
+				<header className='flex min-h-16 items-center justify-start px-3 border-b'>
 					<div className='flex flex-1 flex-col items-stretch justify-around'>
 						<div className='flex w-full flex-1 items-stretch justify-start'>
 							<div className='flex-1 pt-3'>
@@ -133,7 +143,6 @@ function RouteComponent() {
 													</EditableArea>
 												</Editable>
 											</h1>
-
 											<DropdownMenu>
 												<DropdownMenuTrigger asChild>
 													<Button
@@ -148,7 +157,7 @@ function RouteComponent() {
 													<DialogTrigger asChild>
 														<DropdownMenuItem
 															onSelect={() => setDialogContent('settings')}
-															disabled={proposal.status === 'signed'}
+															disabled={proposal?.status === 'signed'}
 														>
 															<PenLine className='mr-1.5' />
 															<span>Edit proposal details</span>
@@ -158,7 +167,7 @@ function RouteComponent() {
 													<DialogTrigger asChild>
 														<DropdownMenuItem
 															onSelect={() => setDialogContent('opportunity')}
-															disabled={proposal.status !== 'signed'}
+															disabled={proposal?.status !== 'signed'}
 														>
 															<BetweenHorizontalEnd className='mr-1.5' />
 															<span>Transfer to Manage</span>
@@ -224,7 +233,6 @@ function RouteComponent() {
 													</DialogTrigger>
 												</DropdownMenuContent>
 											</DropdownMenu>
-
 											<Button
 												size='icon'
 												variant='ghost'
@@ -234,8 +242,8 @@ function RouteComponent() {
 														: handlePinnedItemCreation.mutate({
 																pinnedItem: {
 																	record_type: 'proposals',
-																	identifier: proposal.id,
-																	helper_name: proposal.name,
+																	identifier: proposal?.id ?? '',
+																	helper_name: proposal?.name ?? '',
 																	params: { id, version },
 																	path: '/proposals/$id/$version',
 																},
@@ -250,7 +258,6 @@ function RouteComponent() {
 													)}
 												/>
 											</Button>
-
 											<Popover>
 												<PopoverTrigger asChild>
 													<Button
@@ -299,13 +306,34 @@ function RouteComponent() {
 													<Separator />
 												</PopoverContent>
 											</Popover>
+
+											{proposal?.status === 'signed' && (
+												<DialogTrigger asChild>
+													<Button
+														variant='secondary'
+														size='sm'
+														onClick={() => setDialogContent('opportunity')}
+													>
+														{proposal.is_getting_converted ? (
+															<Loader2 className='animate-spin mr-1.5' />
+														) : (
+															<BetweenHorizontalEnd className='mr-1.5' />
+														)}
+														<span>
+															{proposal.is_getting_converted
+																? 'Converting...'
+																: 'Transfer to Manage'}
+														</span>
+													</Button>
+												</DialogTrigger>
+											)}
 										</div>
 									</div>
 								</div>
 							</div>
 
 							<ProposalActions
-								proposalId={proposal.id}
+								proposalId={proposal?.id ?? ''}
 								versionId={version}
 								total={totals?.total_price ?? 0}
 							/>
@@ -372,7 +400,7 @@ function RouteComponent() {
 						<TabsList
 							links={linksConfig.proposalTabs.map((tab) => ({
 								...tab,
-								params: { id: proposal.id, version: proposal.working_version },
+								params: { id: proposal?.id ?? '', version: proposal?.working_version ?? '' },
 							}))}
 							className='border-b-0'
 						/>
@@ -388,8 +416,33 @@ function RouteComponent() {
 				{dialogContent === 'opportunity' && (
 					<>
 						<DialogHeader>
-							<DialogTitle>Transfer To Manage</DialogTitle>
+							<DialogTitle>Are you sure you want to transfer this project?</DialogTitle>
 						</DialogHeader>
+
+						<div className='text-sm text-muted-foreground'>
+							This will create a new opportunity, and transfer all the products, phases, and labor from
+							this proposal.
+						</div>
+
+						<DialogFooter>
+							<DialogClose asChild>
+								<Button
+									variant='secondary'
+									type='button'
+								>
+									Keep editing
+								</Button>
+							</DialogClose>
+
+							<Button
+								onClick={() => {
+									handleProposalConversion.mutate({ id: proposal?.id ?? '' });
+									setOpen(false);
+								}}
+							>
+								Transfer
+							</Button>
+						</DialogFooter>
 
 						{/* <ConversionModal
 					proposal={proposal}
@@ -443,7 +496,7 @@ function RouteComponent() {
 
 							<Button
 								variant='destructive'
-								onClick={() => handleProposalDeletion.mutate({ id: proposal.id })}
+								onClick={() => handleProposalDeletion.mutate({ id: proposal?.id ?? '' })}
 								disabled={handleProposalDeletion.isPending}
 							>
 								{handleProposalDeletion.isPending && <Loader2 className='animate-spin mr-1.5' />}
@@ -465,7 +518,7 @@ function RouteComponent() {
 									<LabeledInput
 										label='Name'
 										className='col-span-2 w-full'
-										value={proposal.name}
+										value={proposal?.name}
 										onChange={(e) => handleProposalUpdate({ proposal: { name: e.target.value } })}
 									/>
 
@@ -480,8 +533,8 @@ function RouteComponent() {
 													size='sm'
 													className={cn(
 														'h-auto py-1.5 border-gray-600 text-muted-foreground justify-start items-center gap-3',
-														proposal.expiration_date
-															? new Date(proposal.expiration_date) < new Date()
+														proposal?.expiration_date
+															? new Date(proposal?.expiration_date) < new Date()
 																? 'text-red-500 border-red-500 hover:border-red-500 hover:text-red-500'
 																: 'text-green-500 border-green-500 hover:border-green-500 hover:text-green-500'
 															: undefined
@@ -501,9 +554,9 @@ function RouteComponent() {
 													</div>
 
 													<span className='whitespace-nowrap overflow-hidden text-ellipsis text-base font-medium'>
-														{proposal.expiration_date
+														{proposal?.expiration_date
 															? formatRelative(
-																	new Date(proposal.expiration_date),
+																	new Date(proposal?.expiration_date),
 																	new Date(),
 																	{
 																		locale: {
@@ -525,13 +578,13 @@ function RouteComponent() {
 												<Calendar
 													mode='single'
 													defaultMonth={
-														proposal.expiration_date
-															? new Date(proposal.expiration_date)
+														proposal?.expiration_date
+															? new Date(proposal?.expiration_date)
 															: undefined
 													}
 													selected={
-														proposal.expiration_date
-															? new Date(proposal.expiration_date)
+														proposal?.expiration_date
+															? new Date(proposal?.expiration_date)
 															: undefined
 													}
 													onSelect={(date) =>
@@ -546,7 +599,7 @@ function RouteComponent() {
 
 									<LabeledInput label='Labor rate'>
 										<CurrencyInput
-											defaultValue={proposal.labor_rate}
+											defaultValue={proposal?.labor_rate}
 											onChange={(e) =>
 												handleProposalUpdate({
 													proposal: { labor_rate: e.target.valueAsNumber },
@@ -565,7 +618,7 @@ function RouteComponent() {
 								<CardContent className='grid grid-cols-2 gap-3'>
 									<div className='grid gap-2 col-span-2'>
 										<h3 className='text-sm text-muted-foreground'>Summary</h3>
-										<p className='font-medium'>{ticket?.summary}</p>
+										<p className='font-medium'>{ticket?.summary ?? ''}</p>
 									</div>
 
 									<div className='grid gap-2'>

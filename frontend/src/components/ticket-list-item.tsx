@@ -87,7 +87,7 @@ const TicketListItem = ({
 				className={cn(
 					'last:border-b-0 pr-1.5 -mr-1.5 group/ticket border border-transparent border-b-border',
 					!ticket.visible &&
-						'group-data-[visible=true]/phase:border group-data-[visible=true]/phase:border-primary group-data-[visible=true]/phase:bg-muted/50 group-data-[visible=true]/phase:border-dashed group-data-[visible=true]/phase:rounded-lg'
+						'group-data-[visible=true]/phase:border group-data-[visible=true]/phase:border-muted-foreground/25 group-data-[visible=true]/phase:bg-muted/50 group-data-[visible=true]/phase:border-dashed group-data-[visible=true]/phase:rounded-lg'
 				)}
 				data-visible={parentVisible ? ticket.visible : false}
 				defaultOpen

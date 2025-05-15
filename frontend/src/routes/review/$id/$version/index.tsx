@@ -1,5 +1,4 @@
 import LabeledInput from '@/components/labeled-input';
-import Navbar from '@/components/nav-bar';
 import ProductCard from '@/components/product-card';
 import Tiptap from '@/components/tip-tap';
 import { Button } from '@/components/ui/button';
@@ -109,10 +108,7 @@ function RouteComponent() {
 				</div>
 			</div>
 
-			<Navbar
-				hideToggle
-				className='bg-background'
-			>
+			<header className='sticky top-0 z-50 flex h-[var(--navbar-height)] w-full shrink-0 items-center gap-3 border-b bg-sidebar px-3 justify-between'>
 				<Dialog>
 					<DialogTrigger asChild>
 						<Button
@@ -129,6 +125,7 @@ function RouteComponent() {
 						</DialogHeader>
 						<form
 							onSubmit={(e) => {
+								e.preventDefault();
 								const data = new FormData(e.currentTarget);
 								handleProposalUpdate({
 									proposal: {
@@ -138,22 +135,6 @@ function RouteComponent() {
 											name: data.get('name') as string,
 											initials: data.get('initials') as string,
 											dateSigned: new Date().toISOString(),
-										},
-									},
-								});
-							}}
-							action={async (data: FormData) => {
-								await updateProposal({
-									data: {
-										id: proposal.id,
-										proposal: {
-											status: 'signed',
-											approval_info: {
-												po: data.get('po') as string,
-												name: data.get('name') as string,
-												initials: data.get('initials') as string,
-												dateSigned: new Date().toISOString(),
-											},
 										},
 									},
 								});
@@ -197,7 +178,7 @@ function RouteComponent() {
 						</form>
 					</DialogContent>
 				</Dialog>
-			</Navbar>
+			</header>
 
 			<div className='border-t'>
 				<div className='grid items-start gap-6 py-6 sm:grid-cols-5 sm:gap-12 sm:py-12 container mx-auto'>

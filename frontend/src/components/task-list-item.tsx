@@ -29,7 +29,7 @@ const TaskListItem = ({ task, parentVisible, handleUpdate, handleDeletion, handl
 			className={cn(
 				'flex items-center flex-1 gap-2 flex-shrink-0 flex-grow space-y-0 hover:bg-muted/50 group border border-transparent border-b-border last:border-b-transparent',
 				!task.visible &&
-					'group-data-[visible=true]/ticket:border group-data-[visible=true]/ticket:border-primary group-data-[visible=true]/ticket:bg-muted/50 group-data-[visible=true]/ticket:border-dashed group-data-[visible=true]/ticket:rounded-lg '
+					'group-data-[visible=true]/ticket:border group-data-[visible=true]/ticket:border-muted-foreground/25 group-data-[visible=true]/ticket:bg-muted/50 group-data-[visible=true]/ticket:border-dashed group-data-[visible=true]/ticket:rounded-lg '
 			)}
 			data-visible={parentVisible ? task.visible : false}
 		>

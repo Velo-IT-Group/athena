@@ -4,9 +4,7 @@ import { useMutation, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Content } from '@tiptap/core';
 import { relativeDate } from '@/utils/date';
 import { toast } from 'sonner';
-import { createCompanyNote } from '@/lib/manage/create';
 import { cn } from '@/lib/utils';
-import { getCompanyNotes } from '@/lib/manage/read';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +14,7 @@ import { Operation, PatchOperation } from '@/types';
 import Tiptap from '@/components/tip-tap';
 import type { CompanyNote } from '@/types/manage';
 import { getCompanyNotesQuery } from '@/lib/manage/api';
+import { createCompanyNote } from '@/lib/manage/create';
 
 type Props = {
 	note?: CompanyNote;
@@ -41,7 +40,7 @@ const SOPExceptions = ({ companyId, isEditable = false, className }: Props) => {
 	const note = data?.data?.[0];
 
 	const updateNote = useMutation({
-		mutationFn: async (operation: PatchOperation[]) => {},
+		mutationFn: async (operation: PatchOperation<CompanyNote>[]) => {},
 		// await updateCompanyNote(companyId, note?.id ?? -1, operation),
 		onError(error) {
 			toast.error(error.message);
@@ -54,7 +53,7 @@ const SOPExceptions = ({ companyId, isEditable = false, className }: Props) => {
 
 	const createNote = useMutation({
 		mutationKey: ['notes', companyId],
-		mutationFn: (newNote: CompanyNote) => createCompanyNote(companyId, newNote),
+		mutationFn: (newNote: CompanyNote) => createCompanyNote({ data: { companyId, note: newNote } }),
 		onError(error) {
 			toast.error(error.message);
 		},

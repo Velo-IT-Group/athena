@@ -188,6 +188,50 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          from: string | null
+          id: string
+          is_read: boolean
+          read_at: string | null
+          resource_params: Json | null
+          resource_path: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from?: string | null
+          id?: string
+          is_read?: boolean
+          read_at?: string | null
+          resource_params?: Json | null
+          resource_path: string
+          type: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          from?: string | null
+          id?: string
+          is_read?: boolean
+          read_at?: string | null
+          resource_params?: Json | null
+          resource_path?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_integrations: {
         Row: {
           client_id: string | null
@@ -253,6 +297,53 @@ export type Database = {
           visibility_settings?: Json
         }
         Relationships: []
+      }
+      phase_templates: {
+        Row: {
+          bill_phase_separately: boolean | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          mark_as_milestone_flag: boolean
+          order: number
+          template_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          bill_phase_separately?: boolean | null
+          created_at?: string
+          created_by?: string
+          description: string
+          id?: string
+          mark_as_milestone_flag?: boolean
+          order: number
+          template_id: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          bill_phase_separately?: boolean | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          mark_as_milestone_flag?: boolean
+          order?: number
+          template_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_template_phases_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       phases: {
         Row: {
@@ -533,6 +624,7 @@ export type Database = {
           date_updated: string
           first_name: string | null
           id: string
+          image_url: string | null
           last_name: string | null
           organization: string | null
           system_member_id: number | null
@@ -545,6 +637,7 @@ export type Database = {
           date_updated?: string
           first_name?: string | null
           id: string
+          image_url?: string | null
           last_name?: string | null
           organization?: string | null
           system_member_id?: number | null
@@ -557,6 +650,7 @@ export type Database = {
           date_updated?: string
           first_name?: string | null
           id?: string
+          image_url?: string | null
           last_name?: string | null
           organization?: string | null
           system_member_id?: number | null
@@ -570,6 +664,43 @@ export type Database = {
             columns: ["organization"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proposal_followers: {
+        Row: {
+          proposal_id: string
+          user_id: string
+        }
+        Insert: {
+          proposal_id: string
+          user_id: string
+        }
+        Update: {
+          proposal_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_followers_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposal_totals"
+            referencedColumns: ["proposal_id"]
+          },
+          {
+            foreignKeyName: "proposal_followers_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_followers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -624,141 +755,6 @@ export type Database = {
           },
         ]
       }
-      proposal_template_phases: {
-        Row: {
-          bill_phase_separately: boolean | null
-          created_at: string
-          created_by: string
-          description: string
-          id: string
-          mark_as_milestone_flag: boolean
-          order: number
-          template_id: string
-          updated_at: string
-          updated_by: string
-        }
-        Insert: {
-          bill_phase_separately?: boolean | null
-          created_at?: string
-          created_by?: string
-          description: string
-          id?: string
-          mark_as_milestone_flag?: boolean
-          order: number
-          template_id: string
-          updated_at?: string
-          updated_by?: string
-        }
-        Update: {
-          bill_phase_separately?: boolean | null
-          created_at?: string
-          created_by?: string
-          description?: string
-          id?: string
-          mark_as_milestone_flag?: boolean
-          order?: number
-          template_id?: string
-          updated_at?: string
-          updated_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "proposal_template_phases_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "proposal_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      proposal_template_tasks: {
-        Row: {
-          created_at: string
-          created_by: string
-          id: string
-          notes: string
-          priority: number
-          summary: string
-          ticket_id: string
-          updated_at: string
-          updated_by: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string
-          id?: string
-          notes: string
-          priority: number
-          summary: string
-          ticket_id: string
-          updated_at?: string
-          updated_by?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          id?: string
-          notes?: string
-          priority?: number
-          summary?: string
-          ticket_id?: string
-          updated_at?: string
-          updated_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "proposal_template_tasks_ticket_id_fkey"
-            columns: ["ticket_id"]
-            isOneToOne: false
-            referencedRelation: "proposal_template_tickets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      proposal_template_tickets: {
-        Row: {
-          budgetHours: number
-          created_at: string
-          created_by: string
-          id: string
-          order: number
-          phase_id: string
-          summary: string
-          updated_at: string
-          updated_by: string
-        }
-        Insert: {
-          budgetHours: number
-          created_at?: string
-          created_by?: string
-          id?: string
-          order: number
-          phase_id: string
-          summary: string
-          updated_at?: string
-          updated_by?: string
-        }
-        Update: {
-          budgetHours?: number
-          created_at?: string
-          created_by?: string
-          id?: string
-          order?: number
-          phase_id?: string
-          summary?: string
-          updated_at?: string
-          updated_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "proposal_template_tickets_phase_id_fkey"
-            columns: ["phase_id"]
-            isOneToOne: false
-            referencedRelation: "proposal_template_phases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       proposal_templates: {
         Row: {
           created_at: string
@@ -795,7 +791,6 @@ export type Database = {
       proposals: {
         Row: {
           approval_info: Json | null
-          assumptions: string | null
           catalog_items: number[] | null
           company: Json | null
           company_id: number | null
@@ -807,6 +802,8 @@ export type Database = {
           expiration_date: string | null
           fts: unknown | null
           id: string
+          is_conversion_completed: boolean
+          is_getting_converted: boolean
           labor_hours: number
           labor_rate: number
           name: string
@@ -821,7 +818,6 @@ export type Database = {
         }
         Insert: {
           approval_info?: Json | null
-          assumptions?: string | null
           catalog_items?: number[] | null
           company?: Json | null
           company_id?: number | null
@@ -833,6 +829,8 @@ export type Database = {
           expiration_date?: string | null
           fts?: unknown | null
           id?: string
+          is_conversion_completed?: boolean
+          is_getting_converted?: boolean
           labor_hours?: number
           labor_rate?: number
           name: string
@@ -847,7 +845,6 @@ export type Database = {
         }
         Update: {
           approval_info?: Json | null
-          assumptions?: string | null
           catalog_items?: number[] | null
           company?: Json | null
           company_id?: number | null
@@ -859,6 +856,8 @@ export type Database = {
           expiration_date?: string | null
           fts?: unknown | null
           id?: string
+          is_conversion_completed?: boolean
+          is_getting_converted?: boolean
           labor_hours?: number
           labor_rate?: number
           name?: string
@@ -978,6 +977,50 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_templates: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          notes: string
+          priority: number
+          summary: string
+          ticket_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes: string
+          priority: number
+          summary: string
+          ticket_id: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string
+          priority?: number
+          summary?: string
+          ticket_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_template_tasks_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -1114,6 +1157,50 @@ export type Database = {
           visibility?: string | null
         }
         Relationships: []
+      }
+      ticket_templates: {
+        Row: {
+          budgetHours: number
+          created_at: string
+          created_by: string
+          id: string
+          order: number
+          phase_id: string
+          summary: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          budgetHours: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          order: number
+          phase_id: string
+          summary: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Update: {
+          budgetHours?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          order?: number
+          phase_id?: string
+          summary?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_template_tickets_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "phase_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tickets: {
         Row: {

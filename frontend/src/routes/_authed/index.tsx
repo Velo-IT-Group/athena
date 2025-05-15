@@ -6,7 +6,7 @@ import PrivateNotepad from '@/components/widgets/private-notepad';
 import MyGoals from '@/components/widgets/my-goals';
 
 import { AchievementsBar } from '@/components/achievements-bar';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import { MyProposals } from '@/components/widgets/my-proposals';
 import { Sortable, SortableContent, SortableItem, SortableOverlay } from '@/components/ui/sortable';
 

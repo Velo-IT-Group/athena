@@ -23,7 +23,7 @@ function RouteComponent() {
 	const { id, version } = Route.useParams();
 
 	const [{ data: proposalSettings }, { data: initialProposal }] = useSuspenseQueries({
-		queries: [getProposalSettingsQuery(id, version), getProposalQuery(id)],
+		queries: [getProposalSettingsQuery(id, version), getProposalQuery(id, version)],
 	});
 
 	const {

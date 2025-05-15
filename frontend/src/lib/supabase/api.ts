@@ -6,6 +6,7 @@ import {
     getEngagementReservations,
     getEngagements,
     getEngagementSummaryByPeriod,
+    getNotifications,
     getPhase,
     getPhases,
     getPinnedItem,
@@ -13,6 +14,7 @@ import {
     getProducts,
     getProfiles,
     getProposal,
+    getProposalFollowers,
     getProposals,
     getProposalSettings,
     getProposalTotals,
@@ -23,12 +25,20 @@ import {
     getStorageFiles,
     getTasks,
     getTeams,
+    getTemplate,
+    getTemplates,
     getTickets,
     getVersions,
     type ProposalQueryOptions,
 } from "@/lib/supabase/read";
+import { baseHeaders } from "@/utils/manage/params";
+import { env } from "@/lib/utils";
 import { FileObject } from "@supabase/storage-js";
 import { queryOptions } from "@tanstack/react-query";
+import type { ProjectWorkPlan } from "@/types/manage";
+import type { ProjectTemplate } from "@/types/manage";
+import { createClient } from "@/lib/supabase/server";
+import { createServerFn } from "@tanstack/react-start";
 
 export const getSectionProductsQuery = (
     {
@@ -65,9 +75,20 @@ export const getEngagementSummaryByPeriodQuery = (
 
 export const getProposalQuery = (
     id: string,
+    version: string,
 ) => queryOptions({
-    queryKey: ["proposals", id],
+    queryKey: ["proposals", id, version],
     queryFn: () => getProposal({ data: id }) as Promise<NestedProposal>,
+    staleTime: Infinity,
+    gcTime: DAY_IN_MS,
+});
+
+export const getProposalFollowersQuery = (
+    id: string,
+    version: string,
+) => queryOptions({
+    queryKey: ["proposals", id, version, "followers"],
+    queryFn: () => getProposalFollowers({ data: id }),
     staleTime: Infinity,
     gcTime: DAY_IN_MS,
 });
@@ -172,6 +193,13 @@ export const getEngagementReservationsQuery = (id: string) =>
         staleTime: Infinity,
     });
 
+export const getNotificationsQuery = () =>
+    queryOptions({
+        queryKey: ["notifications"],
+        queryFn: () => getNotifications() as Promise<AppNotification[]>,
+        staleTime: Infinity,
+    });
+
 export const getProductsQuery = (id: string) =>
     queryOptions({
         queryKey: ["sections", id, "products"],
@@ -209,14 +237,15 @@ export const getPhasesQuery = (proposalId: string, versionId: string) =>
         staleTime: Infinity,
     });
 
-export const getProfilesQuery = () =>
-    queryOptions({
-        queryKey: ["profiles"],
-        queryFn: getProfiles,
-        staleTime: Infinity,
-        gcTime: DAY_IN_MS,
-        networkMode: "offlineFirst",
-    });
+export const getProfilesQuery = (
+    { search, userIds }: { search?: string; userIds?: string[] },
+) => queryOptions({
+    queryKey: ["profiles", search, userIds],
+    queryFn: () => getProfiles({ data: { search, userIds } }),
+    staleTime: Infinity,
+    gcTime: DAY_IN_MS,
+    networkMode: "offlineFirst",
+});
 
 export const getConversationsQuery = (
     { contactId, companyId, limit = 7 }: {
@@ -250,3 +279,178 @@ export const getPhaseQuery = (id: string) =>
         queryKey: ["phases", id],
         queryFn: () => getPhase({ data: id }),
     });
+
+export const getTemplateQuery = (id: string) =>
+    queryOptions({
+        queryKey: ["proposal-templates", id],
+        queryFn: () => getTemplate({ data: id }),
+    });
+
+export const getTemplatesQuery = () =>
+    queryOptions({
+        queryKey: ["proposal-templates"],
+        queryFn: () => getTemplates(),
+    });
+
+export const syncTemplates = createServerFn().handler(async () => {
+    const projectTemplateResponse = await fetch(
+        `${env
+            .VITE_CONNECT_WISE_URL!}/project/projectTemplates`,
+        {
+            headers: baseHeaders,
+        },
+    );
+
+    if (!projectTemplateResponse.ok) {
+        console.error(projectTemplateResponse.statusText);
+        throw Error(
+            "Error fetching project templates... " +
+                projectTemplateResponse.statusText,
+            {
+                cause: projectTemplateResponse.statusText,
+            },
+        );
+    }
+
+    const templates: ProjectTemplate[] = await projectTemplateResponse
+        .json();
+
+    const workplansResponse = await Promise.all(
+        templates.map(({ id }) =>
+            fetch(
+                `${env
+                    .VITE_CONNECT_WISE_URL!}/project/projectTemplates/${id}/workplan`,
+                {
+                    // next: {
+                    // 	revalidate: 21600,
+                    // 	tags: ['workplans'],
+                    // },
+                    headers: baseHeaders,
+                },
+            )
+        ),
+    );
+
+    const workplans: ProjectWorkPlan[] = await Promise.all(
+        workplansResponse.map((r) => r.json()),
+    );
+
+    const fullTemplates: ProjectTemplate[] = templates.map((template) => {
+        return {
+            ...template,
+            workplan: workplans.find((workplan) =>
+                workplan.templateId === template.id
+            ),
+        };
+    });
+
+    const supabase = createClient();
+
+    const templateData = await Promise.all(
+        fullTemplates.map(async (template) => {
+            const { data: templateData, error } = await supabase
+                .from("proposal_templates")
+                .insert({
+                    name: template.name,
+                    description: template.description,
+                })
+                .select();
+
+            console.log(templateData, error);
+
+            if (template.workplan) {
+                await Promise.all(
+                    template.workplan?.phases.map(async (phase) => {
+                        const { data: phaseData, error: phaseError } =
+                            await supabase
+                                .from("phase_templates")
+                                .insert({
+                                    description: phase.description,
+                                    order: parseInt(phase.wbsCode),
+                                    template_id: templateData?.[0].id ?? "",
+                                    bill_phase_separately:
+                                        phase.billPhaseSeparately,
+                                    mark_as_milestone_flag:
+                                        phase.markAsMilestoneFlag,
+                                })
+                                .select();
+
+                        console.log(phaseData, phaseError);
+
+                        if (phase.tickets) {
+                            await Promise.all(
+                                phase.tickets.map(async (ticket, index) => {
+                                    const {
+                                        data: ticketData,
+                                        error: ticketError,
+                                    } = await supabase
+                                        .from(
+                                            "ticket_templates",
+                                        )
+                                        .insert({
+                                            summary: ticket.summary,
+                                            description: ticket.description,
+                                            budgetHours: ticket.budgetHours,
+                                            order: ticket.wbsCode
+                                                ? parseInt(
+                                                    ticket.wbsCode
+                                                        .split(
+                                                            ".",
+                                                        )[0],
+                                                )
+                                                : index,
+                                            phase_id: phaseData?.[0].id ??
+                                                "",
+                                        }).select();
+
+                                    console.log(ticketData, ticketError);
+
+                                    if (ticket.tasks) {
+                                        await Promise.all(
+                                            ticket.tasks.map(
+                                                async (task) => {
+                                                    const {
+                                                        data: taskData,
+                                                        error: taskError,
+                                                    } = await supabase
+                                                        .from(
+                                                            "task_templates",
+                                                        )
+                                                        .insert({
+                                                            summary:
+                                                                task.summary ??
+                                                                    "",
+                                                            notes: task.notes ??
+                                                                "",
+                                                            priority:
+                                                                task.priority ??
+                                                                    0,
+                                                            ticket_id:
+                                                                ticketData
+                                                                    ?.[0]
+                                                                    .id ??
+                                                                    "",
+                                                        });
+
+                                                    console.log(
+                                                        taskData,
+                                                        taskError,
+                                                    );
+                                                },
+                                            ),
+                                        );
+                                    }
+                                    return ticketData;
+                                }),
+                            );
+                        }
+                    }),
+                );
+            }
+
+            return templateData;
+        }),
+    );
+
+    return templateData;
+});

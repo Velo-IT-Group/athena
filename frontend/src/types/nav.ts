@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react';
-import type { LinkOptions } from '@tanstack/react-router';
+import type { LucideIcon } from "lucide-react";
+import type { LinkOptions } from "@tanstack/react-router";
 
 export interface NavSection {
 	label?: String;
@@ -12,6 +12,12 @@ export interface NavItem extends LinkOptions {
 	icon?: LucideIcon;
 }
 
+export type Action = {
+	title: string;
+	action: () => void;
+};
+
 export interface NavItemWithChildren extends NavItem {
 	items?: NavItemWithChildren[];
+	actions?: Action[];
 }

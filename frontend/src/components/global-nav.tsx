@@ -22,7 +22,7 @@ import { useWorker } from '@/providers/worker-provider';
 import type { Session } from '@supabase/supabase-js';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { History, LogOut, RefreshCcw, Settings } from 'lucide-react';
+import { Bell, FilePen, History, LogOut, RefreshCcw, Settings } from 'lucide-react';
 import type { WorkerInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/worker';
 
 type Props = {
@@ -38,8 +38,9 @@ const GlobalNav = ({ profile, session, worker }: Props) => {
 		{
 			data: { data: reservations },
 		},
+		{ data: notifications },
 	] = useSuspenseQueries({
-		queries: [getActivitiesQuery(), getEngagementReservationsQuery(worker.sid)],
+		queries: [getActivitiesQuery(), getEngagementReservationsQuery(worker.sid), getNotificationsQuery()],
 	});
 
 	const { updateWorkerActivity, activity } = useWorker();
@@ -120,6 +121,21 @@ const GlobalNav = ({ profile, session, worker }: Props) => {
 					</DropdownMenuContent>
 				</DropdownMenu>
 
+				<Suspense
+					fallback={
+						<Button
+							variant='ghost'
+							size='icon'
+							disabled
+						>
+							<Bell />
+							<span className='sr-only'>Notifications</span>
+						</Button>
+					}
+				>
+					<NotificationFeed />
+				</Suspense>
+
 				<Dialog>
 					<AlertDialog>
 						<DropdownMenu>
@@ -192,8 +208,12 @@ export default GlobalNav;
 
 import { relativeDay } from '@/utils/date';
 import { Phone, PhoneIncoming, PhoneMissed, PhoneOutgoing } from 'lucide-react';
-import { formatDate } from 'date-fns';
-import { getEngagementReservationsQuery } from '@/lib/supabase/api';
+import { formatDate, formatRelative } from 'date-fns';
+import { getEngagementReservationsQuery, getNotificationsQuery } from '@/lib/supabase/api';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import NotificationFeed from '@/components/notification-feed';
+import { Suspense } from 'react';
 
 type HistoryListItemProps = {
 	reservation: EngagementReservation & {

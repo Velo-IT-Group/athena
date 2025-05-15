@@ -21,6 +21,25 @@ export const updateProposalSettings = createServerFn().validator((
   },
 );
 
+export const updateNotification = createServerFn().validator((
+  params: { id: string; notification: AppNotificationUpdate },
+) => params).handler(async ({ data: { id, notification } }) => {
+  const supabase = createClient();
+  const { error } = await supabase.from("notifications").update(notification)
+    .eq(
+      "id",
+      id,
+    );
+
+  if (error) {
+    throw new Error("Error updating notification " + error.message, {
+      cause: error,
+    });
+  }
+
+  return true;
+});
+
 export const updatePinnedItem = createServerFn().validator((
   { id, item }: { id: string; item: PinnedItemUpdate },
 ) => ({ id, item })).handler(async ({ data: { id, item } }) => {

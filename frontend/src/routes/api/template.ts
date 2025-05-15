@@ -15,8 +15,6 @@ export const APIRoute = createAPIFileRoute("/api/template")({
                 headers: baseHeaders,
             },
         );
-        // `${env
-        // 	.VITE_CONNECT_WISE_URL!}/project/projectTemplates?fields=id,name,description&pageSize=1000&orderBy=name`,
 
         if (!projectTemplateResponse.ok) {
             console.error(projectTemplateResponse.statusText);
@@ -73,14 +71,14 @@ export const APIRoute = createAPIFileRoute("/api/template")({
                     })
                     .select();
 
-                console.log(templateData);
+                console.log(templateData, error);
 
                 if (template.workplan) {
                     await Promise.all(
                         template.workplan?.phases.map(async (phase) => {
                             const { data: phaseData, error: phaseError } =
                                 await supabase
-                                    .from("proposal_template_phases")
+                                    .from("phase_templates")
                                     .insert({
                                         description: phase.description,
                                         order: parseInt(phase.wbsCode),
@@ -92,7 +90,7 @@ export const APIRoute = createAPIFileRoute("/api/template")({
                                     })
                                     .select();
 
-                            console.log(phaseData);
+                            console.log("phaseData", phaseData, phaseError);
 
                             if (phase.tickets) {
                                 await Promise.all(
@@ -102,13 +100,11 @@ export const APIRoute = createAPIFileRoute("/api/template")({
                                             error: ticketError,
                                         } = await supabase
                                             .from(
-                                                "proposal_template_tickets",
+                                                "ticket_templates",
                                             )
                                             .insert({
                                                 summary: ticket.summary,
                                                 description: ticket.description,
-                                                budget_hours:
-                                                    ticket.budgetHours,
                                                 budgetHours: ticket.budgetHours,
                                                 order: ticket.wbsCode
                                                     ? parseInt(
@@ -122,7 +118,7 @@ export const APIRoute = createAPIFileRoute("/api/template")({
                                                     "",
                                             }).select();
 
-                                        console.log(ticketData);
+                                        console.log(ticketData, ticketError);
 
                                         if (ticket.tasks) {
                                             await Promise.all(
@@ -133,7 +129,7 @@ export const APIRoute = createAPIFileRoute("/api/template")({
                                                             error: taskError,
                                                         } = await supabase
                                                             .from(
-                                                                "proposal_template_tasks",
+                                                                "task_templates",
                                                             )
                                                             .insert({
                                                                 summary:
@@ -152,7 +148,10 @@ export const APIRoute = createAPIFileRoute("/api/template")({
                                                                         "",
                                                             });
 
-                                                        console.log(taskData);
+                                                        console.log(
+                                                            taskData,
+                                                            taskError,
+                                                        );
                                                     },
                                                 ),
                                             );

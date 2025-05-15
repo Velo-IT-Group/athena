@@ -18,6 +18,7 @@ import { Route as SettingsRouteImport } from './routes/settings/route'
 import { Route as SettingsIndexImport } from './routes/settings/index'
 import { Route as AuthedIndexImport } from './routes/_authed/index'
 import { Route as AuthAuthCodeErrorImport } from './routes/auth/auth-code-error'
+import { Route as SettingsTemplatesIndexImport } from './routes/settings/templates/index'
 import { Route as SettingsMembersIndexImport } from './routes/settings/members/index'
 import { Route as AuthedTicketsIndexImport } from './routes/_authed/tickets/index'
 import { Route as AuthedTeamsIndexImport } from './routes/_authed/teams/index'
@@ -46,6 +47,7 @@ import { Route as AuthedCompaniesIdContactsImport } from './routes/_authed/compa
 import { Route as AuthedCompaniesIdConfigurationsImport } from './routes/_authed/companies/$id/configurations'
 import { Route as AuthedProposalsIdVersionRouteImport } from './routes/_authed/proposals/$id/$version/route'
 import { Route as AuthedProposalsIdVersionIndexImport } from './routes/_authed/proposals/$id/$version/index'
+import { Route as SettingsTemplatesProposalIdEditImport } from './routes/settings/templates/proposal/$id/edit'
 import { Route as AuthedProposalsIdVersionWorkplanImport } from './routes/_authed/proposals/$id/$version/workplan'
 import { Route as AuthedProposalsIdVersionSettingsImport } from './routes/_authed/proposals/$id/$version/settings'
 import { Route as AuthedProposalsIdVersionProductsImport } from './routes/_authed/proposals/$id/$version/products'
@@ -91,6 +93,12 @@ const AuthAuthCodeErrorRoute = AuthAuthCodeErrorImport.update({
   id: '/auth/auth-code-error',
   path: '/auth/auth-code-error',
   getParentRoute: () => rootRoute,
+} as any)
+
+const SettingsTemplatesIndexRoute = SettingsTemplatesIndexImport.update({
+  id: '/templates/',
+  path: '/templates/',
+  getParentRoute: () => SettingsRouteRoute,
 } as any)
 
 const SettingsMembersIndexRoute = SettingsMembersIndexImport.update({
@@ -269,6 +277,13 @@ const AuthedProposalsIdVersionIndexRoute =
     getParentRoute: () => AuthedProposalsIdVersionRouteRoute,
   } as any)
 
+const SettingsTemplatesProposalIdEditRoute =
+  SettingsTemplatesProposalIdEditImport.update({
+    id: '/templates/proposal/$id/edit',
+    path: '/templates/proposal/$id/edit',
+    getParentRoute: () => SettingsRouteRoute,
+  } as any)
+
 const AuthedProposalsIdVersionWorkplanRoute =
   AuthedProposalsIdVersionWorkplanImport.update({
     id: '/workplan',
@@ -434,6 +449,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsMembersIndexImport
       parentRoute: typeof SettingsRouteImport
     }
+    '/settings/templates/': {
+      id: '/settings/templates/'
+      path: '/templates'
+      fullPath: '/settings/templates'
+      preLoaderRoute: typeof SettingsTemplatesIndexImport
+      parentRoute: typeof SettingsRouteImport
+    }
     '/_authed/proposals/$id/$version': {
       id: '/_authed/proposals/$id/$version'
       path: '/proposals/$id/$version'
@@ -553,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProposalsIdVersionWorkplanImport
       parentRoute: typeof AuthedProposalsIdVersionRouteImport
     }
+    '/settings/templates/proposal/$id/edit': {
+      id: '/settings/templates/proposal/$id/edit'
+      path: '/templates/proposal/$id/edit'
+      fullPath: '/settings/templates/proposal/$id/edit'
+      preLoaderRoute: typeof SettingsTemplatesProposalIdEditImport
+      parentRoute: typeof SettingsRouteImport
+    }
     '/_authed/proposals/$id/$version/': {
       id: '/_authed/proposals/$id/$version/'
       path: '/'
@@ -583,12 +612,16 @@ interface SettingsRouteRouteChildren {
   SettingsIndexRoute: typeof SettingsIndexRoute
   SettingsMembersIdRouteRoute: typeof SettingsMembersIdRouteRouteWithChildren
   SettingsMembersIndexRoute: typeof SettingsMembersIndexRoute
+  SettingsTemplatesIndexRoute: typeof SettingsTemplatesIndexRoute
+  SettingsTemplatesProposalIdEditRoute: typeof SettingsTemplatesProposalIdEditRoute
 }
 
 const SettingsRouteRouteChildren: SettingsRouteRouteChildren = {
   SettingsIndexRoute: SettingsIndexRoute,
   SettingsMembersIdRouteRoute: SettingsMembersIdRouteRouteWithChildren,
   SettingsMembersIndexRoute: SettingsMembersIndexRoute,
+  SettingsTemplatesIndexRoute: SettingsTemplatesIndexRoute,
+  SettingsTemplatesProposalIdEditRoute: SettingsTemplatesProposalIdEditRoute,
 }
 
 const SettingsRouteRouteWithChildren = SettingsRouteRoute._addFileChildren(
@@ -729,6 +762,7 @@ export interface FileRoutesByFullPath {
   '/teams': typeof AuthedTeamsIndexRoute
   '/tickets': typeof AuthedTicketsIndexRoute
   '/settings/members': typeof SettingsMembersIndexRoute
+  '/settings/templates': typeof SettingsTemplatesIndexRoute
   '/proposals/$id/$version': typeof AuthedProposalsIdVersionRouteRouteWithChildren
   '/companies/$id/configurations': typeof AuthedCompaniesIdConfigurationsRoute
   '/companies/$id/contacts': typeof AuthedCompaniesIdContactsRoute
@@ -746,6 +780,7 @@ export interface FileRoutesByFullPath {
   '/proposals/$id/$version/products': typeof AuthedProposalsIdVersionProductsRoute
   '/proposals/$id/$version/settings': typeof AuthedProposalsIdVersionSettingsRoute
   '/proposals/$id/$version/workplan': typeof AuthedProposalsIdVersionWorkplanRoute
+  '/settings/templates/proposal/$id/edit': typeof SettingsTemplatesProposalIdEditRoute
   '/proposals/$id/$version/': typeof AuthedProposalsIdVersionIndexRoute
 }
 
@@ -764,6 +799,7 @@ export interface FileRoutesByTo {
   '/teams': typeof AuthedTeamsIndexRoute
   '/tickets': typeof AuthedTicketsIndexRoute
   '/settings/members': typeof SettingsMembersIndexRoute
+  '/settings/templates': typeof SettingsTemplatesIndexRoute
   '/companies/$id/configurations': typeof AuthedCompaniesIdConfigurationsRoute
   '/companies/$id/contacts': typeof AuthedCompaniesIdContactsRoute
   '/companies/$id/proposals': typeof AuthedCompaniesIdProposalsRoute
@@ -780,6 +816,7 @@ export interface FileRoutesByTo {
   '/proposals/$id/$version/products': typeof AuthedProposalsIdVersionProductsRoute
   '/proposals/$id/$version/settings': typeof AuthedProposalsIdVersionSettingsRoute
   '/proposals/$id/$version/workplan': typeof AuthedProposalsIdVersionWorkplanRoute
+  '/settings/templates/proposal/$id/edit': typeof SettingsTemplatesProposalIdEditRoute
   '/proposals/$id/$version': typeof AuthedProposalsIdVersionIndexRoute
 }
 
@@ -805,6 +842,7 @@ export interface FileRoutesById {
   '/_authed/teams/': typeof AuthedTeamsIndexRoute
   '/_authed/tickets/': typeof AuthedTicketsIndexRoute
   '/settings/members/': typeof SettingsMembersIndexRoute
+  '/settings/templates/': typeof SettingsTemplatesIndexRoute
   '/_authed/proposals/$id/$version': typeof AuthedProposalsIdVersionRouteRouteWithChildren
   '/_authed/companies/$id/configurations': typeof AuthedCompaniesIdConfigurationsRoute
   '/_authed/companies/$id/contacts': typeof AuthedCompaniesIdContactsRoute
@@ -822,6 +860,7 @@ export interface FileRoutesById {
   '/_authed/proposals/$id/$version/products': typeof AuthedProposalsIdVersionProductsRoute
   '/_authed/proposals/$id/$version/settings': typeof AuthedProposalsIdVersionSettingsRoute
   '/_authed/proposals/$id/$version/workplan': typeof AuthedProposalsIdVersionWorkplanRoute
+  '/settings/templates/proposal/$id/edit': typeof SettingsTemplatesProposalIdEditRoute
   '/_authed/proposals/$id/$version/': typeof AuthedProposalsIdVersionIndexRoute
 }
 
@@ -848,6 +887,7 @@ export interface FileRouteTypes {
     | '/teams'
     | '/tickets'
     | '/settings/members'
+    | '/settings/templates'
     | '/proposals/$id/$version'
     | '/companies/$id/configurations'
     | '/companies/$id/contacts'
@@ -865,6 +905,7 @@ export interface FileRouteTypes {
     | '/proposals/$id/$version/products'
     | '/proposals/$id/$version/settings'
     | '/proposals/$id/$version/workplan'
+    | '/settings/templates/proposal/$id/edit'
     | '/proposals/$id/$version/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -882,6 +923,7 @@ export interface FileRouteTypes {
     | '/teams'
     | '/tickets'
     | '/settings/members'
+    | '/settings/templates'
     | '/companies/$id/configurations'
     | '/companies/$id/contacts'
     | '/companies/$id/proposals'
@@ -898,6 +940,7 @@ export interface FileRouteTypes {
     | '/proposals/$id/$version/products'
     | '/proposals/$id/$version/settings'
     | '/proposals/$id/$version/workplan'
+    | '/settings/templates/proposal/$id/edit'
     | '/proposals/$id/$version'
   id:
     | '__root__'
@@ -921,6 +964,7 @@ export interface FileRouteTypes {
     | '/_authed/teams/'
     | '/_authed/tickets/'
     | '/settings/members/'
+    | '/settings/templates/'
     | '/_authed/proposals/$id/$version'
     | '/_authed/companies/$id/configurations'
     | '/_authed/companies/$id/contacts'
@@ -938,6 +982,7 @@ export interface FileRouteTypes {
     | '/_authed/proposals/$id/$version/products'
     | '/_authed/proposals/$id/$version/settings'
     | '/_authed/proposals/$id/$version/workplan'
+    | '/settings/templates/proposal/$id/edit'
     | '/_authed/proposals/$id/$version/'
   fileRoutesById: FileRoutesById
 }
@@ -983,7 +1028,9 @@ export const routeTree = rootRoute
       "children": [
         "/settings/",
         "/settings/members/$id",
-        "/settings/members/"
+        "/settings/members/",
+        "/settings/templates/",
+        "/settings/templates/proposal/$id/edit"
       ]
     },
     "/_authed": {
@@ -1093,6 +1140,10 @@ export const routeTree = rootRoute
       "filePath": "settings/members/index.tsx",
       "parent": "/settings"
     },
+    "/settings/templates/": {
+      "filePath": "settings/templates/index.tsx",
+      "parent": "/settings"
+    },
     "/_authed/proposals/$id/$version": {
       "filePath": "_authed/proposals/$id/$version/route.tsx",
       "parent": "/_authed",
@@ -1165,6 +1216,10 @@ export const routeTree = rootRoute
     "/_authed/proposals/$id/$version/workplan": {
       "filePath": "_authed/proposals/$id/$version/workplan.tsx",
       "parent": "/_authed/proposals/$id/$version"
+    },
+    "/settings/templates/proposal/$id/edit": {
+      "filePath": "settings/templates/proposal/$id/edit.tsx",
+      "parent": "/settings"
     },
     "/_authed/proposals/$id/$version/": {
       "filePath": "_authed/proposals/$id/$version/index.tsx",

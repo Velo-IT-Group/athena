@@ -26,6 +26,21 @@ export const createPinnedItem = createServerFn().validator((
 	return data;
 });
 
+export const createProposalFollower = createServerFn().validator((
+	follower: ProposalFollowerInsert,
+) => follower).handler(async ({ data: follower }) => {
+	const supabase = createClient();
+	const { error } = await supabase.from("proposal_followers").insert(
+		follower,
+	);
+
+	if (error) {
+		throw new Error("Error creating proposal follower " + error.message, {
+			cause: error,
+		});
+	}
+});
+
 export const createSection = createServerFn().validator((
 	section: SectionInsert,
 ) => section).handler(async ({ data: section }) => {

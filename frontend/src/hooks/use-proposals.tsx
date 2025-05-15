@@ -19,11 +19,11 @@ export const useProposals = ({ initialData }: Props) => {
 
 	const handleProposalInsert = useMutation({
 		mutationFn: async ({ proposal }: { proposal: ProposalInsert }) => createProposal({ data: proposal }),
-		onMutate: async ({ proposal }) => updateQueryCache(queryClient, queryKey, proposal),
+		onMutate: async ({ proposal }) => await updateQueryCache(queryClient, queryKey, proposal),
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newProduct, context) => {
-			queryClient.setQueryData(queryKey, context?.previousItem);
+			queryClient.setQueryData(queryKey, context?.previousItem ?? []);
 		},
 		onSuccess: async (data, variables, context) => {
 			await navigate({ to: '/proposals/$id/$version', params: { id: data.id, version: data.version } });

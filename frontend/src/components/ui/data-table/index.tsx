@@ -130,7 +130,7 @@ export function DataTable<TData, TValue>({
 	);
 	const [queryPagination, setQueryPagination] = useQueryState(
 		'pagination',
-		parseAsJson(paginationSchema.parse).withDefault({ page: 0, pageSize: 25 })
+		parseAsJson(paginationSchema.parse).withDefault({ page: 1, pageSize: 25 })
 	);
 	const [querySort, setQuerySort] = useQueryState(
 		'sort',
@@ -151,8 +151,6 @@ export function DataTable<TData, TValue>({
 	const [expanded, setExpanded] = useState<ExpandedState>({});
 
 	const { data: initialData, isLoading } = useQuery(options);
-
-	console.log(initialData);
 
 	// Step 5: Create our TanStack Table instance
 	const table = useReactTable({
