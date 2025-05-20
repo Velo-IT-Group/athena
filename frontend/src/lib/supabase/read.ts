@@ -471,9 +471,12 @@ export const getProposalFollowers = createServerFn().validator((id: string) =>
 			).eq("proposal_id", id);
 
 		if (error) {
-			throw new Error("Error in getting templates " + error.message, {
-				cause: error,
-			});
+			throw new Error(
+				"Error in getting proposal followers " + error.message,
+				{
+					cause: error,
+				},
+			);
 		}
 
 		return data;

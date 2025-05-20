@@ -120,18 +120,21 @@ export const APIRoute = createAPIFileRoute("/api/proposals/convert-to-manage")({
         );
 
         // Create default service product
-        await createManageProduct(
-            {
-                data: {
-                    catalogItem: { id: 15 },
-                    price: proposal.labor_rate,
-                    quantity: phases.reduce(
-                        (acc, current) => acc + current.hours,
-                        0,
-                    ),
+        if (!products.some((product) => product.id === 15)) {
+            await createManageProduct(
+                {
+                    data: {
+                        catalogItem: { id: 15 },
+                        price: proposal.labor_rate,
+                        quantity: phases.reduce(
+                            (acc, current) => acc + current.hours,
+                            0,
+                        ),
+                        billableOption: "Billable",
+                    },
                 },
-            },
-        );
+            );
+        }
 
         // Create all products
         const createdProducts = await Promise.all(
@@ -142,11 +145,10 @@ export const APIRoute = createAPIFileRoute("/api/proposals/convert-to-manage")({
                     quantity: product.quantity,
                     price: product.price ?? undefined,
                     cost: product.cost ?? undefined,
+                    billableOption: "Billable",
                 })
             ),
         );
-
-        console.log(createdProducts);
 
         let project: Project | undefined;
 
@@ -156,6 +158,11 @@ export const APIRoute = createAPIFileRoute("/api/proposals/convert-to-manage")({
                     id: opportunity.id,
                     body: {
                         includeAllProductsFlag: true,
+                        board: {
+                            id: 1,
+                        },
+                        estimatedStart: new Date().toISOString(),
+                        estimatedEnd: new Date().toISOString(),
                     },
                 },
             });

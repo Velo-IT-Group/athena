@@ -10,7 +10,6 @@ import {
 	PenLine,
 	Trash,
 	Undo2,
-	type Loader,
 } from 'lucide-react';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { ChevronDown, Star } from 'lucide-react';
@@ -18,12 +17,12 @@ import TabsList from '@/components/tabs-list';
 import { ProposalActions } from '@/components/proposal-actions';
 import { Editable, EditableArea, EditableInput, EditablePreview } from '@/components/ui/editable';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ListSelector } from '@/components/status-selector';
+import { ListSelector } from '@/components/list-selector';
 import { Separator } from '@/components/ui/separator';
 import { ColoredBadge } from '@/components/ui/badge';
 import useProposal from '@/hooks/use-proposal';
 import { cn } from '@/lib/utils';
-import { useMutation, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import { useMutation, useSuspenseQueries } from '@tanstack/react-query';
 import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
 import {
 	DropdownMenu,
@@ -132,7 +131,9 @@ function RouteComponent() {
 													defaultValue={proposal?.name}
 													className='md:text-2xl cursor-pointer'
 													autosize
-													onSubmit={(name) => handleProposalUpdate({ proposal: { name } })}
+													onSubmit={(name) =>
+														handleProposalUpdate.mutate({ proposal: { name } })
+													}
 												>
 													<EditableArea>
 														<EditablePreview className='md:text-2xl px-1.5 -ml-1.5 -mr-1.5' />
@@ -143,6 +144,7 @@ function RouteComponent() {
 													</EditableArea>
 												</Editable>
 											</h1>
+
 											<DropdownMenu>
 												<DropdownMenuTrigger asChild>
 													<Button
@@ -203,7 +205,7 @@ function RouteComponent() {
 																	)}
 																	onSelect={({ id: versionId }) => {
 																		if (versionId !== version) {
-																			handleProposalUpdate({
+																			handleProposalUpdate.mutate({
 																				proposal: {
 																					working_version: versionId,
 																				},
@@ -233,6 +235,7 @@ function RouteComponent() {
 													</DialogTrigger>
 												</DropdownMenuContent>
 											</DropdownMenu>
+
 											<Button
 												size='icon'
 												variant='ghost'
@@ -258,6 +261,7 @@ function RouteComponent() {
 													)}
 												/>
 											</Button>
+
 											<Popover>
 												<PopoverTrigger asChild>
 													<Button
@@ -286,7 +290,7 @@ function RouteComponent() {
 													<ListSelector
 														currentValue={selectedStatus}
 														onSelect={(status) =>
-															handleProposalUpdate({
+															handleProposalUpdate.mutate({
 																proposal: { status: status.value as StatusEnum },
 															})
 														}
@@ -332,11 +336,22 @@ function RouteComponent() {
 								</div>
 							</div>
 
-							<ProposalActions
-								proposalId={proposal?.id ?? ''}
-								versionId={version}
-								total={totals?.total_price ?? 0}
-							/>
+							{proposal ? (
+								<ProposalActions
+									proposalId={proposal?.id ?? ''}
+									versionId={version}
+									total={totals?.total_price ?? 0}
+								/>
+							) : (
+								<div className='flex items-center justify-end'>
+									<Button
+										variant='secondary'
+										size='sm'
+									>
+										Create proposal
+									</Button>
+								</div>
+							)}
 						</div>
 
 						<CollapsibleContent className='grid grid-cols-4 gap-3 mb-1.5'>
@@ -408,9 +423,7 @@ function RouteComponent() {
 				</header>
 			</Collapsible>
 
-			<main>
-				<Outlet />
-			</main>
+			<Outlet />
 
 			<DialogContent className='max-h-w-padding-padding min-h-0 flex flex-col overflow-auto'>
 				{dialogContent === 'opportunity' && (
@@ -519,7 +532,9 @@ function RouteComponent() {
 										label='Name'
 										className='col-span-2 w-full'
 										value={proposal?.name}
-										onChange={(e) => handleProposalUpdate({ proposal: { name: e.target.value } })}
+										onChange={(e) =>
+											handleProposalUpdate.mutate({ proposal: { name: e.target.value } })
+										}
 									/>
 
 									<LabeledInput
@@ -588,7 +603,7 @@ function RouteComponent() {
 															: undefined
 													}
 													onSelect={(date) =>
-														handleProposalUpdate({
+														handleProposalUpdate.mutate({
 															proposal: { expiration_date: date?.toISOString() },
 														})
 													}
@@ -601,7 +616,7 @@ function RouteComponent() {
 										<CurrencyInput
 											defaultValue={proposal?.labor_rate}
 											onChange={(e) =>
-												handleProposalUpdate({
+												handleProposalUpdate.mutate({
 													proposal: { labor_rate: e.target.valueAsNumber },
 												})
 											}

@@ -40,7 +40,7 @@ function Badge({
 }
 
 const coloredBadgeVariants = cva(
-	'inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset',
+	'inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium ring-1 ring-inset [&>svg]:mr-1.5',
 	{
 		variants: {
 			variant: {

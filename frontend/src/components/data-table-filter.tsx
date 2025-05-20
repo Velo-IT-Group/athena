@@ -35,7 +35,6 @@ import { X } from 'lucide-react';
 import { Ellipsis } from 'lucide-react';
 import { cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import type { DataFetcher } from '@/components/command-menu';
 import { useQuery } from '@tanstack/react-query';
 
 export function DataTableFilter<TData, TValue>({ table }: { table: Table<TData> }) {
@@ -882,7 +881,7 @@ export function FilterValueMultiOptionDisplay<TData, TValue>({
 	table,
 }: FilterValueDisplayProps<TData, TValue>) {
 	// let options: ColumnOption[] | DataFetcher;
-	let options: ColumnOption[] | DataFetcher;
+	let options: ColumnOption[];
 	const columnVals = table
 		.getCoreRowModel()
 		.rows.flatMap((r) => r.getValue<TValue>(id))
@@ -915,12 +914,6 @@ export function FilterValueMultiOptionDisplay<TData, TValue>({
 	}
 
 	const filter = column.getFilterValue() as FilterModel<'multiOption', TData>;
-
-	if (typeof options === 'object' && 'fetcher' in options) {
-		const fetcher = options as DataFetcher;
-		const { data } = useQuery(fetcher.options);
-		console.log(data);
-	}
 
 	const selected = options.filter((o) => filter?.values[0].includes(o.value));
 

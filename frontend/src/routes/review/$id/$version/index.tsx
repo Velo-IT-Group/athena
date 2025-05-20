@@ -18,7 +18,7 @@ import { getPhases, getProposal, getProposalSettings, getProposalTotals, getSect
 import { updateProposal } from '@/lib/supabase/update';
 import { calculateTotals } from '@/utils/helpers';
 import { getCurrencyString } from '@/utils/money';
-import { useSuspenseQueries } from '@tanstack/react-query';
+import { useQueries, useSuspenseQueries } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ClockIcon } from 'lucide-react';
 import { Fragment } from 'react/jsx-runtime';
@@ -31,7 +31,7 @@ function RouteComponent() {
 	const { id, version: versionParam } = Route.useParams();
 
 	const [{ data: initialProposal }, { data: sections }, { data: totals }, { data: settings }, { data: phases }] =
-		useSuspenseQueries({
+		useQueries({
 			queries: [
 				{
 					queryKey: ['proposals', id, versionParam],
@@ -62,7 +62,7 @@ function RouteComponent() {
 		version: versionParam,
 		initialData: initialProposal,
 	});
-	const proposalExpirationDate = new Date(proposal.expiration_date ?? '');
+	const proposalExpirationDate = new Date(proposal?.expiration_date ?? '');
 
 	const today = new Date(); // Get today's date
 
@@ -79,7 +79,7 @@ function RouteComponent() {
 		proposalExpirationDate.getDate()
 	);
 
-	if (proposal.status === 'signed')
+	if (proposal?.status === 'signed')
 		return <div className='relative bg-secondary/25 dark:bg-background flex-1 min-h-screen'>Approved</div>;
 
 	if (todayWithoutTime > dateToCompareWithoutTime)
@@ -283,7 +283,7 @@ function RouteComponent() {
 													/mo
 												</p>
 												<p className='text-sm text-muted-foreground text-right col-span-2'>
-													{getCurrencyString(totals.labor_cost ?? 0)}
+													{getCurrencyString(totals?.labor_cost ?? 0)}
 												</p>
 											</div>
 										</div>
@@ -295,13 +295,13 @@ function RouteComponent() {
 											<div className='grid gap-2 justify-items-end grid-cols-3 col-span-3'>
 												<p className='text-sm text-muted-foreground text-right'>
 													<span className='font-medium'>
-														{getCurrencyString(totals.recurring_total ?? 0)}
+														{getCurrencyString(totals?.recurring_total ?? 0)}
 														/mo
 													</span>
 												</p>
 												<p className='text-sm text-muted-foreground text-right col-span-2'>
 													<span className='font-medium'>
-														{getCurrencyString(totals.total_price ?? 0)}
+														{getCurrencyString(totals?.total_price ?? 0)}
 													</span>
 												</p>
 											</div>

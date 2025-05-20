@@ -36,32 +36,38 @@ export const linksConfig: LinksConfig = {
 				{
 					title: "Home",
 					icon: Home,
-					to: "/",
+					href: "https://athena.velomethod.com",
+					// to: "/",
 				},
 				{
 					title: "Coordinator View",
 					icon: ChartBarDecreasing,
-					to: "/coordinator-view",
+					href: "https://athena.velomethod.com/coordinator-view",
+					// to: "/coordinator-view",
 				},
-				{
-					title: "Teams",
-					icon: Users,
-					to: "/teams",
-				},
+				// {
+				// 	title: "Teams",
+				// 	icon: Users,
+				// 	href: "https://www.athena.velomethod.com/teams",
+				// 	// to: "/teams",
+				// },
 				{
 					title: "Tickets",
 					icon: Ticket,
-					to: "/tickets",
+					href: "https://athena.velomethod.com/tickets",
+					// to: "/tickets",
 				},
 				{
 					title: "Companies",
 					icon: Building,
-					to: "/companies",
+					href: "https://athena.velomethod.com/companies",
+					// to: "/companies",
 				},
 				{
 					title: "Contacts",
 					icon: User,
-					to: "/contacts",
+					href: "https://athena.velomethod.com/contacts",
+					// to: "/contacts",
 				},
 				{
 					title: "Proposals",

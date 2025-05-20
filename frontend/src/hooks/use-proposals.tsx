@@ -1,8 +1,13 @@
-import { getProposalsQuery } from '@/lib/supabase/api';
-import { createProposal } from '@/lib/supabase/create';
+import { getProposalFollowersQuery, getProposalSettingsQuery, getProposalsQuery } from '@/lib/supabase/api';
+
+import { createProposal, createProposalFollower } from '@/lib/supabase/create';
 import { deleteProposal } from '@/lib/supabase/delete';
-import { updateQueryCache } from '@/lib/utils';
+import { updateProposal, updateProposalSettings } from '@/lib/supabase/update';
+
+import { addCacheItem, deleteCacheItem, env, updateArrayCacheItem, updateCacheItem } from '@/lib/utils';
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
 import { useNavigate } from '@tanstack/react-router';
 
 type Props = {
@@ -13,17 +18,24 @@ export const useProposals = ({ initialData }: Props) => {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const query = getProposalsQuery();
+
 	const { queryKey } = query;
 
-	const { data } = useQuery(query);
+	console.log(initialData);
+
+	const {
+		data: { data },
+	} = useQuery({ ...query, initialData: { data: initialData || [], count: initialData?.length ?? 0 } });
 
 	const handleProposalInsert = useMutation({
 		mutationFn: async ({ proposal }: { proposal: ProposalInsert }) => createProposal({ data: proposal }),
-		onMutate: async ({ proposal }) => await updateQueryCache(queryClient, queryKey, proposal),
+		onMutate: async ({ proposal }) =>
+			await addCacheItem<NestedProposal>(queryClient, queryKey, proposal as NestedProposal),
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newProduct, context) => {
-			queryClient.setQueryData(queryKey, context?.previousItem ?? []);
+			console.log(context);
+			queryClient.setQueryData<NestedProposal[]>(queryKey, context?.previousItems ?? []);
 		},
 		onSuccess: async (data, variables, context) => {
 			await navigate({ to: '/proposals/$id/$version', params: { id: data.id, version: data.version } });
@@ -37,33 +49,11 @@ export const useProposals = ({ initialData }: Props) => {
 
 	const handleProposalDeletion = useMutation({
 		mutationFn: async ({ id }: { id: string }) => deleteProposal({ data: id }),
-		onMutate: async ({ id }) => {
-			// Cancel any outgoing refetches
-			// (so they don't overwrite our optimistic update)
-			await queryClient.cancelQueries({
-				queryKey,
-			});
-
-			// Snapshot the previous value
-			const { data: previousItems } = queryClient.getQueryData<{ data: NestedProposal[]; count: number }>(
-				queryKey
-			) ?? {
-				data: [],
-				count: 0,
-			};
-
-			const newItems: NestedProposal[] = [...previousItems.filter((p) => p.id !== id)];
-
-			// Optimistically update to the new value
-			queryClient.setQueryData(queryKey, newItems);
-
-			// Return a context with the previous and new items
-			return { previousItems, newItems };
-		},
-		// If the mutation fails,
-		// use the context returned from onMutate to roll back
+		onMutate: async ({ id }) => deleteCacheItem<NestedProposal>(queryClient, queryKey, (item) => item.id === id),
+		// Cancel any outgoing refetches
+		// (so they don't overwrite our optimistic update)
 		onError: (err, newProduct, context) => {
-			queryClient.setQueryData(queryKey, context?.previousItems);
+			queryClient.setQueryData<NestedProposal[]>(queryKey, context?.previousItems ?? []);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
@@ -75,5 +65,114 @@ export const useProposals = ({ initialData }: Props) => {
 		},
 	});
 
-	return { data, handleProposalInsert, handleProposalDeletion };
+	const handleProposalUpdate = useMutation({
+		mutationFn: async ({ id, proposal }: { id: string; proposal: ProposalUpdate }) =>
+			updateProposal({ data: { id, proposal } }),
+		onMutate: async ({ id, proposal }) =>
+			updateArrayCacheItem<NestedProposal>(queryClient, queryKey, proposal, (item) => item.id === id),
+		onError: (err, newProduct, context) => {
+			queryClient.setQueryData<NestedProposal[]>(queryKey, context?.previousItems ?? []);
+		},
+		onSettled: async () => {
+			await queryClient.invalidateQueries({
+				queryKey,
+			});
+		},
+	});
+
+	const handleProposalSettingsUpdate = useMutation({
+		mutationFn: async ({
+			id,
+			version,
+			settings,
+		}: {
+			id: string;
+			version: string;
+			settings: ProposalSettingsUpdate;
+		}) => updateProposalSettings({ data: { version, settings } }),
+		onMutate: async ({ id, version, settings }) => {
+			const settingsQuery = getProposalSettingsQuery(id, version);
+			const { queryKey: settingsQueryKey } = settingsQuery;
+
+			return updateCacheItem<ProposalSettings>(
+				queryClient,
+				settingsQueryKey,
+				settings,
+				(item) => item.proposal === settings.proposal
+			);
+		},
+		// If the mutation fails,
+		// use the context returned from onMutate to roll back
+		onError: (err, { id, version }, context) => {
+			const settingsQuery = getProposalSettingsQuery(id, version);
+			const { queryKey: settingsQueryKey } = settingsQuery;
+			queryClient.setQueryData<ProposalSettings[]>(settingsQueryKey, context?.previousItems);
+		},
+		onSettled: async (_, __, { id, version }) => {
+			const settingsQuery = getProposalSettingsQuery(id, version);
+			const { queryKey: settingsQueryKey } = settingsQuery;
+			await queryClient.invalidateQueries({
+				queryKey: settingsQueryKey,
+			});
+		},
+	});
+
+	const handleProposalConversion = useMutation({
+		mutationFn: async ({ id, version }: { id: string; version: string }) =>
+			await fetch(`${env.VITE_SUPABASE_URL}/functions/v1/convert-proposal-to-project`, {
+				method: 'POST',
+				body: JSON.stringify({
+					proposalId: id,
+					versionId: version,
+				}),
+			}),
+		onMutate: async ({ id }) =>
+			updateCacheItem<NestedProposal>(
+				queryClient,
+				queryKey,
+				{ ...(data?.find((item) => item.id === id) ?? {}), is_getting_converted: true },
+				(item) => item.id === id
+			),
+		onError: (err, newProduct, context) => {
+			if (!context) return;
+			queryClient.setQueryData<NestedProposal[]>(queryKey, context?.previousItems);
+		},
+		onSettled: async () => {
+			await queryClient.invalidateQueries({
+				queryKey,
+			});
+		},
+	});
+
+	const handleAddingFollower = useMutation({
+		mutationFn: async ({ id, user }: { id: string; version: string; user: Profile }) =>
+			await createProposalFollower({ data: { proposal_id: id, user_id: user.id } }),
+		onMutate: async ({ id, version, user }) => {
+			const followersQuery = getProposalFollowersQuery(id, version);
+			const { queryKey: followersQueryKey } = followersQuery;
+			return await addCacheItem<Profile>(queryClient, followersQueryKey, user);
+		},
+		onError: (err, { id, version }, context) => {
+			const followersQuery = getProposalFollowersQuery(id, version);
+			const { queryKey: followersQueryKey } = followersQuery;
+			queryClient.setQueryData<Profile[]>(followersQueryKey, context?.previousItems);
+		},
+		onSettled: async (_, __, { id, version }) => {
+			const followersQuery = getProposalFollowersQuery(id, version);
+			const { queryKey: followersQueryKey } = followersQuery;
+			await queryClient.invalidateQueries({
+				queryKey: followersQueryKey,
+			});
+		},
+	});
+
+	return {
+		data,
+		handleProposalInsert,
+		handleProposalDeletion,
+		handleProposalUpdate,
+		handleProposalSettingsUpdate,
+		handleProposalConversion,
+		handleAddingFollower,
+	};
 };

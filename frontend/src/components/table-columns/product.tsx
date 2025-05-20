@@ -18,15 +18,15 @@ export const columns: ColumnDef<Product>[] = [
 		id: 'drag',
 		enableHiding: false,
 		cell: () => (
-			<SortableItemHandle asChild>
-				<Button
-					variant='ghost'
-					size='icon'
-					// className='size-8'
-				>
-					<GripVertical />
-				</Button>
-			</SortableItemHandle>
+			// <SortableItemHandle asChild>
+			<Button
+				variant='ghost'
+				size='icon'
+				// className='size-8'
+			>
+				<GripVertical />
+			</Button>
+			// </SortableItemHandle>
 		),
 	},
 	{

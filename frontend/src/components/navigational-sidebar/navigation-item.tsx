@@ -32,10 +32,20 @@ const NavigationItem = ({ item, actions }: Props) => {
 							isActive={href === item.href}
 							asChild
 						>
-							<Link {...item}>
-								{item.icon && <item.icon />}
-								<span>{item.title}</span>
-							</Link>
+							{item.href ? (
+								<a
+									href={item.href}
+									target='_blank'
+								>
+									{item.icon && <item.icon />}
+									<span>{item.title}</span>
+								</a>
+							) : (
+								<Link {...item}>
+									{item.icon && <item.icon />}
+									<span>{item.title}</span>
+								</Link>
+							)}
 						</SidebarMenuButton>
 
 						{item.items && item.items.length > 0 && (
@@ -79,10 +89,20 @@ const NavigationItem = ({ item, actions }: Props) => {
 				isActive={href === item.href}
 				asChild
 			>
-				<Link {...item}>
-					{item.icon && <item.icon />}
-					<span>{item.title}</span>
-				</Link>
+				{item.href ? (
+					<a
+						href={item.href}
+						target='_blank'
+					>
+						{item.icon && <item.icon />}
+						<span>{item.title}</span>
+					</a>
+				) : (
+					<Link {...item}>
+						{item.icon && <item.icon />}
+						<span>{item.title}</span>
+					</Link>
+				)}
 			</SidebarMenuButton>
 
 			{item.items && item.items.length > 0 && (

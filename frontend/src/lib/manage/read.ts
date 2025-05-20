@@ -1161,22 +1161,24 @@ export const getTemplate = async (id: number) => {
 	return { ...template, workplan: workplan ?? [] };
 };
 
-export const getOpportunityProducts = async (id: number) => {
+export const getProducts = createServerFn().validator((
+	conditions?: Conditions<ProductsItem>,
+) => generateParams(conditions)).handler(async ({ data: conditions }) => {
 	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL!}/project/projectTemplates/${id}`,
+		`${env.VITE_CONNECT_WISE_URL!}/procurement/products${conditions}`,
 		{
 			headers: baseHeaders,
 		},
 	);
 
 	if (!response.ok) {
-		throw Error("Error fetching opportunity...", {
+		throw Error("Error fetching products... " + await response.json(), {
 			cause: response.statusText,
 		});
 	}
 
 	return (await response.json()) as ProductsItem[];
-};
+});
 
 export const getOpportunityTypes = async (): Promise<
 	{ id: number; description: string }[]

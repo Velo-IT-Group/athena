@@ -5,10 +5,9 @@ import { createProduct } from '@/lib/supabase/create';
 import { deleteProduct } from '@/lib/supabase/delete';
 import { updateProduct } from '@/lib/supabase/update';
 
-import { getSectionProducts } from '@/lib/supabase/read';
-import { updateArrayQueryCache } from '@/lib/utils';
 import { getProposalTotalsQuery, getSectionProductsQuery, getSectionsQuery } from '@/lib/supabase/api';
 import { useCallback } from 'react';
+import { addCacheItem, updateCacheItem } from '@/lib/utils';
 
 type Props = {
 	initialData: NestedProduct[];
@@ -86,7 +85,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 
 			updateProposalTotals(newProduct);
 
-			return updateArrayQueryCache(queryClient, queryKey, newProduct, (p) => p.unique_id === id);
+			return updateCacheItem<NestedProduct>(queryClient, queryKey, newProduct, (p) => p.unique_id === id);
 		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
@@ -104,7 +103,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		mutationFn: async ({ product, bundledItems }: { product: ProductInsert; bundledItems?: ProductInsert[] }) =>
 			createProduct({ data: { product, bundledItems } }),
 		onMutate: async ({ product, bundledItems }) =>
-			updateArrayQueryCache(queryClient, queryKey, {
+			addCacheItem<NestedProduct>(queryClient, queryKey, {
 				...product,
 				products: bundledItems,
 			}),

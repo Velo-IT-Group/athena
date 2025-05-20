@@ -1,8 +1,8 @@
-import { z } from "zod";
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import type { QueryClient } from "@tanstack/react-query";
-import { dataTableFilterQuerySchema } from "@/components/ui/data-table";
+import { z } from 'zod';
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import type { QueryClient } from '@tanstack/react-query';
+import { dataTableFilterQuerySchema } from '@/components/ui/data-table';
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const sortSchema = z.object({
 	field: z.string(),
-	direction: z.enum(["asc", "desc"]).default("asc"),
+	direction: z.enum(['asc', 'desc']).default('asc'),
 });
 
 export const paginationSchema = z.object({
@@ -25,7 +25,7 @@ export const filterSchema = z.object({
 });
 
 const envSchema = z.object({
-	MODE: z.enum(["development", "production", "test"]),
+	MODE: z.enum(['development', 'production', 'test']),
 	VITE_ATLASSIAN_API_TOKEN: z.string(),
 	VITE_CONNECT_WISE_CLIENT_ID: z.string(),
 	VITE_CONNECT_WISE_PASSWORD: z.string(),
@@ -54,27 +54,23 @@ const envSchema = z.object({
 export const env = envSchema.parse(import.meta.env);
 
 export const delay = async (delay = 1000) => {
-	const delayPromise = (ms: number) =>
-		new Promise((res) => setTimeout(res, ms));
+	const delayPromise = (ms: number) => new Promise((res) => setTimeout(res, ms));
 	await delayPromise(delay);
 };
 
 /**
  * Updates the query cache with a new item
  * @param {QueryClient} queryClient
- * @param {unknown[]} queryKey
- * @param {T} newItem
- * @param {Function} comparisonFn
- * @return {Promise<{ previousItems: T[] | undefined, newItems: T[] }>}
+ * @param {readonly unknown[]} queryKey
+ * @param {any} item
+ * @return {Promise<{ previousItem: T, newItem?: T }>}
  */
-export const updateArrayQueryCache = async <T>(
+export const updateCacheItem = async <T>(
 	queryClient: QueryClient,
-	queryKey: unknown[],
-	newItem: T,
-	comparisonFn?: (item: T) => boolean,
-): Promise<{ previousItems: T[] | undefined; newItems: T[] }> => {
-	let newItems: T[] = [];
-	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
+	queryKey: readonly unknown[],
+	item: any
+): Promise<{ previousItem: T; newItem?: T }> => {
+	const previousItem = queryClient.getQueryData<T>(queryKey) ?? [];
 
 	// Cancel any outgoing refetches
 	// (so they don't overwrite our optimistic update)
@@ -82,22 +78,50 @@ export const updateArrayQueryCache = async <T>(
 		queryKey,
 	});
 
-	if (comparisonFn) {
-		// Snapshot the previous value
-		console.log(previousItems);
-		const updatedItem = previousItems?.find(comparisonFn);
+	if (!previousItem) return { previousItem: item };
 
-		const newItemTest = { ...updatedItem, ...newItem };
+	const updatedItem = { ...previousItem, ...item };
 
-		newItems = [
-			...previousItems.filter((item) => !comparisonFn(item)),
-			newItemTest,
-		];
-	} else {
-		newItems = [...previousItems, newItem];
-	}
+	// Optimistically update to the new value
+	queryClient.setQueryData(queryKey, updatedItem);
 
-	console.log(newItems, previousItems);
+	/// Returning context for optimistic updates
+	return { previousItem: previousItem as T, newItem: updatedItem as T };
+};
+
+/**
+ * Updates the query cache with a new item
+ * @param {QueryClient} queryClient
+ * @param {readonly unknown[]} queryKey
+ * @param {T} item
+ * @param {Function} comparisonFn
+ * @return {Promise<{ previousItems: T[], newItems: T[] }>}
+ */
+export const updateArrayCacheItem = async <T>(
+	queryClient: QueryClient,
+	queryKey: readonly unknown[],
+	item: any,
+	comparisonFn: (item: T) => boolean
+): Promise<{ previousItems: T[]; newItems: T[] }> => {
+	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
+	console.log(previousItems);
+
+	// Cancel any outgoing refetches
+	// (so they don't overwrite our optimistic update)
+	await queryClient.cancelQueries({
+		queryKey,
+	});
+
+	const updatedItem = previousItems?.find(comparisonFn);
+
+	const newItemTest = { ...updatedItem, ...item };
+
+	console.log('updatedItem', updatedItem);
+	console.log('newItemTest', newItemTest);
+
+	const newItems = [...previousItems.filter((item) => !comparisonFn(item)), newItemTest];
+
+	console.log(newItems);
 
 	// Optimistically update to the new value
 	queryClient.setQueryData(queryKey, newItems);
@@ -106,41 +130,53 @@ export const updateArrayQueryCache = async <T>(
 	return { previousItems, newItems };
 };
 
-/**
- * Updates the query cache with a new item
- * @param {QueryClient} queryClient
- * @param {unknown[]} queryKey
- * @param {T} newItem
- * @return {Promise<{ previousItems: T | undefined, newItems: T }>}
- */
-export const updateQueryCache = async <T>(
+export const deleteCacheItem = async <T>(
 	queryClient: QueryClient,
 	queryKey: readonly unknown[],
-	newItem: T,
-): Promise<{ previousItem: T | undefined; newItem: T }> => {
-	const previousItem = queryClient.getQueryData<T>(queryKey);
+	comparisonFn: (item: T) => boolean
+): Promise<{ previousItems: T[]; newItems: T[] }> => {
+	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
+	const newItems = previousItems.filter((item) => !comparisonFn(item));
+	queryClient.setQueryData(queryKey, newItems);
+	return { previousItems, newItems };
+};
 
-	// Cancel any outgoing refetches
-	// (so they don't overwrite our optimistic update)
-	await queryClient.cancelQueries({
-		queryKey,
-	});
+export const addCacheItem = async <T>(
+	queryClient: QueryClient,
+	queryKey: readonly unknown[],
+	item: T
+): Promise<{ previousItems: T[]; newItems: T[] }> => {
+	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
+	console.log(previousItems);
+	const newItems = [...previousItems, item];
+	console.log(newItems);
+	queryClient.setQueryData(queryKey, newItems);
+	return { previousItems, newItems };
+};
 
-	const updatedItem: T = { ...previousItem, ...newItem };
+export const moveTicketsBetweenPhases = (from: NestedPhase, to: NestedPhase, targetedIndex: number) => {
+	const fromPhaseTickets = from.tickets;
+	const toPhaseTickets = to.tickets;
 
-	// Optimistically update to the new value
-	queryClient.setQueryData(queryKey, updatedItem);
+	if (!fromPhaseTickets || !toPhaseTickets) {
+		return { fromPhase: from, toPhase: to };
+	}
 
-	/// Returning context for optimistic updates
-	return { previousItem, newItem: updatedItem };
+	const newFromPhaseTickets = fromPhaseTickets?.filter((ticket) => ticket.id !== to.id);
+	const newToPhaseTickets = [...toPhaseTickets, ...fromPhaseTickets];
+
+	const newFromPhase = { ...from, tickets: newFromPhaseTickets };
+	const newToPhase = { ...to, tickets: newToPhaseTickets };
+
+	return { fromPhase: newFromPhase, toPhase: newToPhase };
 };
 
 export const parsePhoneNumber = (phoneNumber: string) => {
-	const regex = "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$";
+	const regex = '^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$';
 	const isValid = phoneNumber.match(regex);
 
 	return {
 		isValid,
-		formattedNumber: phoneNumber.replace(regex, "+1 \($1\) $2-$3"),
+		formattedNumber: phoneNumber.replace(regex, '+1 ($1) $2-$3'),
 	};
 };

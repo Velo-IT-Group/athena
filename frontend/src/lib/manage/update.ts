@@ -1,21 +1,10 @@
-import { decryptToken } from "@/utils/crypto";
-// import { createClient } from '@/utils/supabase/server';
-import axios, {
-	AxiosHeaders,
-	type AxiosRequestConfig,
-	type AxiosResponse,
-} from "axios";
-// import { CompanyNote, ProductsItem } from '@/types/manage';
-// import { ManageProductUpdate, PatchOperation } from '@/types';
-import { env } from "../utils";
-import { createClient } from "@/lib/supabase/server";
+import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
+import { env } from "@/lib/utils";
 import type { PatchOperation } from "@/types";
 import { createServerFn } from "@tanstack/react-start";
 import { baseHeaders } from "@/utils/manage/params";
-import { getCookie } from "@tanstack/start/server";
-import { jwtVerify } from "jose";
-import type { WebToken } from "@/types/crypto";
 import type { Project } from "@/types/manage";
+import authMiddleware from "@/lib/supabase/middleware";
 
 const headers = new AxiosHeaders(baseHeaders);
 
@@ -33,21 +22,25 @@ headers.set(
 		),
 );
 
-export const updateTicket = createServerFn().validator((
-	{ id, operation }: { id: number; operation: PatchOperation<Ticket>[] },
-) => ({ id, operation })).handler(async ({ data: { id, operation } }) => {
-	const config: AxiosRequestConfig = {
-		headers,
-	};
+export const updateTicket = createServerFn().middleware([authMiddleware])
+	.validator((
+		{ id, operation }: { id: number; operation: PatchOperation<Ticket>[] },
+	) => ({ id, operation })).handler(
+		async ({ data: { id, operation }, context }) => {
+			const config: AxiosRequestConfig = {
+				headers: context.userHeaders,
+			};
 
-	const { data } = await axios.patch(
-		`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}`,
-		operation,
-		config,
+			console.log(config);
+			// const { data } = await axios.patch(
+			// 	`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}`,
+			// 	operation,
+			// 	config,
+			// );
+
+			// return data;
+		},
 	);
-
-	return data;
-});
 
 // export const updateCompanyNote = async (
 // 	companyId: number,

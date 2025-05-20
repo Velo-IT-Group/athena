@@ -20,11 +20,7 @@ type Props = {
 };
 
 const TaskListItem = ({ task, parentVisible, handleUpdate, handleDeletion, handleDuplication }: Props) => (
-	<SortableItem
-		key={task.id}
-		value={task.id}
-		asChild
-	>
+	<SortableItem value={task.id}>
 		<div
 			className={cn(
 				'flex items-center flex-1 gap-2 flex-shrink-0 flex-grow space-y-0 hover:bg-muted/50 group border border-transparent border-b-border last:border-b-transparent',
@@ -33,41 +29,43 @@ const TaskListItem = ({ task, parentVisible, handleUpdate, handleDeletion, handl
 			)}
 			data-visible={parentVisible ? task.visible : false}
 		>
-			<SortableItemHandle asChild>
-				<Button
-					variant='ghost'
-					size='icon'
-					className='-ml-1.5'
-				>
-					<GripVertical />
-				</Button>
-			</SortableItemHandle>
-
-			<Editable
-				defaultValue={task.notes}
-				defaultEditing={true}
-				placeholder='Enter your text here'
-				className='text-base flex flex-row items-center ml-12'
-				onSubmit={(value) =>
-					handleUpdate({
-						notes: value,
-					})
-				}
-				autosize
-			>
-				<EditableArea>
-					<EditablePreview className='whitespace-pre-wrap px-1.5 text-sm' />
-					<EditableInput
-						className='px-1.5 text-sm whitespace-pre-wrap'
-						asChild
+			<div className='flex items-center'>
+				<SortableItemHandle asChild>
+					<Button
+						variant='ghost'
+						size='smIcon'
+						className='opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground'
 					>
-						<textarea
-							className='w-full grow'
-							cols={200}
-						/>
-					</EditableInput>
-				</EditableArea>
-			</Editable>
+						<GripVertical />
+					</Button>
+				</SortableItemHandle>
+
+				<Editable
+					defaultValue={task.notes}
+					defaultEditing={true}
+					placeholder='Enter your text here'
+					className='text-base flex flex-row items-center ml-12'
+					onSubmit={(value) =>
+						handleUpdate({
+							notes: value,
+						})
+					}
+					autosize
+				>
+					<EditableArea>
+						<EditablePreview className='whitespace-pre-wrap px-1.5 text-sm' />
+						<EditableInput
+							className='px-1.5 text-sm whitespace-pre-wrap'
+							asChild
+						>
+							<textarea
+								className='w-full grow'
+								cols={200}
+							/>
+						</EditableInput>
+					</EditableArea>
+				</Editable>
+			</div>
 
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>

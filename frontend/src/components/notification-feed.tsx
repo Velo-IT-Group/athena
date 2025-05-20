@@ -1,7 +1,5 @@
-import { TabsContent } from '@/components/ui/tabs';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, FilePen } from 'lucide-react';
 import { formatRelative } from 'date-fns';
 import { Link } from '@tanstack/react-router';
@@ -10,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 type Props = {};
 
-const NotificationFeed = (props: Props) => {
+const NotificationCenter = (props: Props) => {
 	const {
 		allNotifications,
 		unreadNotifications,
@@ -40,13 +38,14 @@ const NotificationFeed = (props: Props) => {
 
 			<PopoverContent
 				align='end'
-				className='space-y-3 w-lg min-w-md'
+				className='flex flex-col content-stretch justify-stretch p-0'
+				style={{ width: 'min(100vw, 450px)', maxHeight: 'min(-100px + 100vh, 800px)' }}
 			>
-				<div className='flex items-center justify-between'>
+				<div className='py-3 px-4 border-b flex items-center justify-between shrink-0'>
 					<h2 className='text-lg font-medium'>Notifications</h2>
 
 					<Button
-						variant='link'
+						variant='outline'
 						size='sm'
 						disabled={unreadNotifications?.length === 0}
 						onClick={() => {
@@ -57,58 +56,24 @@ const NotificationFeed = (props: Props) => {
 					</Button>
 				</div>
 
-				<Tabs defaultValue='all'>
-					<TabsList className='w-full'>
-						<TabsTrigger value='all'>All</TabsTrigger>
-						<TabsTrigger value='following'>Following</TabsTrigger>
-						<TabsTrigger value='archive'>Archive</TabsTrigger>
-					</TabsList>
-
-					<TabsContent
-						value='all'
-						className='space-y-1.5 h-96 overflow-y-auto'
-					>
-						{allNotifications?.map((notification) => (
-							<NotificationItem
-								key={notification.id}
-								notification={notification}
-								markNotificationAsRead={markNotificationAsRead.mutate}
-							/>
-						))}
-					</TabsContent>
-
-					<TabsContent
-						value='following'
-						className='space-y-1.5 h-96 overflow-y-auto'
-					>
-						{unreadNotifications?.map((notification) => (
-							<NotificationItem
-								key={notification.id}
-								notification={notification}
-								markNotificationAsRead={markNotificationAsRead.mutate}
-							/>
-						))}
-					</TabsContent>
-
-					<TabsContent
-						value='archive'
-						className='space-y-1.5 h-96 overflow-y-auto'
-					>
-						{archiveNotifications?.map((notification) => (
-							<NotificationItem
-								key={notification.id}
-								notification={notification}
-								markNotificationAsRead={markNotificationAsRead.mutate}
-							/>
-						))}
-					</TabsContent>
-				</Tabs>
+				<div className='flex-1 overflow-y-auto'>
+					<NotificationSection />
+					<NotificationItemTest notification={allNotifications?.[0]} />
+				</div>
 			</PopoverContent>
 		</Popover>
 	);
 };
 
-export default NotificationFeed;
+export default NotificationCenter;
+
+const NotificationSection = ({}) => {
+	return (
+		<div className='h-9 flex items-center justify-between p-3 bg-muted font-medium text-muted-foreground'>
+			Unread
+		</div>
+	);
+};
 
 const NotificationItem = ({
 	notification,
@@ -152,3 +117,27 @@ const NotificationItem = ({
 		</Link>
 	);
 };
+
+function NotificationItemTest({ notification }: { notification: AppNotification }) {
+	return (
+		<div className='flex gap-3 p-3 border-b'>
+			<div className='size-8 rounded-full bg-muted grid place-items-center'>
+				<Bell />
+			</div>
+
+			<div className='flex-1'>
+				<p className='font-medium'>{notificationHelperText.get(notification?.type)?.title}</p>
+				<p className='text-sm text-muted-foreground'>
+					{notificationHelperText.get(notification?.type)?.description}
+				</p>
+			</div>
+			<div className='text-sm text-muted-foreground'></div>
+		</div>
+	);
+}
+
+const notificationHelperText = new Map();
+notificationHelperText.set('proposal_approved', {
+	title: 'Proposal approved',
+	description: 'Expect a transaction for $48.64 in 3 days from Bird Rock Coffee Roasters.',
+});

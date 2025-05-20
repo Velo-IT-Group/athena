@@ -24,8 +24,10 @@ export const decryptSymmetric = (
 	return plaintext;
 };
 
-export const decryptToken = (token: string, user_id: string) =>
-	verify(token, env.VITE_SECRET_KEY + user_id) as WebToken;
+export const decryptToken = (token: string, user_id: string) => {
+	console.log(token, env.VITE_SECRET_KEY + user_id);
+	return verify(token, env.VITE_SECRET_KEY + user_id) as WebToken;
+};
 
 export const encryptSymmetric = (key: string, plaintext: string) => {
 	const iv = randomBytes(12).toString("base64");

@@ -7,12 +7,12 @@ import { CommandItem } from '@/components/ui/command';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useCurrentUserImage } from '@/hooks/use-current-user-image';
 import { useCurrentUserName } from '@/hooks/use-current-user-name';
-import useProposal from '@/hooks/use-proposal';
+import { useProposals } from '@/hooks/use-proposals';
 import { getProposalFollowersQuery } from '@/lib/supabase/api';
-import { getProfiles, getProposalFollowers } from '@/lib/supabase/read';
+import { getProfiles } from '@/lib/supabase/read';
 import { getCurrencyString } from '@/utils/money';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { Building2, Check, Ellipsis, Link } from 'lucide-react';
+import { Building2, Check, Link } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export function ProposalActions({
@@ -24,7 +24,7 @@ export function ProposalActions({
 	versionId: string;
 	total: number;
 }) {
-	const { handleAddingFollower } = useProposal({ id: proposalId, version: versionId });
+	const { handleAddingFollower } = useProposals({});
 	const { data: followers } = useSuspenseQuery(getProposalFollowersQuery(proposalId, versionId));
 
 	const image = useCurrentUserImage();
@@ -64,7 +64,7 @@ export function ProposalActions({
 						<CommandItem
 							value={option.id}
 							onSelect={() => {
-								handleAddingFollower.mutate({ user: option });
+								handleAddingFollower.mutate({ id: proposalId, version: versionId, user: option });
 							}}
 						>
 							{option.first_name} {option.last_name}
@@ -88,89 +88,6 @@ export function ProposalActions({
 						showDeletion
 					/>
 				</AsyncSelect>
-				{/* <div
-					className='FacepileButton FacepileButton--sizeSmall'
-					aria-label='Manage project members'
-					role='button'
-					tabIndex={0}
-					style={{
-						cursor: 'pointer',
-						display: 'inline-flex',
-						borderRadius: 'calc((24px + 4px)*.5)',
-					}}
-				>
-					<ul
-						className='FacepileStructure Facepile FacepileButton-facepile'
-						aria-hidden='true'
-						style={{
-							border: '0px',
-							verticalAlign: 'baseline',
-							fontFamily: 'inherit',
-							fontSize: '100%',
-							margin: '0px',
-							listStyle: 'none',
-							padding: '2px',
-							flexDirection: 'row-reverse',
-							alignItems: 'center',
-							display: 'inline-flex',
-						}}
-					>
-						<li
-							className='FacepileStructure-item'
-							style={{
-								border: '0px',
-								margin: '0px',
-								padding: '0px',
-								verticalAlign: 'baseline',
-								fontFamily: 'inherit',
-								fontSize: '100%',
-								flexShrink: 0,
-								alignItems: 'center',
-								marginLeft: '-4px',
-								display: 'flex',
-							}}
-						>
-							<div
-								className='bg-muted border'
-								aria-hidden='true'
-								style={{
-									flexShrink: 0,
-									boxSizing: 'border-box',
-									justifyContent: 'center',
-									alignItems: 'center',
-									display: 'inline-flex',
-									borderRadius: 'calc(24px*.5)',
-									padding: '0px 4px',
-									height: '24px',
-									minWidth: '24px',
-									// background: '#f9f8f8',
-									// border: '1px solid #cfcbcb',
-									// fill: '#6d6e6f',
-								}}
-							>
-								<Ellipsis />
-							</div>
-						</li>
-
-						<li
-							className='FacepileStructure-item'
-							style={{
-								border: '0px',
-								margin: '0px',
-								padding: '0px',
-								verticalAlign: 'baseline',
-								fontFamily: 'inherit',
-								fontSize: '100%',
-								flexShrink: 0,
-								alignItems: 'center',
-								display: 'flex',
-								marginLeft: '0px',
-							}}
-						>
-							
-						</li>
-					</ul>
-				</div> */}
 
 				<Dialog>
 					<DialogTrigger asChild>
