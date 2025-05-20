@@ -20,10 +20,11 @@ import type { User } from '@supabase/supabase-js';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Tiptap from '@/components/tip-tap';
 import { AsyncSelect } from '@/components/ui/async-select';
-import { searchContacts, searchServiceTickets } from '@/lib/manage/read';
+import { getTickets, searchContacts, searchServiceTickets } from '@/lib/manage/read';
 import type { Contact, ServiceTicket } from '@/types/manage';
 import HistoryEngagmentTab from '@/components/engagement-tabs/history-engagment-tab';
 import { cn, parsePhoneNumber } from '@/lib/utils';
+import { CommandItem } from '@/components/ui/command';
 
 const schema = z.object({
 	edit: z.boolean().optional(),
@@ -280,12 +281,42 @@ function RouteComponent() {
 									/>
 								) : (
 									<AsyncSelect<ServiceTicket>
-										fetcher={searchServiceTickets}
+										fetcher={async (value, page) => {
+											const ticketData = await getTickets({
+												data: {
+													conditions: {
+														summary: {
+															value: `'${value}'`,
+															comparison: 'contains',
+														},
+														closedFlag: false,
+														parentTicketId: null,
+														'board/id': [22, 26, 30, 31],
+													},
+													page,
+													orderBy: {
+														key: 'summary',
+													},
+												},
+											});
+
+											return ticketData.data;
+										}}
 										renderOption={(item) => (
-											<div className='flex items-center gap-2'>
-												<div className='flex flex-col'>
-													<div className='font-medium'>{item.summary}</div>
-													{/* <div className='text-xs text-muted-foreground'>
+											<CommandItem
+												value={item.id.toString()}
+												onSelect={async () => {
+													setSelectedTicket((prev) => [...prev, item.id]);
+													await task.setAttributes({
+														...parsedAttributes,
+														ticketIds: [item.id],
+													});
+												}}
+											>
+												<div className='flex flex-col gap-1.5'>
+													<div className='flex flex-col'>
+														<div className='font-medium'>{item.summary}</div>
+														{/* <div className='text-xs text-muted-foreground'>
 									{item.identifier}
 									{item.productClass === 'Bundle' && (
 										<Badge
@@ -296,8 +327,13 @@ function RouteComponent() {
 										</Badge>
 									)}
 								</div> */}
+													</div>
+
+													<div className='text-xs text-muted-foreground'>
+														{item.company?.name} • {item.contact?.name}
+													</div>
 												</div>
-											</div>
+											</CommandItem>
 										)}
 										getOptionValue={(item) => item.id.toString()}
 										getDisplayValue={(item) => (

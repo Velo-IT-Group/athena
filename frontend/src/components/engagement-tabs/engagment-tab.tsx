@@ -16,6 +16,7 @@ import { getTicketsQuery } from '@/lib/manage/api';
 import { searchServiceTickets } from '@/lib/manage/read';
 import type { ServiceTicket } from '@/types/manage';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { CommandItem } from 'cmdk';
 import { AlarmClockPlus, Plus } from 'lucide-react';
 type Props = {
 	ticketIds: number[];
@@ -33,13 +34,55 @@ const EngagementTab = ({ ticketIds, handleTicketChange }: Props) => {
 				<h2 className='text-2xl font-semibold'>Engagement</h2>
 
 				<AsyncSelect<ServiceTicket>
-					fetcher={searchServiceTickets}
+					fetcher={async (value, page) => {
+						const ticketData = await getTickets({
+							data: {
+								conditions: {
+									summary: {
+										value: `'${value}'`,
+										comparison: 'contains',
+									},
+									closedFlag: false,
+									parentTicketId: null,
+									'board/id': [22, 26, 30, 31],
+								},
+								page,
+								orderBy: {
+									key: 'summary',
+								},
+							},
+						});
+
+						return ticketData.data;
+					}}
 					renderOption={(item) => (
-						<div className='flex items-center gap-2'>
-							<div className='flex flex-col'>
-								<div className='font-medium'>{item.summary}</div>
+						<CommandItem
+							value={item.id.toString()}
+							onSelect={async () => {
+								handleTicketChange([item.id]);
+							}}
+						>
+							<div className='flex flex-col gap-1.5'>
+								<div className='flex flex-col'>
+									<div className='font-medium'>{item.summary}</div>
+									{/* <div className='text-xs text-muted-foreground'>
+									{item.identifier}
+									{item.productClass === 'Bundle' && (
+										<Badge
+											variant='outline'
+											className='ml-1.5'
+										>
+											Bundle
+										</Badge>
+									)}
+								</div> */}
+								</div>
+
+								<div className='text-xs text-muted-foreground'>
+									{item.company?.name} • {item.contact?.name}
+								</div>
 							</div>
-						</div>
+						</CommandItem>
 					)}
 					getOptionValue={(item) => item.id.toString()}
 					getDisplayValue={(item) => (
@@ -58,13 +101,13 @@ const EngagementTab = ({ ticketIds, handleTicketChange }: Props) => {
 						if (!value) {
 							return;
 						}
-						handleTicketChange(
-							ticketIds.includes(value.id)
-								? ticketIds.filter((t) => (value.id = t))
-								: [...ticketIds, value.id]
-						);
+						// setSelectedTicket((prev) => [...prev, value.id]);
+						// await task.setAttributes({
+						// 	...parsedAttributes,
+						// 	ticketIds: [value.id],
+						// });
 					}}
-					className='w-[500px]'
+					className='w-[var(--radix-popover-trigger-width)]'
 				>
 					<Button variant='outline'>
 						<Plus />

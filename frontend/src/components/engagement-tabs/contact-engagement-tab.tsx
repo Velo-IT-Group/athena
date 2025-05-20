@@ -6,7 +6,7 @@ import { EditableArea, EditableInput, EditablePreview } from '@/components/ui/ed
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { getCommunicationTypes, getContact, getContactImage, getTickets } from '@/lib/manage/read';
 import { useQuery, useSuspenseQueries } from '@tanstack/react-query';
-import { MoreHorizontal, Pen, Phone, Plus, TabletSmartphone, Tag, Tags, UserPen } from 'lucide-react';
+import { MoreHorizontal, Pen, Phone, Plus, ShieldCheck, TabletSmartphone, Tag, Tags, UserPen } from 'lucide-react';
 import { Editable, EditableLabel } from '@/components/ui/editable';
 import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -71,9 +71,12 @@ const ContactEngagementTab = ({ id }: Props) => {
 				</Avatar>
 
 				<div>
-					<h2 className='text-2xl font-semibold'>
-						{contact?.firstName} {contact?.lastName}
-					</h2>
+					<div className='flex items-center gap-1.5'>
+						<h2 className='text-2xl font-semibold'>
+							{contact?.firstName} {contact?.lastName}
+						</h2>
+						<ShieldCheck className='text-green-500 size-8' />
+					</div>
 
 					<p className='text-sm text-muted-foreground'>{contact?.company?.name}</p>
 				</div>
