@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import {
 	SidebarGroup,
@@ -9,7 +9,7 @@ import {
 	SidebarMenu,
 	SidebarProvider,
 } from '@/components/ui/sidebar';
-import { Settings, Trash } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import NavigationalSidebar from '@/components/navigational-sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { linksConfig } from '@/config/links';
@@ -21,12 +21,10 @@ import GlobalNav from '@/components/global-nav';
 import { pinnedIcons } from '@/utils/icon-sets';
 import { getPinnedItemsQuery } from '@/lib/supabase/api';
 import { usePinnedItems } from '@/hooks/use-pinned-items';
-import { getCookie, setCookie } from '@tanstack/react-start/server';
-import { EncryptJWT, jwtDecrypt, jwtVerify, SignJWT } from 'jose';
-import { decryptToken } from '@/utils/crypto';
+import { getCookie } from '@tanstack/react-start/server';
+import { jwtVerify } from 'jose';
 import type { WebToken } from '@/types/crypto';
 import { env } from '@/lib/utils';
-import { AxiosHeaders } from 'axios';
 
 export const fetchSessionUser = createServerFn().handler(async () => {
 	const supabase = createClient();
