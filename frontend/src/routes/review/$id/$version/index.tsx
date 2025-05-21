@@ -14,11 +14,17 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import useProposal from '@/hooks/use-proposal';
-import { getPhases, getProposal, getProposalSettings, getProposalTotals, getSections } from '@/lib/supabase/read';
-import { updateProposal } from '@/lib/supabase/update';
+import {
+	getPhasesQuery,
+	getProductsQuery,
+	getProposalQuery,
+	getProposalSettingsQuery,
+	getProposalTotalsQuery,
+	getSectionsQuery,
+} from '@/lib/supabase/api';
 import { calculateTotals } from '@/utils/helpers';
 import { getCurrencyString } from '@/utils/money';
-import { useQueries, useSuspenseQueries } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ClockIcon } from 'lucide-react';
 import { Fragment } from 'react/jsx-runtime';
@@ -30,32 +36,23 @@ export const Route = createFileRoute('/review/$id/$version/')({
 function RouteComponent() {
 	const { id, version: versionParam } = Route.useParams();
 
-	const [{ data: initialProposal }, { data: sections }, { data: totals }, { data: settings }, { data: phases }] =
-		useQueries({
-			queries: [
-				{
-					queryKey: ['proposals', id, versionParam],
-					queryFn: () => getProposal({ data: id }),
-				},
-				{
-					queryKey: ['proposals', id, versionParam, 'sections'],
-					queryFn: () => getSections({ data: { proposalId: id, versionId: versionParam } }),
-				},
-				{
-					queryKey: ['proposals', id, versionParam, 'totals'],
-					queryFn: () => getProposalTotals({ data: { id, version: versionParam } }),
-				},
-				{
-					queryKey: ['proposals', id, versionParam, 'settings'],
-					queryFn: () => getProposalSettings({ data: { id, version: versionParam } }),
-				},
-				{
-					queryKey: ['phases', id, versionParam],
-					queryFn: () =>
-						getPhases({ data: { proposalId: id, versionId: versionParam } }) as Promise<NestedPhase[]>,
-				},
-			],
-		});
+	const [
+		{ data: initialProposal },
+		{ data: sections },
+		{ data: totals },
+		{ data: settings },
+		{ data: phases },
+		{ data: products },
+	] = useQueries({
+		queries: [
+			getProposalQuery(id, versionParam),
+			getSectionsQuery(id, versionParam),
+			getProposalTotalsQuery(id, versionParam),
+			getProposalSettingsQuery(id, versionParam),
+			getPhasesQuery(id, versionParam),
+			getProductsQuery(versionParam),
+		],
+	});
 
 	const { data: proposal, handleProposalUpdate } = useProposal({
 		id,
@@ -65,12 +62,6 @@ function RouteComponent() {
 	const proposalExpirationDate = new Date(proposal?.expiration_date ?? '');
 
 	const today = new Date(); // Get today's date
-
-	// const { recurringTotal, laborTotal, totalPrice } = calculateTotals(
-	// 	(sections as NestedSection[]).flatMap((s) => s.products).filter(Boolean) as NestedProduct[],
-	// 	phases ?? [],
-	// 	proposal.labor_rate
-	// );
 
 	const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 	const dateToCompareWithoutTime = new Date(
@@ -127,7 +118,7 @@ function RouteComponent() {
 							onSubmit={(e) => {
 								e.preventDefault();
 								const data = new FormData(e.currentTarget);
-								handleProposalUpdate({
+								handleProposalUpdate.mutate({
 									proposal: {
 										status: 'signed',
 										approval_info: {
@@ -220,7 +211,7 @@ function RouteComponent() {
 										<ProductCard
 											key={section.id}
 											title={section.name}
-											products={section.products ?? []}
+											products={products?.filter((p) => p.section === section.id) ?? []}
 										/>
 									);
 								})}
@@ -379,9 +370,6 @@ function RouteComponent() {
 															))}
 													</ul>
 												</div>
-												{/* {!phase.description.includes('Backoffice Coordination') && (
-													
-												)} */}
 											</Fragment>
 										))}
 								</div>

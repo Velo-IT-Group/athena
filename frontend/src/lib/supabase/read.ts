@@ -169,7 +169,7 @@ export const getPinnedItem = createServerFn()
 		return JSON.parse(JSON.stringify(pinnedItem));
 	});
 
-export const getProposals = createServerFn()
+export const getProposalsWithCount = createServerFn()
 	.validator((options?: ProposalQueryOptions) => options)
 	.handler(async ({ data }) => {
 		const supabase = createClient();
@@ -205,6 +205,46 @@ export const getProposals = createServerFn()
 		}
 
 		return { data: JSON.parse(JSON.stringify(proposals)), count: count };
+	});
+
+export const getProposals = createServerFn()
+	.validator((options?: ProposalQueryOptions) => options)
+	.handler(async ({ data }) => {
+		const supabase = createClient();
+
+		const proposalsQuery = supabase.from('proposals').select('*');
+
+		if (data?.order) {
+			proposalsQuery.order('updated_at', { ascending: false });
+		}
+
+		if (data?.searchText) {
+			proposalsQuery.textSearch('name', data.searchText, {
+				type: 'plain',
+				config: 'english',
+			});
+		}
+
+		if (data?.userFilters?.length) {
+			proposalsQuery.in(
+				'created_by',
+				data.userFilters.map((u) => u)
+			);
+		}
+
+		if (data?.companyFilters?.length) {
+			proposalsQuery.eq('company->id', data?.companyFilters.map((u) => Number(u)).toString());
+		}
+
+		proposalsQuery.range(data?.range?.[0] ?? 0, data?.range?.[1] ?? 25);
+
+		const { data: proposals, error } = await proposalsQuery;
+
+		if (error) {
+			throw new Error('Error in getting proposals', { cause: error });
+		}
+
+		return JSON.parse(JSON.stringify(proposals));
 	});
 
 export const getConversations = createServerFn()
@@ -449,7 +489,7 @@ export const getTasks = createServerFn()
 		const { data, error } = await supabase.from('tasks').select().eq('ticket', id).order('order');
 
 		if (!data || error) {
-			throw new Error('Error in getting tickets', { cause: error });
+			throw new Error('Error in getting tasks', { cause: error });
 		}
 
 		return data;
@@ -506,18 +546,16 @@ export const getSections = createServerFn()
 		proposalId,
 		versionId,
 	}))
-	.handler(async ({ data: { versionId, proposalId } }) => {
+	.handler(async ({ data: { versionId } }) => {
 		const supabase = createClient();
 
 		const { data: sections, error } = await supabase
 			.from('sections')
-			.select('*, products(*, products(*))')
+			.select('*')
 			.match({
 				version: versionId,
 			})
-			.is('products.parent', null)
-			.order('order')
-			.order('order', { referencedTable: 'products' });
+			.order('order');
 
 		if (error) {
 			throw Error('Error in getting sections + ' + error.message, {
@@ -712,6 +750,7 @@ export type ProposalQueryOptions = {
 	searchText?: string;
 	userFilters?: string[];
 	companyFilters?: string[];
+	range?: number[];
 };
 
 // export const getProposals = async (options?: ProposalQueryOptions) => {

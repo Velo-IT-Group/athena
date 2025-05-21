@@ -1,23 +1,19 @@
-import type { User, UserMetadata } from '@supabase/supabase-js';
-import { createAPIFileRoute } from '@tanstack/react-start/api';
-import { createClient } from '@/lib/supabase/server';
-// import { createClient as createTwilioClient } from "@/utils/twilio";
-import { deleteCookie, setCookie } from '@tanstack/start/server';
-import { env } from '@/lib/utils';
-import { baseHeaders, type Conditions, generateParams } from '@/utils/manage/params';
-import type { Contact, SystemMember } from '@/types/manage';
-import type {
-	WorkerContextUpdateOptions,
-	WorkerListInstanceOptions,
-} from 'twilio/lib/rest/taskrouter/v1/workspace/worker';
+import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { createClient } from "@/lib/supabase/server";
+import { setCookie } from "@tanstack/start/server";
 
-export const APIRoute = createAPIFileRoute('/api/auth/callback')({
-	GET: async ({ request, params }: { request: Request; params: Record<string, string | undefined> }) => {
+export const APIRoute = createAPIFileRoute("/api/auth/callback")({
+	GET: async (
+		{ request, params }: {
+			request: Request;
+			params: Record<string, string | undefined>;
+		},
+	) => {
 		const url = new URL(request.url);
 		const { searchParams, origin } = url;
 
-		const code = searchParams.get('code');
-		const next = searchParams.get('next');
+		const code = searchParams.get("code");
+		const next = searchParams.get("next");
 
 		if (code) {
 			const supabase = createClient();
@@ -27,27 +23,35 @@ export const APIRoute = createAPIFileRoute('/api/auth/callback')({
 				error,
 			} = await supabase.auth.exchangeCodeForSession(code);
 
-			const { data, error: profile_key_error } = await supabase.from('profile_keys').select().single();
+			const { data, error: profile_key_error } = await supabase.from(
+				"profile_keys",
+			).select().single();
 
 			if (profile_key_error) {
-				return Response.redirect(`${origin}/token-setup?user_id=${user?.id}`);
+				return Response.redirect(
+					`${origin}/token-setup?user_id=${user?.id}`,
+				);
 			}
 
-			setCookie('connect_wise:auth', JSON.stringify(data?.key));
-			setCookie('twilio:worker_sid', user?.user_metadata?.worker_sid);
+			setCookie("connect_wise:auth", JSON.stringify(data?.key));
+			setCookie("twilio:worker_sid", user?.user_metadata?.worker_sid);
 
 			if (error) {
 				const urlParams = new URLSearchParams();
-				urlParams.append('error', error.message);
+				urlParams.append("error", error.message);
 
 				// return the user to an error page with instructions
-				return Response.redirect(`${origin}/auth/auth-code-error?${urlParams.toString()}`);
+				return Response.redirect(
+					`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+				);
 			}
 
 			if (!user) {
 				const urlParams = new URLSearchParams();
-				urlParams.append('error', 'No user found');
-				return Response.redirect(`${origin}/auth/auth-code-error?${urlParams.toString()}`);
+				urlParams.append("error", "No user found");
+				return Response.redirect(
+					`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+				);
 			}
 
 			// try {
@@ -65,12 +69,12 @@ export const APIRoute = createAPIFileRoute('/api/auth/callback')({
 			// 	);
 			// }
 
-			return Response.redirect(`${origin}${next ?? '/proposals'}`);
+			return Response.redirect(`${origin}${next ?? "/proposals"}`);
 		}
 
 		// return the user to an error page with instructions
 		return Response.json({
-			error: 'Not authenticated',
+			error: "Not authenticated",
 		});
 	},
 });

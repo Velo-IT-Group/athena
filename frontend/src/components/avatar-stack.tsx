@@ -60,13 +60,19 @@ const AvatarStack = ({
 							)}
 						>
 							<AvatarImage src={image} />
-							<AvatarFallback>
-								{name
+							<AvatarFallback
+								style={{
+									backgroundColor: `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(
+										Math.random() * 255
+									)}, ${Math.floor(Math.random() * 255)})`,
+								}}
+							/>
+							{/* {name
 									?.split(' ')
 									?.map((word) => word[0])
 									?.join('')
-									?.toUpperCase()}
-							</AvatarFallback>
+									?.toUpperCase()} */}
+							{/* </AvatarFallback> */}
 						</Avatar>
 					</TooltipTrigger>
 					<TooltipContent>
@@ -78,7 +84,14 @@ const AvatarStack = ({
 			{hiddenAvatars.length ? (
 				<Tooltip key='hidden-avatars'>
 					<TooltipTrigger asChild>
-						<Avatar>
+						<Avatar
+							className={cn(
+								'hover:z-10 size-7 group',
+								avatarSize === 'md' && 'size-9',
+								avatarSize === 'lg' && 'size-12',
+								avatarSize === 'xl' && 'size-16'
+							)}
+						>
 							<AvatarFallback>+{avatars.length - shownAvatars.length}</AvatarFallback>
 						</Avatar>
 					</TooltipTrigger>

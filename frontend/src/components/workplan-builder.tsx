@@ -1,19 +1,26 @@
 import PhaseListItem from '@/components/phase-list-item';
 import TemplateCatalog from '@/components/template-catalog';
+
 import { Button } from '@/components/ui/button';
 import { Kanban, KanbanBoard, KanbanColumn, KanbanOverlay } from '@/components/ui/kanban';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Sortable, SortableContent, SortableOverlay } from '@/components/ui/sortable';
+
 import { usePhase } from '@/hooks/use-phase';
 import { useTicket } from '@/hooks/use-ticket';
+
 import { getPhasesQuery } from '@/lib/supabase/api';
+
 import { isSame } from '@/lib/utils';
-import type { ProjectTemplate } from '@/types/manage';
+
 import { createNestedPhaseFromTemplate } from '@/utils/helpers';
-import { DndContext, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
+
+import { type UniqueIdentifier } from '@dnd-kit/core';
+
 import { useSuspenseQuery } from '@tanstack/react-query';
+
 import { Plus, PlusCircle, PlusCircleIcon } from 'lucide-react';
-import { Suspense, useMemo, useState } from 'react';
+
+import { Suspense, useState } from 'react';
 
 type Props = {
 	params: { id: string; version: string };
@@ -24,7 +31,7 @@ const WorkplanBuilder = ({ params }: Props) => {
 
 	const { data: initialData } = useSuspenseQuery(getPhasesQuery(id, version));
 
-	const { data, handlePhaseDeletion, handlePhaseInsert, handlePhaseUpdate } = usePhase({
+	const { data, handlePhaseDeletion, handlePhaseInsert, handlePhaseUpdate, handleTemplateDrop } = usePhase({
 		initialData,
 		params: { id, version },
 	});
@@ -32,8 +39,8 @@ const WorkplanBuilder = ({ params }: Props) => {
 	const { handleTicketUpdate } = useTicket({
 		initialData: data?.flatMap((p) => p.tickets ?? []) ?? [],
 		phaseId: '',
-		proposalId: '',
-		versionId: '',
+		proposalId: params.id,
+		versionId: params.version,
 	});
 
 	const sortedPhases =
@@ -63,8 +70,6 @@ const WorkplanBuilder = ({ params }: Props) => {
 
 	const [columns, setColumns] = useState<Record<UniqueIdentifier, NestedTicket[]>>(groupedPhases);
 
-	// createNestedPhaseFromTemplate;
-
 	return (
 		<div className='grid grid-cols-[288px_1fr] items-start h-full overflow-hidden border-t flex-1 min-h-0'>
 			<div className='p-3 flex flex-col gap-1.5 border-r overflow-y-auto min-h-0 flex-1'>
@@ -82,7 +87,33 @@ const WorkplanBuilder = ({ params }: Props) => {
 						</>
 					}
 				>
-					<TemplateCatalog />
+					<TemplateCatalog
+						onSelect={(template) => {
+							if (!template.workplan) return;
+							const phases = createNestedPhaseFromTemplate(
+								template.workplan,
+								version,
+								phaseStub.order ?? 0
+							);
+
+							const newColumns: Record<UniqueIdentifier, NestedTicket[]> = {};
+							phases.forEach((phase) => {
+								newColumns[phase.id as unknown as UniqueIdentifier] = phase.tickets ?? [];
+							});
+
+							setColumns((prevColumns) => ({
+								...prevColumns,
+								...newColumns,
+							}));
+
+							phases.forEach((phase) => {
+								handlePhaseInsert({
+									newPhase: phase,
+									tickets: phase.tickets ?? [],
+								});
+							});
+						}}
+					/>
 				</Suspense>
 			</div>
 
@@ -127,10 +158,9 @@ const WorkplanBuilder = ({ params }: Props) => {
 					<Kanban
 						value={columns}
 						onValueChange={(value) => {
+							setColumns(value);
 							const newColumns = Object.entries(value);
 							const currentColumns = Object.entries(columns);
-
-							setColumns(value);
 
 							const arePhasesSame = isSame(
 								newColumns.map(([key]) => key),
@@ -198,6 +228,9 @@ const WorkplanBuilder = ({ params }: Props) => {
 							}
 						}}
 						getItemValue={(item) => item.id}
+						onDragEnd={() => {
+							console.log('drag end');
+						}}
 						autoScroll
 						orientation='vertical'
 					>

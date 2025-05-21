@@ -12,21 +12,18 @@ export const columns: ColumnDef<NestedProposal>[] = [
 		id: 'name',
 		accessorKey: 'name',
 		header: 'Name',
-		cell: ({ row }) => {
-			console.log(row.original);
-			return (
-				<Link
-					to='/proposals/$id/$version'
-					params={{
-						id: row.original.id,
-						version: row.original.working_version,
-					}}
-				>
-					<h3 className='text-lg'>{row.getValue('name')}</h3>
-					<p className='text-sm text-muted-foreground'>Joined</p>
-				</Link>
-			);
-		},
+		cell: ({ row }) => (
+			<Link
+				to='/proposals/$id/$version'
+				params={{
+					id: row.original.id,
+					version: row.original.working_version,
+				}}
+			>
+				<h3 className='text-lg'>{row.getValue('name')}</h3>
+				<p className='text-sm text-muted-foreground'>Joined</p>
+			</Link>
+		),
 	},
 	{
 		id: 'company',

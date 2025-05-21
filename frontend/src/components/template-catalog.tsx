@@ -7,10 +7,11 @@ import { getTemplatesQuery } from '@/lib/manage/api';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { ProjectTemplate } from '@/types/manage';
 
 export const DAY_IN_MS = 86_400_000;
 
-const TemplateCatalog = () => {
+const TemplateCatalog = ({ onSelect }: { onSelect: (template: ProjectTemplate) => void }) => {
 	const { data: templates } = useSuspenseQuery(getTemplatesQuery());
 
 	return (
@@ -31,6 +32,8 @@ const TemplateCatalog = () => {
 										variant='ghost'
 										size='smIcon'
 										className='opacity-0 group-hover:opacity-100 transition-opacity'
+										onClick={() => onSelect(template)}
+										onSelect={() => onSelect(template)}
 									>
 										<Plus className='flex-shrink-0' />
 									</Button>

@@ -1,4 +1,5 @@
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+
 import {
 	BetweenHorizontalEnd,
 	CalendarIcon,
@@ -10,16 +11,24 @@ import {
 	PenLine,
 	Trash,
 	Undo2,
+	ChevronDown,
+	Star,
 } from 'lucide-react';
+
+import { formatRelative } from 'date-fns';
+import NumberFlow from '@number-flow/react';
+
 import { createFileRoute, Outlet } from '@tanstack/react-router';
-import { ChevronDown, Star } from 'lucide-react';
 import TabsList from '@/components/tabs-list';
 import { ProposalActions } from '@/components/proposal-actions';
+
+import { Button } from '@/components/ui/button';
 import { Editable, EditableArea, EditableInput, EditablePreview } from '@/components/ui/editable';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ListSelector } from '@/components/list-selector';
 import { Separator } from '@/components/ui/separator';
 import { ColoredBadge } from '@/components/ui/badge';
+
+import { ListSelector } from '@/components/list-selector';
 import useProposal from '@/hooks/use-proposal';
 import { cn } from '@/lib/utils';
 import { useMutation, useSuspenseQueries } from '@tanstack/react-query';
@@ -34,7 +43,6 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState } from 'react';
 import {
 	Dialog,
 	DialogClose,
@@ -54,11 +62,10 @@ import { linksConfig } from '@/config/links';
 import { getPinnedItemQuery, getProposalQuery, getProposalTotalsQuery, getVersionsQuery } from '@/lib/supabase/api';
 import { usePinnedItems } from '@/hooks/use-pinned-items';
 import LabeledInput from '@/components/labeled-input';
-import { formatRelative } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
-import { enUS } from 'date-fns/locale/en-US';
 import { formatRelativeLocale } from '@/components/overview-right';
 import CurrencyInput from '@/components/currency-input';
+import { Calendar } from '@/components/ui/calendar';
+import { enUS } from 'date-fns/locale/en-US';
 import useServiceTicket from '@/hooks/use-service-ticket';
 
 export const Route = createFileRoute('/_authed/proposals/$id/$version')({
@@ -340,6 +347,7 @@ function RouteComponent() {
 								<ProposalActions
 									proposalId={proposal?.id ?? ''}
 									versionId={version}
+									serviceTicketId={proposal.service_ticket ?? 0}
 									total={totals?.total_price ?? 0}
 								/>
 							) : (
@@ -364,7 +372,12 @@ function RouteComponent() {
 
 								<CardContent className='px-3 pb-3'>
 									<div className='text-2xl font-bold'>
-										{getCurrencyString(totals?.labor_cost ?? 0)}
+										<NumberFlow
+											value={totals?.labor_cost ?? 0}
+											locales='en-US'
+											format={{ style: 'currency', currency: 'USD' }}
+										/>
+										{/* {getCurrencyString(totals?.labor_cost ?? 0)} */}
 									</div>
 								</CardContent>
 							</Card>
@@ -378,7 +391,12 @@ function RouteComponent() {
 
 								<CardContent className='px-3 pb-3'>
 									<div className='text-2xl font-bold'>
-										{getCurrencyString(totals?.recurring_total ?? 0)}
+										<NumberFlow
+											value={totals?.recurring_total ?? 0}
+											locales='en-US'
+											format={{ style: 'currency', currency: 'USD' }}
+										/>
+										{/* {getCurrencyString(totals?.recurring_total ?? 0)} */}
 									</div>
 								</CardContent>
 							</Card>
@@ -392,7 +410,12 @@ function RouteComponent() {
 
 								<CardContent className='px-3 pb-3'>
 									<div className='text-2xl font-bold'>
-										{getCurrencyString(totals?.non_recurring_product_total ?? 0)}
+										<NumberFlow
+											value={totals?.non_recurring_product_total ?? 0}
+											locales='en-US'
+											format={{ style: 'currency', currency: 'USD' }}
+										/>
+										{/* {getCurrencyString(totals?.non_recurring_product_total ?? 0)} */}
 									</div>
 								</CardContent>
 							</Card>
@@ -406,7 +429,12 @@ function RouteComponent() {
 
 								<CardContent className='px-3 pb-3'>
 									<div className='text-2xl font-bold'>
-										{getCurrencyString(totals?.total_price ?? 0)}
+										<NumberFlow
+											value={totals?.total_price ?? 0}
+											locales='en-US'
+											format={{ style: 'currency', currency: 'USD' }}
+										/>
+										{/* {getCurrencyString(totals?.total_price ?? 0)} */}
 									</div>
 								</CardContent>
 							</Card>

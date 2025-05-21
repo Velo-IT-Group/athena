@@ -8,24 +8,44 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { useCurrentUserImage } from '@/hooks/use-current-user-image';
 import { useCurrentUserName } from '@/hooks/use-current-user-name';
 import { useProposals } from '@/hooks/use-proposals';
+import { getScheduleEntriesQuery } from '@/lib/manage/api';
 import { getProposalFollowersQuery } from '@/lib/supabase/api';
 import { getProfiles } from '@/lib/supabase/read';
 import { getCurrencyString } from '@/utils/money';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import NumberFlow from '@number-flow/react';
+import { useSuspenseQueries, useSuspenseQuery } from '@tanstack/react-query';
 import { Building2, Check, Link } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export function ProposalActions({
 	proposalId,
 	versionId,
+	serviceTicketId,
 	total,
 }: {
 	proposalId: string;
 	versionId: string;
+	serviceTicketId: number;
 	total: number;
 }) {
 	const { handleAddingFollower } = useProposals({});
-	const { data: followers } = useSuspenseQuery(getProposalFollowersQuery(proposalId, versionId));
+	const [{ data: followers }, { data: scheduleEntries }] = useSuspenseQueries({
+		queries: [
+			getProposalFollowersQuery(proposalId, versionId),
+			getScheduleEntriesQuery({
+				conditions: {
+					'type/id': 4,
+					objectId: serviceTicketId,
+					// doneFlag: false,
+					// date: {
+					// 	from: new Date().toISOString(),
+					// 	to: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
+					// },
+				},
+				fields: ['id', 'member'],
+			}),
+		],
+	});
 
 	const image = useCurrentUserImage();
 	const name = useCurrentUserName();
@@ -79,10 +99,10 @@ export function ProposalActions({
 					label='Add members'
 				>
 					<AvatarStack
-						avatars={followers
+						avatars={scheduleEntries
 							.map((follower) => ({
-								name: `${follower.first_name ?? ''} ${follower.last_name ?? ''}`,
-								image: follower.image_url || image || '',
+								name: follower.member.name,
+								image: '',
 							}))
 							.reverse()}
 						showDeletion
@@ -138,7 +158,14 @@ export function ProposalActions({
 						size='sm'
 						className='text-sm font-medium self-center mr-1.5'
 					>
-						Total: <span className='text-muted-foreground'>{getCurrencyString(total ?? 0)}</span>
+						Total:{' '}
+						<span className='text-muted-foreground'>
+							<NumberFlow
+								value={total ?? 0}
+								locales='en-US'
+								format={{ style: 'currency', currency: 'USD' }}
+							/>
+						</span>
 					</Button>
 				</CollapsibleTrigger>
 			</div>

@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { ChevronDown, Ellipsis, GripVertical, Pencil, Trash2 } from 'lucide-react';
 
-import { ChevronDown, Ellipsis, GripVertical, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-import { useProduct } from '@/hooks/use-product';
-
-import { ExtendedCatalogItem, searchCatalogItems } from '@/lib/manage/read';
+import { searchCatalogItems } from '@/lib/manage/read';
 
 import { convertToProduct, convertToSnakeCase } from '@/utils/helpers';
 import { getCurrencyString } from '@/utils/money';
+
+import CurrencyInput from '@/components/currency-input';
 
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -25,7 +25,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CommandItem } from '@/components/ui/command';
 import { KanbanColumnHandle, KanbanItem, KanbanItemHandle } from '@/components/ui/kanban';
 import { Input } from '@/components/ui/input';
-import CurrencyInput from '@/components/currency-input';
 import {
 	AlertDialog,
 	AlertDialogDescription,
@@ -41,27 +40,24 @@ type Props = {
 	section: NestedSection;
 	products: NestedProduct[];
 	params: { id: string; version: string };
-	url?: string;
-	order: number;
-	handleSectionInsert: (section: SectionInsert) => void;
 	handleSectionUpdate: (section: SectionUpdate) => void;
 	handleSectionDeletion: () => void;
+	handleProductUpdate: (id: string, product: ProductUpdate) => void;
+	handleProductInsert: (product: ProductInsert, bundledItems?: ProductInsert[]) => void;
+	handleProductDeletion: (id: string) => void;
 };
 
-const SectionItem = ({ section, products, params, handleSectionUpdate, handleSectionDeletion }: Props) => {
-	const [catalogItem, setCatalogItem] = useState<ExtendedCatalogItem | null>(null);
-
-	const { data, handleProductUpdate, handleProductInsert, handleProductDeletion, setProducts } = useProduct({
-		initialData: products ?? [],
-		params,
-		sectionId: section.id,
-	});
-
-	useEffect(() => {
-		setProducts(products ?? []);
-	}, [products]);
-
-	const orderedProducts = data?.sort((a, b) => {
+const SectionItem = ({
+	section,
+	products,
+	params,
+	handleSectionUpdate,
+	handleSectionDeletion,
+	handleProductDeletion,
+	handleProductInsert,
+	handleProductUpdate,
+}: Props) => {
+	const orderedProducts = products?.sort((a, b) => {
 		// First, compare by score in descending order
 		if (Number(a.order) > Number(b.order)) return 1;
 		if (Number(a.order) < Number(b.order)) return -1;
@@ -125,13 +121,13 @@ const SectionItem = ({ section, products, params, handleSectionUpdate, handleSec
 								<EditableTrigger asChild>
 									<DropdownMenuItem>
 										<Pencil className='mr-1.5 text-muted-foreground' />
-										<span>Rename phase</span>
+										<span>Rename section</span>
 									</DropdownMenuItem>
 								</EditableTrigger>
 
 								<DropdownMenuItem onSelect={() => handleSectionDeletion()}>
 									<Trash2 className='mr-1.5 text-red-500' />
-									<span>Delete phase</span>
+									<span>Delete section</span>
 								</DropdownMenuItem>
 							</DropdownMenuGroup>
 						</DropdownMenuContent>
@@ -142,7 +138,7 @@ const SectionItem = ({ section, products, params, handleSectionUpdate, handleSec
 			<CollapsibleContent>
 				<Table>
 					<TableHeader>
-						<TableRow className='text-sm'>
+						<TableRow className={cn('text-sm', orderedProducts.length > 0 ? '' : '!border-0')}>
 							<TableHead className='-ml-3 w-12' />
 
 							<TableHead className='-ml-3'>
@@ -174,164 +170,182 @@ const SectionItem = ({ section, products, params, handleSectionUpdate, handleSec
 					</TableHeader>
 
 					<TableBody>
-						{orderedProducts?.map((product) => (
-							<KanbanItem
-								key={product.unique_id}
-								value={product.unique_id}
-								asChild
+						{orderedProducts && orderedProducts.length > 0 ? (
+							orderedProducts?.map((product) => (
+								<KanbanItem
+									key={product.unique_id}
+									value={product.unique_id}
+									className='bg-transparent'
+									asChild
+								>
+									<TableRow>
+										<TableCell className='w-12'>
+											<KanbanItemHandle asChild>
+												<Button
+													variant='ghost'
+													size='icon'
+												>
+													<GripVertical />
+												</Button>
+											</KanbanItemHandle>
+										</TableCell>
+
+										<TableCell>
+											<div className='flex items-center'>
+												{/* {row.getCanExpand() && (
+						<>
+							<Button
+								variant='ghost'
+								size='sm'
+								{...{
+									onClick: row.getToggleExpandedHandler(),
+									style: { cursor: 'pointer' },
+								}}
+								className='inline-block'
 							>
-								<TableRow>
-									<TableCell className='w-12'>
-										<KanbanItemHandle asChild>
-											<Button
-												variant='ghost'
-												size='icon'
-											>
-												<GripVertical />
-											</Button>
-										</KanbanItemHandle>
-									</TableCell>
+								{row.getIsExpanded() ? (
+									<ChevronDownIcon className='w-4 h-4' />
+								) : (
+									<ChevronRightIcon className='w-4 h-4' />
+								)}
+							</Button>
+						</>
+					)} */}
 
-									<TableCell>
-										<div className='flex items-center'>
-											{/* {row.getCanExpand() && (
-												<>
-													<Button
-														variant='ghost'
-														size='sm'
-														{...{
-															onClick: row.getToggleExpandedHandler(),
-															style: { cursor: 'pointer' },
-														}}
-														className='inline-block'
-													>
-														{row.getIsExpanded() ? (
-															<ChevronDownIcon className='w-4 h-4' />
-														) : (
-															<ChevronRightIcon className='w-4 h-4' />
-														)}
-													</Button>
-												</>
-											)} */}
+												<span>{product.identifier ?? product.manufacturer_part_number}</span>
+											</div>
+										</TableCell>
 
-											<span>{product.identifier ?? product.manufacturer_part_number}</span>
-										</div>
-									</TableCell>
-
-									<TableCell>
-										<Input
-											className='w-[500px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
-											defaultValue={product.description ?? ''}
-											onBlur={(e) => {
-												if (e.currentTarget.value !== product.description) {
-													handleProductUpdate.mutate({
-														id: product.unique_id,
-														product: {
+										<TableCell>
+											<Input
+												className='w-[500px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+												defaultValue={product.description ?? ''}
+												onBlur={(e) => {
+													if (e.currentTarget.value !== product.description) {
+														handleProductUpdate(product.unique_id, {
 															description: e.currentTarget.value,
-														},
-													});
-												}
-											}}
-										/>
-									</TableCell>
+														});
+													}
+												}}
+											/>
+										</TableCell>
 
-									<TableCell>
-										<CurrencyInput
-											handleBlurChange={(cost) => {
-												handleProductUpdate.mutate({
-													id: product.unique_id,
-													product: {
+										<TableCell>
+											<CurrencyInput
+												handleBlurChange={(cost) => {
+													handleProductUpdate(product.unique_id, {
 														cost,
-													},
-												});
-											}}
-											defaultValue={product.cost ?? ''}
-											className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
-										/>
-									</TableCell>
-
-									<TableCell>
-										<CurrencyInput
-											handleBlurChange={(price) => {
-												handleProductUpdate.mutate({
-													id: product.unique_id,
-													product: {
-														price,
-													},
-												});
-											}}
-											defaultValue={product.price ?? ''}
-											className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
-										/>
-									</TableCell>
-
-									<TableCell>
-										<Input
-											type='number'
-											defaultValue={product.quantity}
-											onBlur={async (e) => {
-												if (e.currentTarget.valueAsNumber !== product.quantity) {
-													handleProductUpdate.mutate({
-														id: product.unique_id,
-														product: {
-															quantity: e.currentTarget.valueAsNumber,
-														},
 													});
-												}
-											}}
-											className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
-										/>
-									</TableCell>
+													// handleProductUpdate.mutate({
+													// 	id: product.unique_id,
+													// 	product: {
+													// 		cost,
+													// 	},
+													// });
+												}}
+												defaultValue={product.cost ?? ''}
+												className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+											/>
+										</TableCell>
 
-									<TableCell>
-										<span className='w-[100px] text-right font-medium'>
-											{getCurrencyString(product.extended_price ?? 0)}
-										</span>
-									</TableCell>
+										<TableCell>
+											<CurrencyInput
+												handleBlurChange={(price) => {
+													handleProductUpdate(product.unique_id, {
+														price,
+													});
+												}}
+												defaultValue={product.price ?? ''}
+												className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+											/>
+										</TableCell>
 
-									<TableCell>
-										<>
-											<AlertDialog>
-												<AlertDialogTrigger asChild>
-													<Button
-														variant='ghost'
-														size='icon'
-													>
-														<span className='sr-only'>Delete item</span>
-														<Trash2 className='text-red-500' />
-													</Button>
-												</AlertDialogTrigger>
-												<AlertDialogContent>
-													<AlertDialogHeader>
-														<AlertDialogTitle>Are you sure?</AlertDialogTitle>
-														<AlertDialogDescription>
-															This action cannot be undone. This will permanently delete
-															the product from our servers.
-														</AlertDialogDescription>
-													</AlertDialogHeader>
-													<AlertDialogFooter>
-														<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<TableCell>
+											<Input
+												type='number'
+												defaultValue={product.quantity}
+												onBlur={async (e) => {
+													if (e.currentTarget.valueAsNumber !== product.quantity) {
+														handleProductUpdate(product.unique_id, {
+															quantity: e.currentTarget.valueAsNumber,
+														});
+													}
+												}}
+												className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+											/>
+										</TableCell>
 
+										<TableCell>
+											<span className='w-[100px] text-right font-medium'>
+												{getCurrencyString(product.extended_price ?? 0)}
+											</span>
+										</TableCell>
+
+										<TableCell>
+											<>
+												<AlertDialog>
+													<AlertDialogTrigger asChild>
 														<Button
-															onClick={() =>
-																handleProductDeletion.mutate({
-																	id: product.unique_id,
-																})
-															}
+															variant='ghost'
+															size='icon'
 														>
-															{handleProductDeletion && (
-																<Loader2 className='animate-spin mr-1.5' />
-															)}
-															<span>Continue</span>
+															<span className='sr-only'>Delete item</span>
+															<Trash2 className='text-red-500' />
 														</Button>
-													</AlertDialogFooter>
-												</AlertDialogContent>
-											</AlertDialog>
-										</>
-									</TableCell>
-								</TableRow>
-							</KanbanItem>
-						))}
+													</AlertDialogTrigger>
+													<AlertDialogContent>
+														<AlertDialogHeader>
+															<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+															<AlertDialogDescription>
+																This action cannot be undone. This will permanently
+																delete the product from our servers.
+															</AlertDialogDescription>
+														</AlertDialogHeader>
+														<AlertDialogFooter>
+															<AlertDialogCancel>Cancel</AlertDialogCancel>
+
+															<Button
+																onClick={() => handleProductDeletion(product.unique_id)}
+															>
+																<span>Continue</span>
+															</Button>
+														</AlertDialogFooter>
+													</AlertDialogContent>
+												</AlertDialog>
+											</>
+										</TableCell>
+									</TableRow>
+								</KanbanItem>
+							))
+						) : (
+							<TableRow>
+								<TableCell className='w-12 h-12 border-y border-l border-dashed border-muted-foreground' />
+
+								<TableCell className='border-y border-dashed border-muted-foreground' />
+
+								<TableCell className='border-y border-dashed border-muted-foreground'>
+									<div className='w-[500px]' />
+								</TableCell>
+
+								<TableCell className='border-y border-dashed border-muted-foreground'>
+									<div className='w-[100px]' />
+								</TableCell>
+
+								<TableCell className='border-y border-dashed border-muted-foreground'>
+									<div className='w-[100px]' />
+								</TableCell>
+
+								<TableCell className='border-y border-dashed border-muted-foreground'>
+									<div className='w-[100px]' />
+								</TableCell>
+
+								<TableCell className='border-y border-dashed border-muted-foreground'>
+									<div className='w-[100px]' />
+								</TableCell>
+
+								<TableCell className='border-y border-dashed border-muted-foreground border-r !rounded !overflow-hidden' />
+							</TableRow>
+						)}
 					</TableBody>
 				</Table>
 
@@ -373,10 +387,7 @@ const SectionItem = ({ section, products, params, handleSectionUpdate, handleSec
 								// @ts-ignore
 								delete newProduct['bundled_items'];
 
-								handleProductInsert.mutate({
-									product: newProduct,
-									bundledItems,
-								});
+								handleProductInsert(newProduct, bundledItems);
 							}}
 						>
 							<div className='flex items-center gap-2'>
@@ -409,7 +420,7 @@ const SectionItem = ({ section, products, params, handleSectionUpdate, handleSec
 					notFound={<div className='py-6 text-center text-sm'>No products found</div>}
 					label='Products'
 					placeholder='Search products...'
-					value={catalogItem?.id.toString() ?? ''}
+					value={''}
 					onChange={(value) => {
 						if (!value) return;
 						const snakedObj: ProductInsert = {
@@ -442,10 +453,7 @@ const SectionItem = ({ section, products, params, handleSectionUpdate, handleSec
 						// @ts-ignore
 						delete newProduct['bundled_items'];
 
-						handleProductInsert.mutate({
-							product: newProduct,
-							bundledItems,
-						});
+						handleProductInsert(newProduct, bundledItems);
 					}}
 					className='min-w-[375px] max-w-fit'
 				>

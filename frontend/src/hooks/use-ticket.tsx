@@ -9,7 +9,7 @@ import { deleteTicket } from '@/lib/supabase/delete';
 
 import { getPhasesQuery, getProposalTotalsQuery, getTicketsQuery } from '@/lib/supabase/api';
 
-import { addCacheItem, deleteCacheItem, updateArrayCacheItem, updateCacheItem } from '@/lib/utils';
+import { addCacheItem, deleteCacheItem, updateArrayCacheItem } from '@/lib/utils';
 
 type Props = {
 	proposalId: string;
@@ -23,7 +23,7 @@ export const useTicket = ({ proposalId, versionId, phaseId, initialData }: Props
 	const query = getTicketsQuery(phaseId);
 	const { queryKey } = query;
 
-	const { data } = useQuery(query);
+	const { data } = useQuery({ ...query, enabled: !!phaseId });
 
 	const updateProposalTotals = useCallback(
 		(phases: NestedPhase[]) => {
@@ -78,16 +78,20 @@ export const useTicket = ({ proposalId, versionId, phaseId, initialData }: Props
 	const { mutate: handleTicketUpdate } = useMutation({
 		mutationFn: async ({ id, ticket }: { id: string; ticket: TicketUpdate }) =>
 			await updateTicket({ data: { id, ticket } }),
-		onMutate: async ({ id, ticket }) =>
-			await updateArrayCacheItem<NestedTicket>(
+		onMutate: async ({ id, ticket }) => {
+			const cachedData = await updateArrayCacheItem<NestedTicket>(
 				queryClient,
 				queryKey,
 				{ ...ticket, id },
 				(item) => item.id === id
-			),
+			);
+
+			updateProposalTotals(cachedData.newItems);
+
+			return cachedData;
+		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
-		// @ts-ignore
 		onError: (err, newPhase, context) => queryClient.setQueryData(queryKey, context?.previousItems! ?? []),
 		onSettled: async () => {
 			await queryClient.invalidateQueries({

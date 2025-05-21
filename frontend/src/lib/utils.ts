@@ -104,7 +104,6 @@ export const updateArrayCacheItem = async <T>(
 	comparisonFn: (item: T) => boolean
 ): Promise<{ previousItems: T[]; newItems: T[] }> => {
 	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
-	console.log(previousItems);
 
 	// Cancel any outgoing refetches
 	// (so they don't overwrite our optimistic update)
@@ -116,12 +115,7 @@ export const updateArrayCacheItem = async <T>(
 
 	const newItemTest = { ...updatedItem, ...item };
 
-	console.log('updatedItem', updatedItem);
-	console.log('newItemTest', newItemTest);
-
 	const newItems = [...previousItems.filter((item) => !comparisonFn(item)), newItemTest];
-
-	console.log(newItems);
 
 	// Optimistically update to the new value
 	queryClient.setQueryData(queryKey, newItems);
@@ -147,9 +141,7 @@ export const addCacheItem = async <T>(
 	item: T
 ): Promise<{ previousItems: T[]; newItems: T[] }> => {
 	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
-	console.log(previousItems);
 	const newItems = [...previousItems, item];
-	console.log(newItems);
 	queryClient.setQueryData(queryKey, newItems);
 	return { previousItems, newItems };
 };

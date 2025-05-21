@@ -17,6 +17,7 @@ import {
 	getProposalFollowers,
 	getProposals,
 	getProposalSettings,
+	getProposalsWithCount,
 	getProposalTotals,
 	getSection,
 	getSectionProducts,
@@ -50,7 +51,7 @@ export const getSectionProductsQuery = ({
 	proposalId: string;
 }) =>
 	queryOptions({
-		queryKey: ['proposals', proposalId, versionId, 'sections', sectionId, 'products'],
+		queryKey: ['proposals', proposalId, versionId, 'products'],
 		queryFn: () => getSectionProducts({ data: { id: sectionId, version: versionId } }) as Promise<NestedProduct[]>,
 	});
 
@@ -79,6 +80,13 @@ export const getProposalFollowersQuery = (id: string, version: string) =>
 		queryFn: () => getProposalFollowers({ data: id }),
 		staleTime: Infinity,
 		gcTime: DAY_IN_MS,
+	});
+
+export const getProposalsWithCountQuery = (options?: ProposalQueryOptions) =>
+	queryOptions({
+		queryKey: ['proposals', options],
+		queryFn: () => getProposalsWithCount({ data: options }) as Promise<{ data: NestedProposal[]; count: number }>,
+		staleTime: Infinity,
 	});
 
 export const getProposalsQuery = (options?: ProposalQueryOptions) =>
@@ -191,7 +199,7 @@ export const getSectionQuery = (sectionId: string) =>
 export const getSectionsQuery = (proposalId: string, versionId: string) =>
 	queryOptions({
 		queryKey: ['proposals', proposalId, versionId, 'sections'],
-		queryFn: () => getSections({ data: { versionId, proposalId } }) as Promise<NestedSection[]>,
+		queryFn: () => getSections({ data: { versionId, proposalId } }) as Promise<Section[]>,
 	});
 
 export const getPhasesQuery = (proposalId: string, versionId: string) =>

@@ -10,6 +10,9 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { getProducts } from '@/lib/manage/read';
 import { createClient } from '@/lib/supabase/server';
 import { createServerFn } from '@tanstack/react-start';
+import { ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const getProposalProducts = createServerFn()
 	.validator((version: string) => version)
@@ -38,38 +41,39 @@ export const Route = createFileRoute('/_authed/proposals/$id/$version/products')
 });
 
 function RouteComponent() {
-	const params = Route.useParams();
-	const { data: products } = useSuspenseQuery({
-		queryKey: ['products'],
-		queryFn: async () => getProposalProducts({ data: params.version }),
-	});
-
-	const flattendProducts: Product[] = products?.flatMap((product: NestedProduct) => product.products ?? []);
-
-	const { data: opportunityProducts } = useSuspenseQuery({
-		queryKey: ['product-items'],
-		queryFn: () =>
-			getProducts({
-				data: {
-					conditions: {
-						'opportunity/id': 4885,
-					},
-				},
-			}),
-	});
-	// Filter bundled products to update the sub items prices
-	const bundledProducts = opportunityProducts.filter((product) =>
-		flattendProducts.some((p) => p && p.catalog_item === product.catalogItem.id)
-	);
-
-	console.log(bundledProducts);
-
 	return (
 		<main className='grow px-6 py-4 w-full flex flex-col items-start space-y-3'>
 			<h1 className='text-2xl font-semibold'>Products</h1>
 
-			<Suspense fallback={<div>Loading...</div>}>
-				<SectionTabs params={params} />
+			<Suspense
+				fallback={
+					<div className='w-full'>
+						{Array.from({ length: 10 }).map((_, index) => (
+							<div
+								key={index}
+								className='h-12 flex items-center'
+							>
+								<Button
+									variant='ghost'
+									size='icon'
+								>
+									{/* <ChevronUp /> */}
+								</Button>
+
+								<Button
+									variant='ghost'
+									size='icon'
+								>
+									<ChevronUp />
+								</Button>
+
+								<Skeleton className='h-6 w-48' />
+							</div>
+						))}
+					</div>
+				}
+			>
+				<SectionTabs params={Route.useParams()} />
 			</Suspense>
 		</main>
 	);

@@ -121,6 +121,9 @@ export default function OverviewRight({
 								<Calendar
 									mode='single'
 									selected={proposal.expiration_date ? new Date(proposal.expiration_date) : undefined}
+									defaultMonth={
+										proposal.expiration_date ? new Date(proposal.expiration_date) : undefined
+									}
 									onSelect={(day) => {
 										onProposalUpdate({
 											expiration_date: day?.toISOString(),

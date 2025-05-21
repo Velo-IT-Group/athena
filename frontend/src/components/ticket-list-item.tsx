@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-	AlignCenter,
-	ArrowDown,
-	ArrowUp,
 	ChevronDown,
 	CopyPlus,
 	Ellipsis,
@@ -19,21 +16,16 @@ import {
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import TaskListItem from './task-list-item';
 import { EditableArea, EditableInput, EditablePreview, Editable, EditableTrigger } from '@/components/ui/editable';
-import { Sortable, SortableContent, SortableItem, SortableItemHandle } from '@/components/ui/sortable';
+import { Sortable, SortableContent } from '@/components/ui/sortable';
 import useTask from '@/hooks/use-task';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { KanbanItemHandle } from '@/components/ui/kanban';
 
 type Props = {

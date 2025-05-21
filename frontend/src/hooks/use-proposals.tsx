@@ -21,8 +21,6 @@ export const useProposals = ({ initialData }: Props) => {
 
 	const { queryKey } = query;
 
-	console.log(initialData);
-
 	const {
 		data: { data },
 	} = useQuery({ ...query, initialData: { data: initialData || [], count: initialData?.length ?? 0 } });
@@ -94,19 +92,14 @@ export const useProposals = ({ initialData }: Props) => {
 			const settingsQuery = getProposalSettingsQuery(id, version);
 			const { queryKey: settingsQueryKey } = settingsQuery;
 
-			return updateCacheItem<ProposalSettings>(
-				queryClient,
-				settingsQueryKey,
-				settings,
-				(item) => item.proposal === settings.proposal
-			);
+			return updateCacheItem<ProposalSettings>(queryClient, settingsQueryKey, settings);
 		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, { id, version }, context) => {
 			const settingsQuery = getProposalSettingsQuery(id, version);
 			const { queryKey: settingsQueryKey } = settingsQuery;
-			queryClient.setQueryData<ProposalSettings[]>(settingsQueryKey, context?.previousItems);
+			queryClient.setQueryData<ProposalSettings>(settingsQueryKey, context?.previousItem);
 		},
 		onSettled: async (_, __, { id, version }) => {
 			const settingsQuery = getProposalSettingsQuery(id, version);
@@ -127,7 +120,7 @@ export const useProposals = ({ initialData }: Props) => {
 				}),
 			}),
 		onMutate: async ({ id }) =>
-			updateCacheItem<NestedProposal>(
+			updateArrayCacheItem<NestedProposal>(
 				queryClient,
 				queryKey,
 				{ ...(data?.find((item) => item.id === id) ?? {}), is_getting_converted: true },

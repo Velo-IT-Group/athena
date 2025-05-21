@@ -9,13 +9,7 @@ import { cn } from '@/lib/utils';
 type Props = {};
 
 const NotificationCenter = (props: Props) => {
-	const {
-		allNotifications,
-		unreadNotifications,
-		archiveNotifications,
-		markNotificationAsRead,
-		markAllNotificationsAsRead,
-	} = useNotifications();
+	const { allNotifications, unreadNotifications, markAllNotificationsAsRead } = useNotifications();
 
 	return (
 		<Popover>
