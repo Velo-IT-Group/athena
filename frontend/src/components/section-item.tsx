@@ -1,7 +1,15 @@
-import { ChevronDown, Ellipsis, GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { ChevronDown, Ellipsis, GripVertical, Loader2, Pencil, Trash2 } from 'lucide-react';
+
+import { useProduct } from '@/hooks/use-product';
+
+import { ExtendedCatalogItem, searchCatalogItems } from '@/lib/manage/read';
+
+import { convertToProduct, convertToSnakeCase } from '@/utils/helpers';
+import { getCurrencyString } from '@/utils/money';
+
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { ExtendedCatalogItem, getProducts, searchCatalogItems } from '@/lib/manage/read';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
 	DropdownMenu,
@@ -10,28 +18,28 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useProduct } from '@/hooks/use-product';
-import {
-	EditableArea,
-	EditableInput,
-	EditablePreview,
-	Editable,
-	EditableTrigger,
-	Input,
-} from '@/components/ui/editable';
+import { EditableArea, EditableInput, EditablePreview, Editable, EditableTrigger } from '@/components/ui/editable';
 import { AsyncSelect } from '@/components/ui/async-select';
 import { Badge } from '@/components/ui/badge';
-import { convertToProduct, convertToSnakeCase } from '@/utils/helpers';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { flexRender, getExpandedRowModel, getFacetedUniqueValues } from '@tanstack/react-table';
-import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { columns } from '@/components/table-columns/product';
 import { CommandItem } from '@/components/ui/command';
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { KanbanColumnHandle, KanbanItem } from '@/components/ui/kanban';
+import { KanbanColumnHandle, KanbanItem, KanbanItemHandle } from '@/components/ui/kanban';
+import { Input } from '@/components/ui/input';
+import CurrencyInput from '@/components/currency-input';
+import {
+	AlertDialog,
+	AlertDialogDescription,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+	AlertDialogFooter,
+	AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 type Props = {
 	section: NestedSection;
+	products: NestedProduct[];
 	params: { id: string; version: string };
 	url?: string;
 	order: number;
@@ -40,21 +48,20 @@ type Props = {
 	handleSectionDeletion: () => void;
 };
 
-const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeletion }: Props) => {
+const SectionItem = ({ section, products, params, handleSectionUpdate, handleSectionDeletion }: Props) => {
 	const [catalogItem, setCatalogItem] = useState<ExtendedCatalogItem | null>(null);
 
-	const {
-		data: products,
-		handleProductUpdate,
-		handleProductInsert,
-		handleProductDeletion,
-	} = useProduct({
-		initialData: section.products ?? [],
+	const { data, handleProductUpdate, handleProductInsert, handleProductDeletion, setProducts } = useProduct({
+		initialData: products ?? [],
 		params,
 		sectionId: section.id,
 	});
 
-	const orderedProducts = products?.sort((a, b) => {
+	useEffect(() => {
+		setProducts(products ?? []);
+	}, [products]);
+
+	const orderedProducts = data?.sort((a, b) => {
 		// First, compare by score in descending order
 		if (Number(a.order) > Number(b.order)) return 1;
 		if (Number(a.order) < Number(b.order)) return -1;
@@ -64,39 +71,7 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 		return new Date(a.created_at ?? '').getTime() - new Date(b.created_at ?? '').getTime();
 	});
 
-	const table = useReactTable<NestedProduct>({
-		data: orderedProducts ?? [],
-		columns,
-		getCoreRowModel: getCoreRowModel(),
-		getExpandedRowModel: getExpandedRowModel(),
-		enableExpanding: true,
-		getRowId: (row) => row.unique_id,
-		getSubRows: (row) => {
-			const orderedItems = row.products?.sort((a, b) => {
-				// First, compare by score in descending order
-				if (Number(a.sequence_number) > Number(b.sequence_number)) return 1;
-				if (Number(a.sequence_number) < Number(b.sequence_number)) return -1;
-
-				// If scores are equal, then sort by created_at in ascending order
-				return Number(a.id) - Number(b.id);
-				// return new Date(a.=).getTime() - new Date(b.created_at).getTime();
-			});
-
-			return orderedItems;
-		},
-		meta: {
-			updateProduct: handleProductUpdate,
-			deleteProduct: handleProductDeletion,
-		},
-	});
-
 	return (
-		// <SortableItem
-		// 	value={section.id}
-		// 	className='-ml-5'
-		// 	asChild
-		// >
-		// </SortableItem>
 		<Collapsible
 			className='w-full -ml-5'
 			defaultOpen
@@ -165,75 +140,199 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 			</div>
 
 			<CollapsibleContent>
-				{/* <Sortable
-					value={orderedProducts ?? []}
-					onValueChange={(newProducts) =>
-						newProducts.map((product, index) =>
-							handleProductUpdate({
-								id: product.unique_id,
-								product: {
-									order: index,
-								},
-							})
-						)
-					}
-					getItemValue={(item) => item.unique_id}
-				>
-				</Sortable> */}
 				<Table>
 					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
-									return (
-										<TableHead
-											key={header.id}
-											colSpan={header.colSpan}
-											className='text-sm'
-										>
-											{header.isPlaceholder
-												? null
-												: flexRender(header.column.columnDef.header, header.getContext())}
-										</TableHead>
-									);
-								})}
-							</TableRow>
-						))}
+						<TableRow className='text-sm'>
+							<TableHead className='-ml-3 w-12' />
+
+							<TableHead className='-ml-3'>
+								<span>Manufacturer Part Number</span>
+							</TableHead>
+
+							<TableHead className='-ml-3'>
+								<span>Product Description</span>
+							</TableHead>
+
+							<TableHead className='text-right w-[100px] text-nowrap -ml-3'>
+								<span>Quote Item Cost</span>
+							</TableHead>
+
+							<TableHead className='text-right w-[100px] text-nowrap -ml-3'>
+								<span>Quote Item Price</span>
+							</TableHead>
+
+							<TableHead className='w-[100px] text-nowrap -ml-3'>
+								<span>Quantity</span>
+							</TableHead>
+
+							<TableHead className='w-[100px] -ml-3'>
+								<span>Extended Price</span>
+							</TableHead>
+
+							<TableHead className='-ml-3' />
+						</TableRow>
 					</TableHeader>
 
-					<KanbanItem
-						value={section.id}
-						asChild
-					>
-						<TableBody className='overflow-x-auto'>
-							{table.getRowModel().rows?.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow
-										key={row.original.unique_id}
-										data-state={row.getIsSelected() && 'selected'}
-									>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell
-												key={cell.id}
-												className='text-sm'
-											>
-												{flexRender(cell.column.columnDef.cell, cell.getContext())}
-											</TableCell>
-										))}
-									</TableRow>
-								))
-							) : (
+					<TableBody>
+						{orderedProducts?.map((product) => (
+							<KanbanItem
+								key={product.unique_id}
+								value={product.unique_id}
+								asChild
+							>
 								<TableRow>
-									<TableCell
-										colSpan={columns.length}
-										className='h-24 text-center'
-									>
-										No results.
+									<TableCell className='w-12'>
+										<KanbanItemHandle asChild>
+											<Button
+												variant='ghost'
+												size='icon'
+											>
+												<GripVertical />
+											</Button>
+										</KanbanItemHandle>
+									</TableCell>
+
+									<TableCell>
+										<div className='flex items-center'>
+											{/* {row.getCanExpand() && (
+												<>
+													<Button
+														variant='ghost'
+														size='sm'
+														{...{
+															onClick: row.getToggleExpandedHandler(),
+															style: { cursor: 'pointer' },
+														}}
+														className='inline-block'
+													>
+														{row.getIsExpanded() ? (
+															<ChevronDownIcon className='w-4 h-4' />
+														) : (
+															<ChevronRightIcon className='w-4 h-4' />
+														)}
+													</Button>
+												</>
+											)} */}
+
+											<span>{product.identifier ?? product.manufacturer_part_number}</span>
+										</div>
+									</TableCell>
+
+									<TableCell>
+										<Input
+											className='w-[500px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+											defaultValue={product.description ?? ''}
+											onBlur={(e) => {
+												if (e.currentTarget.value !== product.description) {
+													handleProductUpdate.mutate({
+														id: product.unique_id,
+														product: {
+															description: e.currentTarget.value,
+														},
+													});
+												}
+											}}
+										/>
+									</TableCell>
+
+									<TableCell>
+										<CurrencyInput
+											handleBlurChange={(cost) => {
+												handleProductUpdate.mutate({
+													id: product.unique_id,
+													product: {
+														cost,
+													},
+												});
+											}}
+											defaultValue={product.cost ?? ''}
+											className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+										/>
+									</TableCell>
+
+									<TableCell>
+										<CurrencyInput
+											handleBlurChange={(price) => {
+												handleProductUpdate.mutate({
+													id: product.unique_id,
+													product: {
+														price,
+													},
+												});
+											}}
+											defaultValue={product.price ?? ''}
+											className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+										/>
+									</TableCell>
+
+									<TableCell>
+										<Input
+											type='number'
+											defaultValue={product.quantity}
+											onBlur={async (e) => {
+												if (e.currentTarget.valueAsNumber !== product.quantity) {
+													handleProductUpdate.mutate({
+														id: product.unique_id,
+														product: {
+															quantity: e.currentTarget.valueAsNumber,
+														},
+													});
+												}
+											}}
+											className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+										/>
+									</TableCell>
+
+									<TableCell>
+										<span className='w-[100px] text-right font-medium'>
+											{getCurrencyString(product.extended_price ?? 0)}
+										</span>
+									</TableCell>
+
+									<TableCell>
+										<>
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<Button
+														variant='ghost'
+														size='icon'
+													>
+														<span className='sr-only'>Delete item</span>
+														<Trash2 className='text-red-500' />
+													</Button>
+												</AlertDialogTrigger>
+												<AlertDialogContent>
+													<AlertDialogHeader>
+														<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+														<AlertDialogDescription>
+															This action cannot be undone. This will permanently delete
+															the product from our servers.
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel>Cancel</AlertDialogCancel>
+
+														<Button
+															onClick={() =>
+																handleProductDeletion.mutate({
+																	id: product.unique_id,
+																})
+															}
+														>
+															{handleProductDeletion && (
+																<Loader2 className='animate-spin mr-1.5' />
+															)}
+															<span>Continue</span>
+														</Button>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+										</>
 									</TableCell>
 								</TableRow>
-							)}
-						</TableBody>
-					</KanbanItem>
+							</KanbanItem>
+						))}
+					</TableBody>
 				</Table>
 
 				<AsyncSelect
@@ -251,8 +350,6 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 									section: section.id,
 								};
 								const newProduct = convertToProduct(snakedObj) as ProductInsert;
-
-								console.log(newProduct);
 
 								const bundledItems = item.bundledItems?.map((b) => {
 									// @ts-ignore
@@ -276,8 +373,7 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 								// @ts-ignore
 								delete newProduct['bundled_items'];
 
-								console.log(newProduct, bundledItems);
-								handleProductInsert({
+								handleProductInsert.mutate({
 									product: newProduct,
 									bundledItems,
 								});
@@ -316,7 +412,6 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 					value={catalogItem?.id.toString() ?? ''}
 					onChange={(value) => {
 						if (!value) return;
-						console.log(value);
 						const snakedObj: ProductInsert = {
 							// @ts-ignore
 							...convertToSnakeCase(value),
@@ -324,8 +419,6 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 							section: section.id,
 						};
 						const newProduct = convertToProduct(snakedObj) as ProductInsert;
-
-						console.log(newProduct);
 
 						const bundledItems = value.bundledItems?.map((b) => {
 							// @ts-ignore
@@ -349,8 +442,7 @@ const SectionItem = ({ section, params, handleSectionUpdate, handleSectionDeleti
 						// @ts-ignore
 						delete newProduct['bundled_items'];
 
-						console.log(newProduct, bundledItems);
-						handleProductInsert({
+						handleProductInsert.mutate({
 							product: newProduct,
 							bundledItems,
 						});

@@ -180,3 +180,13 @@ export const parsePhoneNumber = (phoneNumber: string) => {
 		formattedNumber: phoneNumber.replace(regex, '+1 ($1) $2-$3'),
 	};
 };
+
+export function isSame(oldArray: string[], newArray: string[]): boolean {
+	if (oldArray.length !== newArray.length) return false;
+	for (let i = 0; i < newArray.length; i++) {
+		if (newArray[i] !== oldArray[i]) {
+			return false;
+		}
+	}
+	return true;
+}

@@ -9,6 +9,8 @@ import { getSectionsQuery } from '@/lib/supabase/api';
 import { Kanban, KanbanBoard, KanbanColumn, KanbanOverlay } from '@/components/ui/kanban';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useState } from 'react';
+import { isSame } from '@/lib/utils';
+import { useProduct } from '@/hooks/use-product';
 
 type Props = {
 	params: { id: string; version: string };
@@ -48,87 +50,95 @@ const SectionTabs = ({ params }: Props) => {
 
 	const [columns, setColumns] = useState<Record<UniqueIdentifier, NestedProduct[]>>(groupedSections);
 
+	const allProducts: NestedProduct[] = sections?.flatMap((section) => section.products ?? []);
+
+	const { handleProductUpdate } = useProduct({
+		initialData: allProducts ?? [],
+		params,
+		sectionId: '',
+	});
+
 	return (
 		<Kanban
 			value={columns}
-			// onValueChange={(value) => {
-			// 	const newColumns = Object.entries(value);
-			// 	const currentColumns = Object.entries(columns);
+			onValueChange={(value) => {
+				const newColumns = Object.entries(value);
+				const currentColumns = Object.entries(columns);
 
-			// 	setColumns(value);
+				setColumns(value);
 
-			// 	const arePhasesSame = isSame(
-			// 		newColumns.map(([key]) => key),
-			// 		currentColumns.map(([key]) => key)
-			// 	);
+				const areSectionsSame = isSame(
+					newColumns.map(([key]) => key),
+					currentColumns.map(([key]) => key)
+				);
 
-			// 	if (arePhasesSame) {
-			// 		let ticketsToUpdate: Map<string, TicketUpdate> = new Map();
-			// 		for (const [key, value] of newColumns) {
-			// 			const currentPhase = currentColumns.find(([phaseId]) => phaseId === key);
+				if (areSectionsSame) {
+					let ticketsToUpdate: Map<string, ProductUpdate> = new Map();
+					for (const [key, value] of newColumns) {
+						const currentPhase = currentColumns.find(([phaseId]) => phaseId === key);
 
-			// 			if (!currentPhase) return;
+						if (!currentPhase) return;
 
-			// 			const currentTasks = currentPhase[1];
-			// 			const newTasks = value;
+						const currentTasks = currentPhase[1];
+						const newTasks = value;
 
-			// 			const areTicketsSame = isSame(
-			// 				currentTasks.map((t) => t.id),
-			// 				newTasks.map((t) => t.id)
-			// 			);
+						const areTicketsSame = isSame(
+							currentTasks.map((t) => t.unique_id),
+							newTasks.map((t) => t.unique_id)
+						);
 
-			// 			if (areTicketsSame) continue;
+						if (areTicketsSame) continue;
 
-			// 			newTasks.forEach((t, order) => {
-			// 				const currentTicket = currentTasks.find((t) => t.id === t.id);
+						newTasks.forEach((t, order) => {
+							const currentTicket = currentTasks.find((t) => t.id === t.id);
 
-			// 				if (currentTicket?.order === order && currentTicket?.phase === key)
-			// 					return currentTicket;
+							if (currentTicket?.order === order && currentTicket?.section === key) return currentTicket;
 
-			// 				ticketsToUpdate.set(t.id, {
-			// 					summary: t.summary,
-			// 					order,
-			// 					phase: key,
-			// 				});
-			// 			});
-			// 		}
-			// 		Array.from(ticketsToUpdate.entries()).forEach(([id, ticket]) => {
-			// 			handleTicketUpdate({
-			// 				id,
-			// 				ticket,
-			// 			});
-			// 		});
-			// 	} else {
-			// 		const phasesToUpdate: Map<string, PhaseUpdate> = new Map();
-			// 		newColumns.forEach(([key, value], order) => {
-			// 			const currentPhase = sortedPhases.find((phase) => phase.id === key);
+							ticketsToUpdate.set(t.unique_id, {
+								order,
+								section: key,
+							});
+						});
+					}
+					Array.from(ticketsToUpdate.entries()).forEach(([id, product]) => {
+						handleProductUpdate.mutate({
+							id,
+							product,
+						});
+					});
+				} else {
+					const phasesToUpdate: Map<string, PhaseUpdate> = new Map();
+					newColumns.forEach(([key, value], order) => {
+						const currentPhase = orderedSections.find((phase) => phase.id === key);
 
-			// 			if (!currentPhase) return;
+						if (!currentPhase) return;
 
-			// 			if (currentPhase.order === order && currentPhase.id === key) return;
+						if (currentPhase.order === order && currentPhase.id === key) return;
 
-			// 			phasesToUpdate.set(currentPhase.id, {
-			// 				id: currentPhase.id,
-			// 				version: currentPhase.version,
-			// 				order,
-			// 			});
-			// 		});
+						phasesToUpdate.set(currentPhase.id, {
+							id: currentPhase.id,
+							version: currentPhase.version,
+							order,
+						});
+					});
 
-			// 		Array.from(phasesToUpdate.entries()).forEach(([id, phase]) => {
-			// 			handlePhaseUpdate({
-			// 				id,
-			// 				phase,
-			// 			});
-			// 		});
-			// 	}
-			// }}
-			getItemValue={(item) => item.id}
+					Array.from(phasesToUpdate.entries()).forEach(([id, phase]) => {
+						handleSectionUpdate({
+							id,
+							section: {
+								order: phase.order,
+							},
+						});
+					});
+				}
+			}}
+			getItemValue={(item) => item.unique_id}
 			autoScroll
 			orientation='vertical'
 		>
 			<KanbanBoard>
 				<KanbanBoard>
-					{Object.entries(columns).map(([columnValue, tasks]) => {
+					{Object.entries(columns).map(([columnValue, products]) => {
 						const section = orderedSections.find((p) => p.id === columnValue);
 
 						if (!section) return null;
@@ -144,6 +154,7 @@ const SectionTabs = ({ params }: Props) => {
 									<SectionItem
 										key={section.id}
 										section={section}
+										products={products ?? []}
 										order={section.order}
 										params={params}
 										handleSectionInsert={handleSectionInsert}
@@ -162,47 +173,24 @@ const SectionTabs = ({ params }: Props) => {
 					<div className='size-full rounded-md bg-primary/10' />
 				</KanbanOverlay>
 			</KanbanBoard>
-		</Kanban>
-		// <Sortable
-		// 	value={orderedSections}
-		// 	onValueChange={(newSections) => {
-		// 		newSections.map((section, index) => {
-		// 			return handleSectionUpdate({
-		// 				id: section.id,
-		// 				section: { order: index },
-		// 			});
-		// 		});
-		// 	}}
-		// 	getItemValue={(item) => item.id}
-		// >
-		// 	<SortableContent asChild>
-		// 		<>
-		// 			{orderedSections.map((section) => (
-		// <SectionItem
-		// 	key={section.id}
-		// 	section={section}
-		// 	order={section.order}
-		// 	params={params}
-		// 	handleSectionInsert={handleSectionInsert}
-		// 	handleSectionUpdate={(updateSection) =>
-		// 		handleSectionUpdate({ id: section.id, section: updateSection })
-		// 	}
-		// 	handleSectionDeletion={() => handleSectionDeletion(section.id)}
-		// />
-		// 			))}
-		// 		</>
-		// 	</SortableContent>
 
-		// 	<Button
-		// 		variant='ghost'
-		// 		size='sm'
-		// 		className='w-auto text-muted-foreground'
-		// 		onClick={() => handleSectionInsert(sectionStub)}
-		// 	>
-		// 		<Plus className='mr-1.5' />
-		// 		<span>Add Section</span>
-		// 	</Button>
-		// </Sortable>
+			<Button
+				variant='ghost'
+				size='sm'
+				className='w-auto text-muted-foreground'
+				// onClick={() => handleSectionInsert(sectionStub)}
+				onClick={() => {
+					handleSectionInsert(sectionStub);
+					setColumns((prevColumns) => ({
+						...prevColumns,
+						[sectionStub.id as unknown as UniqueIdentifier]: [],
+					}));
+				}}
+			>
+				<Plus className='mr-1.5' />
+				<span>Add Section</span>
+			</Button>
+		</Kanban>
 	);
 };
 

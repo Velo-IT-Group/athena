@@ -6,8 +6,8 @@ import { deleteProduct } from '@/lib/supabase/delete';
 import { updateProduct } from '@/lib/supabase/update';
 
 import { getProposalTotalsQuery, getSectionProductsQuery, getSectionsQuery } from '@/lib/supabase/api';
-import { useCallback } from 'react';
-import { addCacheItem, updateCacheItem } from '@/lib/utils';
+import { useCallback, useState } from 'react';
+import { addCacheItem, updateArrayCacheItem, updateCacheItem } from '@/lib/utils';
 
 type Props = {
 	initialData: NestedProduct[];
@@ -25,6 +25,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 	const queryClient = useQueryClient();
 
 	const { data } = useQuery(query);
+	const [products, setProducts] = useState<NestedProduct[]>(data ?? initialData);
 
 	const updateProposalTotals = useCallback((newProduct: NestedProduct) => {
 		const previousTotals = queryClient.getQueryData<ProposalTotals>(
@@ -61,7 +62,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		queryClient.setQueryData(getProposalTotalsQuery(params.id, params.version).queryKey, newTotals);
 	}, []);
 
-	const { mutate: handleProductUpdate } = useMutation({
+	const handleProductUpdate = useMutation({
 		mutationFn: async ({ id, product }: { id: string; product: ProductUpdate }) =>
 			updateProduct({ data: { id, product } }),
 		onMutate: async ({ id, product }) => {
@@ -85,7 +86,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 
 			updateProposalTotals(newProduct);
 
-			return updateCacheItem<NestedProduct>(queryClient, queryKey, newProduct, (p) => p.unique_id === id);
+			return updateArrayCacheItem<NestedProduct>(queryClient, queryKey, newProduct, (p) => p.unique_id === id);
 		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
@@ -99,14 +100,19 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		},
 	});
 
-	const { mutate: handleProductInsert } = useMutation({
+	const handleProductInsert = useMutation({
 		mutationFn: async ({ product, bundledItems }: { product: ProductInsert; bundledItems?: ProductInsert[] }) =>
 			createProduct({ data: { product, bundledItems } }),
-		onMutate: async ({ product, bundledItems }) =>
-			addCacheItem<NestedProduct>(queryClient, queryKey, {
+		onMutate: async ({ product, bundledItems }) => {
+			await addCacheItem<NestedProduct>(queryClient, queryKey, {
 				...product,
-				products: bundledItems,
-			}),
+				additional_overrides: product.additional_overrides ?? {},
+				// products: bundledItems,
+			});
+
+			setProducts([...products, product]);
+		},
+
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newProduct, context) => {
@@ -119,7 +125,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		},
 	});
 
-	const { mutate: handleProductDeletion } = useMutation({
+	const handleProductDeletion = useMutation({
 		mutationFn: async ({ id }: { id: string }) => deleteProduct({ data: id }),
 		onMutate: async ({ id }) => {
 			// Cancel any outgoing refetches
@@ -152,7 +158,8 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 	});
 
 	return {
-		data,
+		data: products,
+		setProducts,
 		handleProductUpdate,
 		handleProductInsert,
 		handleProductDeletion,

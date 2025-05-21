@@ -159,8 +159,9 @@ function AuthComponent() {
 				/>
 
 				<SidebarInset className='relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto p-0 [&_section]:px-6'>
-					<Outlet />
-					{/* <ScrollArea className='!h-[calc(100svh-var(--navbar-height))] flex flex-col [&_section]:px-6'></ScrollArea> */}
+					<ScrollArea className='!h-[calc(100svh-var(--navbar-height))] flex flex-col [&_section]:px-6'>
+						<Outlet />
+					</ScrollArea>
 				</SidebarInset>
 			</div>
 		</SidebarProvider>

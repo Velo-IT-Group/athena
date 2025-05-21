@@ -12,21 +12,21 @@ import ProductColumnActions from '@/components/product-column-actions';
 import { SortableItemHandle } from '@/components/ui/sortable';
 import { useProduct } from '@/hooks/use-product';
 import CurrencyInput from '@/components/currency-input';
+import { KanbanItemHandle } from '@/components/ui/kanban';
 
 export const columns: ColumnDef<Product>[] = [
 	{
 		id: 'drag',
 		enableHiding: false,
 		cell: () => (
-			// <SortableItemHandle asChild>
-			<Button
-				variant='ghost'
-				size='icon'
-				// className='size-8'
-			>
-				<GripVertical />
-			</Button>
-			// </SortableItemHandle>
+			<KanbanItemHandle asChild>
+				<Button
+					variant='ghost'
+					size='icon'
+				>
+					<GripVertical />
+				</Button>
+			</KanbanItemHandle>
 		),
 	},
 	{
@@ -399,3 +399,165 @@ export const catalogColumns: ColumnDef<ExtendedCatalogItem>[] = [
 		},
 	},
 ];
+
+{
+	/* <Table>
+	<TableHeader>
+		<TableRow className='text-sm'>
+			<TableHead className='-ml-3' />
+
+			<TableHead className='-ml-3'>
+				<span>Manufacturer Part Number</span>
+			</TableHead>
+
+			<TableHead className='-ml-3'>
+				<span>Product Description</span>
+			</TableHead>
+
+			<TableHead className='text-right w-[100px] text-nowrap -ml-3'>
+				<span>Quote Item Cost</span>
+			</TableHead>
+
+			<TableHead className='text-right w-[100px] text-nowrap -ml-3'>
+				<span>Quote Item Price</span>
+			</TableHead>
+
+			<TableHead className='w-[100px] text-nowrap -ml-3'>
+				<span>Quantity</span>
+			</TableHead>
+
+			<TableHead className='w-[100px] -ml-3'>
+				<span>Extended Price</span>
+			</TableHead>
+
+			<TableHead className='-ml-3' />
+		</TableRow>
+	</TableHeader>
+
+	<TableBody className='overflow-x-auto'>
+		{products?.map((product) => (
+			<KanbanItem
+				key={product.unique_id}
+				value={product.unique_id}
+				asChild
+			>
+				<TableRow>
+					<TableCell>
+						<KanbanItemHandle asChild>
+							<Button
+								variant='ghost'
+								size='icon'
+							>
+								<GripVertical />
+							</Button>
+						</KanbanItemHandle>
+					</TableCell>
+
+					<TableCell>
+						<div className='flex items-center'>
+							{row.getCanExpand() && (
+												<>
+													<Button
+														variant='ghost'
+														size='sm'
+														{...{
+															onClick: row.getToggleExpandedHandler(),
+															style: { cursor: 'pointer' },
+														}}
+														className='inline-block'
+													>
+														{row.getIsExpanded() ? (
+															<ChevronDownIcon className='w-4 h-4' />
+														) : (
+															<ChevronRightIcon className='w-4 h-4' />
+														)}
+													</Button>
+												</>
+											)}
+
+							<span>{product.identifier ?? product.manufacturer_part_number}</span>
+						</div>
+					</TableCell>
+
+					<TableCell>
+						<Input
+							className='w-[500px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+							defaultValue={product.description ?? ''}
+							onBlur={(e) => {
+								if (e.currentTarget.value !== product.description) {
+									handleProductUpdate({
+										id: product.unique_id,
+										product: {
+											description: e.currentTarget.value,
+										},
+									});
+								}
+							}}
+						/>
+					</TableCell>
+
+					<TableCell>
+						<CurrencyInput
+							handleBlurChange={(cost) => {
+								handleProductUpdate({
+									id: product.unique_id,
+									product: {
+										cost,
+									},
+								});
+							}}
+							defaultValue={product.cost ?? ''}
+							className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+						/>
+					</TableCell>
+
+					<TableCell>
+						<CurrencyInput
+							handleBlurChange={(price) => {
+								handleProductUpdate({
+									id: product.unique_id,
+									product: {
+										price,
+									},
+								});
+							}}
+							defaultValue={product.price ?? ''}
+							className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+						/>
+					</TableCell>
+
+					<TableCell>
+						<Input
+							type='number'
+							defaultValue={product.quantity}
+							onBlur={async (e) => {
+								if (e.currentTarget.valueAsNumber !== product.quantity) {
+									handleProductUpdate({
+										id: product.unique_id,
+										product: {
+											quantity: e.currentTarget.valueAsNumber,
+										},
+									});
+								}
+							}}
+							className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
+						/>
+					</TableCell>
+
+					<TableCell>
+						<span className='w-[100px] text-right font-medium'>
+							{getCurrencyString(product.extended_price ?? 0)}
+						</span>
+					</TableCell>
+
+					<TableCell>
+						<span className='w-[100px] text-right font-medium'>
+							{getCurrencyString(product.extended_price ?? 0)}
+						</span>
+					</TableCell>
+				</TableRow>
+			</KanbanItem>
+		))}
+	</TableBody>
+</Table>; */
+}

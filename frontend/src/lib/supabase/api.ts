@@ -51,7 +51,7 @@ export const getSectionProductsQuery = ({
 }) =>
 	queryOptions({
 		queryKey: ['proposals', proposalId, versionId, 'sections', sectionId, 'products'],
-		queryFn: () => getSectionProducts({ data: { id: sectionId, version: versionId } }),
+		queryFn: () => getSectionProducts({ data: { id: sectionId, version: versionId } }) as Promise<NestedProduct[]>,
 	});
 
 export const getEngagementSummaryByPeriodQuery = (options?: EngagementQueryOptions) =>

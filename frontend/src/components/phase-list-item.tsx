@@ -50,7 +50,7 @@ const PhaseListItem = ({ phase, tickets: initialData, params, handleDeletion, ha
 			open={open}
 			onOpenChange={setOpen}
 			className={cn(
-				'w-full border-b last:border-b-0 pr-1.5 -mr-1.5 group/phase border border-transparent rounded-lg border-dashed',
+				'w-full border-b pr-1.5 -mr-1.5 group/phase border border-transparent rounded-lg border-dashed',
 				!phase.visible && 'border-muted-foreground/25 bg-muted/50'
 			)}
 			data-visible={phase.visible}

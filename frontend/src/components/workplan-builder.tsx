@@ -7,6 +7,7 @@ import { Sortable, SortableContent, SortableOverlay } from '@/components/ui/sort
 import { usePhase } from '@/hooks/use-phase';
 import { useTicket } from '@/hooks/use-ticket';
 import { getPhasesQuery } from '@/lib/supabase/api';
+import { isSame } from '@/lib/utils';
 import type { ProjectTemplate } from '@/types/manage';
 import { createNestedPhaseFromTemplate } from '@/utils/helpers';
 import { DndContext, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
@@ -17,16 +18,6 @@ import { Suspense, useMemo, useState } from 'react';
 type Props = {
 	params: { id: string; version: string };
 };
-
-function isSame(oldArray: string[], newArray: string[]): boolean {
-	if (oldArray.length !== newArray.length) return false;
-	for (let i = 0; i < newArray.length; i++) {
-		if (newArray[i] !== oldArray[i]) {
-			return false;
-		}
-	}
-	return true;
-}
 
 const WorkplanBuilder = ({ params }: Props) => {
 	const { id, version } = params;
