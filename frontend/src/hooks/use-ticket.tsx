@@ -20,60 +20,56 @@ type Props = {
 
 export const useTicket = ({ proposalId, versionId, phaseId, initialData }: Props) => {
 	const queryClient = useQueryClient();
+	const phasesQuery = getPhasesQuery(proposalId, versionId);
+
 	const query = getTicketsQuery(phaseId);
 	const { queryKey } = query;
 
 	const { data } = useQuery({ ...query, enabled: !!phaseId });
 
-	const updateProposalTotals = useCallback(
-		(phases: NestedPhase[]) => {
-			const previousTotals = queryClient.getQueryData<ProposalTotals>(
-				getProposalTotalsQuery(proposalId, versionId).queryKey
-			);
+	const updateProposalTotals = (phases: NestedPhase[]) => {
+		const previousTotals = queryClient.getQueryData<ProposalTotals>(
+			getProposalTotalsQuery(proposalId, versionId).queryKey
+		);
 
-			if (!previousTotals) return;
+		if (!previousTotals) return;
 
-			const laborCost = phases.reduce((acc, p) => acc + (p.hours ?? 0) * (previousTotals.labor_rate ?? 0), 0);
+		const laborCost = phases.reduce((acc, p) => acc + (p.hours ?? 0) * (previousTotals.labor_rate ?? 0), 0);
 
-			const newTotals: ProposalTotals = {
-				...previousTotals,
-				labor_cost: laborCost,
-				total_price:
-					(previousTotals.non_recurring_product_total ?? 0) +
-					(previousTotals.recurring_total ?? 0) +
-					(previousTotals.non_recurring_product_total ?? 0) +
-					laborCost,
-			};
+		const newTotals: ProposalTotals = {
+			...previousTotals,
+			labor_cost: laborCost,
+			total_price:
+				(previousTotals.non_recurring_product_total ?? 0) +
+				(previousTotals.recurring_total ?? 0) +
+				(previousTotals.non_recurring_product_total ?? 0) +
+				laborCost,
+		};
 
-			queryClient.setQueryData(getProposalTotalsQuery(proposalId, versionId).queryKey, newTotals);
-		},
-		[phaseId, proposalId, versionId]
-	);
+		queryClient.setQueryData(getProposalTotalsQuery(proposalId, versionId).queryKey, newTotals);
+	};
 
-	const updatePhaseHours = useCallback(
-		(newTicket: NestedTicket) => {
-			const phases = queryClient.getQueryData<NestedPhase[]>(getPhasesQuery(proposalId, versionId).queryKey);
-			const phase = phases?.find((p) => p.id === phaseId);
-			const previousTickets = phase?.tickets;
-			const updatedTickets = [...(previousTickets?.filter((t) => t.id !== newTicket.id) ?? []), newTicket];
+	const updatePhaseHours = (updatedTickets: NestedTicket[]) => {
+		const phases = queryClient.getQueryData<NestedPhase[]>(phasesQuery.queryKey);
+		const phase = phases?.find((p) => p.id === phaseId);
+		// const previousTickets = phase?.tickets;
+		// const updatedTickets = [...(previousTickets?.filter((t) => t.id !== newTicket.id) ?? []), newTicket];
 
-			if (!phase) return;
+		if (!phase) return;
 
-			const updatePhase: NestedPhase = {
-				...phase,
-				hours: updatedTickets.reduce((acc, t) => acc + (t.budget_hours ?? 0), 0),
-			};
+		const updatePhase: NestedPhase = {
+			...phase,
+			hours: updatedTickets.reduce((acc, t) => acc + (t.budget_hours ?? 0), 0),
+		};
 
-			const updatedPhases = phases?.map((p) => (p.id === phaseId ? updatePhase : p));
+		const updatedPhases = phases?.map((p) => (p.id === phaseId ? updatePhase : p));
 
-			if (!updatedPhases) return;
+		if (!updatedPhases) return;
 
-			updateProposalTotals(updatedPhases);
+		updateProposalTotals(updatedPhases);
 
-			queryClient.setQueryData(getPhasesQuery(proposalId, versionId).queryKey, updatedPhases);
-		},
-		[phaseId, proposalId, versionId]
-	);
+		queryClient.setQueryData(phasesQuery.queryKey, updatedPhases);
+	};
 
 	const { mutate: handleTicketUpdate } = useMutation({
 		mutationFn: async ({ id, ticket }: { id: string; ticket: TicketUpdate }) =>
@@ -82,11 +78,11 @@ export const useTicket = ({ proposalId, versionId, phaseId, initialData }: Props
 			const cachedData = await updateArrayCacheItem<NestedTicket>(
 				queryClient,
 				queryKey,
-				{ ...ticket, id },
+				ticket,
 				(item) => item.id === id
 			);
 
-			updateProposalTotals(cachedData.newItems);
+			updatePhaseHours(cachedData.newItems);
 
 			return cachedData;
 		},
