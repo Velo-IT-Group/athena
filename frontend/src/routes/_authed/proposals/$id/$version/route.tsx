@@ -12,7 +12,6 @@ import {
 	Trash,
 	Undo2,
 	ChevronDown,
-	Star,
 } from 'lucide-react';
 
 import { formatRelative } from 'date-fns';
@@ -55,7 +54,6 @@ import {
 } from '@/components/ui/dialog';
 import { createVersion } from '@/lib/supabase/create';
 import { useProposals } from '@/hooks/use-proposals';
-import { getCurrencyString } from '@/utils/money';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { linksConfig } from '@/config/links';
@@ -92,8 +90,6 @@ function RouteComponent() {
 	>();
 
 	const [open, setOpen] = useState(false);
-
-	// const { data, handlePinnedItemDeletion, handlePinnedItemCreation } = usePinnedItems();
 
 	const { mutate: handleNewVersion, isPending: isNewVersionPending } = useMutation({
 		mutationFn: async () => await createVersion({ data: proposal?.id ?? '' }),
@@ -234,7 +230,7 @@ function RouteComponent() {
 												</DropdownMenuContent>
 											</DropdownMenu>
 
-											<Button
+											{/* <Button
 												size='icon'
 												variant='ghost'
 												// onClick={() =>
@@ -258,7 +254,7 @@ function RouteComponent() {
 														// 	'text-yellow-300 fill-yellow-300 stroke-yellow-300'
 													)}
 												/>
-											</Button>
+											</Button> */}
 
 											<Popover>
 												<PopoverTrigger asChild>

@@ -51,8 +51,15 @@ const NotificationCenter = (props: Props) => {
 				</div>
 
 				<div className='flex-1 overflow-y-auto'>
-					<NotificationSection />
-					<NotificationItemTest notification={allNotifications?.[0]} />
+					{unreadNotifications.length > 0 && <NotificationSection />}
+					{unreadNotifications.length > 0 ? (
+						unreadNotifications.map((notification) => <NotificationItemTest notification={notification} />)
+					) : (
+						<div className='p-6 text-muted-foreground text-center flex flex-col items-center gap-3'>
+							<Bell className='size-6' />
+							<p>No new notifications</p>
+						</div>
+					)}
 				</div>
 			</PopoverContent>
 		</Popover>
@@ -120,9 +127,9 @@ function NotificationItemTest({ notification }: { notification: AppNotification 
 			</div>
 
 			<div className='flex-1'>
-				<p className='font-medium'>{notificationHelperText.get(notification?.type)?.title}</p>
+				<p className='font-medium'>Proposal approved</p>
 				<p className='text-sm text-muted-foreground'>
-					{notificationHelperText.get(notification?.type)?.description}
+					${notification.resource_name} has been approved by {notification.from}
 				</p>
 			</div>
 			<div className='text-sm text-muted-foreground'></div>

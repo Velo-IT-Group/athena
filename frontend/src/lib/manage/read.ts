@@ -676,7 +676,9 @@ export const getContactImage = createServerFn({ response: "data" })
 		return await response.blob();
 	});
 
-export const getSystemMemberImage = async (id: number): Promise<Blob> => {
+export const getSystemMemberImage = createServerFn(
+	{ method: "GET", response: "raw" },
+).validator((id: number) => id).handler(async ({ data: id }) => {
 	const response = await fetch(
 		`${env.VITE_CONNECT_WISE_URL}/system/members/${id}/image`,
 		{
@@ -684,8 +686,8 @@ export const getSystemMemberImage = async (id: number): Promise<Blob> => {
 		},
 	);
 
-	return await response.blob();
-};
+	return response;
+});
 
 export const getSystemMembers = createServerFn()
 	.validator((conditions?: Conditions<SystemMember>) =>

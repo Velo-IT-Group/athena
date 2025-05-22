@@ -3,8 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 
 const avatarStackVariants = cva('flex -space-x-4 -space-y-4', {
 	variants: {

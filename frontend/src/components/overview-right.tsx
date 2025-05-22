@@ -10,6 +10,8 @@ import { formatRelative, type FormatRelativeToken } from 'date-fns';
 import { CalendarIcon, Ellipsis } from 'lucide-react';
 import LabeledInput from '@/components/labeled-input';
 import { getCurrencyString } from '@/utils/money';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { getProposalTotalsQuery } from '@/lib/supabase/api';
 
 export const formatRelativeLocale: Record<FormatRelativeToken, string> = {
 	lastWeek: "'Last' eeee",
@@ -28,6 +30,7 @@ export default function OverviewRight({
 	onProposalUpdate: (proposal: ProposalUpdate) => void;
 }) {
 	const currentStatus = proposalStatuses.find((status) => status.value === proposal.status);
+	const { data: totals } = useSuspenseQuery(getProposalTotalsQuery(proposal.id, proposal.working_version ?? ''));
 
 	return (
 		<div className='bg-muted/50 min-w-[398px] border-l flex-[0_0_398px]'>
@@ -108,7 +111,7 @@ export default function OverviewRight({
 														...enUS,
 														formatRelative: (token) => formatRelativeLocale[token],
 													},
-											  })
+												})
 											: 'No due date'}
 									</span>
 								</Button>
@@ -152,11 +155,15 @@ export default function OverviewRight({
 				</LabeledInput>
 
 				<LabeledInput label='Total Amount'>
-					<p className='text-lg font-semibold text-muted-foreground'>{getCurrencyString(0)}</p>
+					<p className='text-lg font-semibold text-muted-foreground'>
+						{getCurrencyString(totals.total_price ?? 0)}
+					</p>
 				</LabeledInput>
 
 				<LabeledInput label='Labor Hours'>
-					<p className='text-lg font-semibold text-muted-foreground'>{getCurrencyString(0)}</p>
+					<p className='text-lg font-semibold text-muted-foreground'>
+						{getCurrencyString(totals.labor_cost ?? 0)}
+					</p>
 				</LabeledInput>
 			</div>
 		</div>
