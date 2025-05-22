@@ -17,8 +17,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function DataTableRowActions() {
-	// const task = taskSchema.parse(row.original);
-
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>

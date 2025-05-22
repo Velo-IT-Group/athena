@@ -51,7 +51,7 @@ const envSchema = z.object({
 	VITE_TWILIO_WORKSPACE_SID: z.string(),
 });
 
-export const env = envSchema.parse(import.meta.env);
+export const env = import.meta.env;
 
 export const delay = async (delay = 1000) => {
 	const delayPromise = (ms: number) =>
