@@ -82,148 +82,76 @@ const SectionTabs = ({ params }: Props) => {
 					value={columns}
 					onValueChange={(value) => {
 						setColumns(value);
-						// const newColumns = Object.entries(value);
-						// const currentColumns = Object.entries(columns);
+						const newColumns = Object.entries(value);
+						const currentColumns = Object.entries(columns);
 
-						// const areSectionsSame = isSame(
-						// 	newColumns.map(([key]) => key),
-						// 	currentColumns.map(([key]) => key)
-						// );
+						const areSectionsSame = isSame(
+							newColumns.map(([key]) => key),
+							currentColumns.map(([key]) => key)
+						);
 
-						// if (areSectionsSame) {
-						// 	let ticketsToUpdate: Map<string, ProductUpdate> = new Map();
-						// 	for (const [key, value] of newColumns) {
-						// 		const currentPhase = currentColumns.find(([phaseId]) => phaseId === key);
+						if (areSectionsSame) {
+							let ticketsToUpdate: Map<string, ProductUpdate> = new Map();
+							for (const [key, value] of newColumns) {
+								const currentPhase = currentColumns.find(([phaseId]) => phaseId === key);
 
-						// 		if (!currentPhase) return;
+								if (!currentPhase) return;
 
-						// 		const currentTasks = currentPhase[1];
-						// 		const newTasks = value;
+								const currentTasks = currentPhase[1];
+								const newTasks = value;
 
-						// 		const areTicketsSame = isSame(
-						// 			currentTasks.map((t) => t.unique_id),
-						// 			newTasks.map((t) => t.unique_id)
-						// 		);
+								const areTicketsSame = isSame(
+									currentTasks.map((t) => t.unique_id),
+									newTasks.map((t) => t.unique_id)
+								);
 
-						// 		if (areTicketsSame) continue;
+								if (areTicketsSame) continue;
 
-						// 		newTasks.forEach((t, order) => {
-						// 			const currentTicket = currentTasks.find((t) => t.id === t.id);
+								newTasks.forEach((t, order) => {
+									const currentTicket = currentTasks.find((t) => t.id === t.id);
 
-						// 			if (currentTicket?.order === order && currentTicket?.section === key)
-						// 				return currentTicket;
+									if (currentTicket?.order === order && currentTicket?.section === key)
+										return currentTicket;
 
-						// 			ticketsToUpdate.set(t.unique_id, {
-						// 				order,
-						// 				section: key,
-						// 			});
-						// 		});
-						// 	}
-						// 	// Array.from(ticketsToUpdate.entries()).forEach(([id, product]) => {
-						// 	// 	handleProductUpdate.mutate({
-						// 	// 		id,
-						// 	// 		product,
-						// 	// 	});
-						// 	// });
-						// } else {
-						// 	const phasesToUpdate: Map<string, PhaseUpdate> = new Map();
-						// 	newColumns.forEach(([key, value], order) => {
-						// 		const currentPhase = orderedSections.find((phase) => phase.id === key);
+									ticketsToUpdate.set(t.unique_id, {
+										order,
+										section: key,
+									});
+								});
+							}
+							Array.from(ticketsToUpdate.entries()).forEach(([id, product]) => {
+								handleProductUpdate.mutate({
+									id,
+									product,
+								});
+							});
+						} else {
+							const phasesToUpdate: Map<string, PhaseUpdate> = new Map();
+							newColumns.forEach(([key, value], order) => {
+								const currentPhase = orderedSections.find((phase) => phase.id === key);
 
-						// 		if (!currentPhase) return;
+								if (!currentPhase) return;
 
-						// 		if (currentPhase.order === order && currentPhase.id === key) return;
+								if (currentPhase.order === order && currentPhase.id === key) return;
 
-						// 		phasesToUpdate.set(currentPhase.id, {
-						// 			id: currentPhase.id,
-						// 			version: currentPhase.version,
-						// 			order,
-						// 		});
-						// 	});
+								phasesToUpdate.set(currentPhase.id, {
+									id: currentPhase.id,
+									version: currentPhase.version,
+									order,
+								});
+							});
 
-						// 	Array.from(phasesToUpdate.entries()).forEach(([id, phase]) => {
-						// 		handleSectionUpdate({
-						// 			id,
-						// 			section: {
-						// 				order: phase.order,
-						// 			},
-						// 		});
-						// 	});
-						// }
+							Array.from(phasesToUpdate.entries()).forEach(([id, phase]) => {
+								handleSectionUpdate({
+									id,
+									section: {
+										order: phase.order,
+									},
+								});
+							});
+						}
 					}}
 					getItemValue={(item) => item.unique_id}
-					onDragEnd={(event: DragEndEvent) => {
-						const { active, over } = event;
-
-						// const newColumns = Object.entries(value);
-						// const currentColumns = Object.entries(columns);
-
-						// const areSectionsSame = isSame(
-						// 	newColumns.map(([key]) => key),
-						// 	currentColumns.map(([key]) => key)
-						// );
-
-						// if (areSectionsSame) {
-						// 	let ticketsToUpdate: Map<string, ProductUpdate> = new Map();
-						// 	for (const [key, value] of newColumns) {
-						// 		const currentPhase = currentColumns.find(([phaseId]) => phaseId === key);
-
-						// 		if (!currentPhase) return;
-
-						// 		const currentTasks = currentPhase[1];
-						// 		const newTasks = value;
-
-						// 		const areTicketsSame = isSame(
-						// 			currentTasks.map((t) => t.unique_id),
-						// 			newTasks.map((t) => t.unique_id)
-						// 		);
-
-						// 		if (areTicketsSame) continue;
-
-						// 		newTasks.forEach((t, order) => {
-						// 			const currentTicket = currentTasks.find((t) => t.id === t.id);
-
-						// 			if (currentTicket?.order === order && currentTicket?.section === key)
-						// 				return currentTicket;
-
-						// 			ticketsToUpdate.set(t.unique_id, {
-						// 				order,
-						// 				section: key,
-						// 			});
-						// 		});
-						// 	}
-						// 	// Array.from(ticketsToUpdate.entries()).forEach(([id, product]) => {
-						// 	// 	handleProductUpdate.mutate({
-						// 	// 		id,
-						// 	// 		product,
-						// 	// 	});
-						// 	// });
-						// } else {
-						// 	const phasesToUpdate: Map<string, PhaseUpdate> = new Map();
-						// 	newColumns.forEach(([key, value], order) => {
-						// 		const currentPhase = orderedSections.find((phase) => phase.id === key);
-
-						// 		if (!currentPhase) return;
-
-						// 		if (currentPhase.order === order && currentPhase.id === key) return;
-
-						// 		phasesToUpdate.set(currentPhase.id, {
-						// 			id: currentPhase.id,
-						// 			version: currentPhase.version,
-						// 			order,
-						// 		});
-						// 	});
-
-						// 	Array.from(phasesToUpdate.entries()).forEach(([id, phase]) => {
-						// 		handleSectionUpdate({
-						// 			id,
-						// 			section: {
-						// 				order: phase.order,
-						// 			},
-						// 		});
-						// 	});
-						// }
-					}}
 					autoScroll
 					orientation='vertical'
 				>
