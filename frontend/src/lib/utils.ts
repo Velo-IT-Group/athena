@@ -51,34 +51,7 @@ const envSchema = z.object({
 	VITE_TWILIO_WORKSPACE_SID: z.string(),
 });
 
-console.log(import.meta.env);
-
-export const env = envSchema.parse({
-	MODE: "",
-	VITE_ATLASSIAN_API_TOKEN: "",
-	VITE_CONNECT_WISE_CLIENT_ID: "",
-	VITE_CONNECT_WISE_PASSWORD: "",
-	VITE_CONNECT_WISE_URL: "",
-	VITE_CONNECT_WISE_USERNAME: "",
-	VITE_FLAGS_SECRET: "",
-	VITE_JIRA_BASE_URL: "",
-	VITE_JIRA_EMAIL: "",
-	VITE_JIRA_PROJECT_KEY: "",
-	VITE_SECRET_KEY: "",
-	VITE_SUPABASE_ANON_KEY: "",
-	VITE_SUPABASE_URL: "",
-	VITE_TWILIO_ACCOUNT_SID: "",
-	VITE_TWILIO_API_KEY_SECRET: "",
-	VITE_TWILIO_API_KEY_SID: "",
-	VITE_TWILIO_AUTH_TOKEN: "",
-	VITE_TWILIO_CHAT_SID: "",
-	VITE_TWILIO_DEFAULT_ACTIVITY_SID: "",
-	VITE_TWILIO_PHONE_NUMBER: "",
-	VITE_TWILIO_SYNC_SID: "",
-	VITE_TWILIO_TASK_QUEUE_SID: "",
-	VITE_TWILIO_WORKFLOW_SID: "",
-	VITE_TWILIO_WORKSPACE_SID: "",
-});
+export const env = envSchema.parse(import.meta.env);
 
 export const delay = async (delay = 1000) => {
 	const delayPromise = (ms: number) =>

@@ -1,5 +1,4 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
-import { DataTableFilter } from '@/components/data-table-filter';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
 	type ColumnDef,
@@ -20,11 +19,10 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
-import { useEffect, useState } from 'react';
-import { cn, paginationSchema, sortSchema } from '@/lib/utils';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 import { DataTablePagination } from '@/components/ui/data-table/pagination';
 import { z } from 'zod';
-import { parseAsJson, useQueryState } from 'nuqs';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const dataTableFilterQuerySchema = z
@@ -59,7 +57,7 @@ function initializeFiltersFromQuery<TData, TValue>(
 						columnMeta,
 					},
 				};
-		  })
+			})
 		: [];
 }
 
@@ -84,26 +82,15 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-	const [queryFilters, setQueryFilters] = useQueryState(
-		'filter',
-		parseAsJson(dataTableFilterQuerySchema.parse).withDefault([])
-	);
-	const [queryPagination, setQueryPagination] = useQueryState(
-		'pagination',
-		parseAsJson(paginationSchema.parse).withDefault({ page: 1, pageSize: 25 })
-	);
-	const [querySort, setQuerySort] = useQueryState(
-		'sort',
-		parseAsJson(sortSchema.parse).withDefault({ field: '', direction: 'asc' })
-	);
-
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
 		// Replace `Issue` with your data type
-		() => initializeFiltersFromQuery(queryFilters, columns as ColumnDef<TData, TValue>[])
+		() => initializeFiltersFromQuery([], columns as ColumnDef<TData, TValue>[])
 	);
 	const [pagination, onPaginationChange] = useState<PaginationState>({
-		pageSize: queryPagination.pageSize,
-		pageIndex: queryPagination.page,
+		pageSize: 25,
+		pageIndex: 1,
+		// pageSize: queryPagination.pageSize,
+		// pageIndex: queryPagination.page,
 	});
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [sorting, setSorting] = useState<SortingState>([]);
@@ -147,31 +134,6 @@ export function DataTable<TData, TValue>({
 			expanded,
 		},
 	});
-
-	useEffect(() => {
-		setQueryFilters(
-			columnFilters.map((f) => ({
-				id: f.id,
-				value: { ...(f.value as any), columnMeta: undefined },
-			}))
-		);
-	}, [columnFilters, setQueryFilters]);
-
-	useEffect(() => {
-		if (hidePagination) return;
-		setQueryPagination({
-			page: pagination.pageIndex,
-			pageSize: pagination.pageSize,
-		});
-	}, [pagination, setQueryPagination, hidePagination]);
-
-	useEffect(() => {
-		if (hideHeader) return;
-		setQuerySort({
-			field: sorting[0]?.id ?? '',
-			direction: sorting[0]?.desc ? 'desc' : 'asc',
-		});
-	}, [sorting, setQuerySort, hideHeader]);
 
 	return (
 		<section className={cn('space-y-3 overflow-x-auto p-[4px]', className)}>

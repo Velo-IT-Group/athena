@@ -1,8 +1,6 @@
 import { Plus } from 'lucide-react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
-import Search from '@/components/search';
-
 import { buttonVariants } from '@/components/ui/button';
 
 import { Suspense } from 'react';
@@ -33,14 +31,6 @@ function Proposals() {
 				>
 					<Plus /> <span>Create Proposal</span>
 				</Link>
-			</section>
-
-			<section>
-				<Search
-					baseUrl='/proposals'
-					placeholder='Find a proposal'
-					className='rounded-full shadow-none'
-				/>
 			</section>
 
 			<Suspense fallback={<TableSkeleton columns={columns.length} />}>

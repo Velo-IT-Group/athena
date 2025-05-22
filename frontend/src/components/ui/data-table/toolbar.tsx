@@ -52,17 +52,6 @@ export function DataTableToolbar<TData>({
 	return (
 		<div className='flex items-center justify-between gap-1.5 overflow-x-auto'>
 			<div className='flex flex-1 items-center space-x-1.5'>
-				{/* {table.options?.meta?.filterKey && (
-                    <Search
-                        placeholder="Filter..."
-                        queryParam={table.options?.meta?.filterKey as string}
-                        defaultValue={''}
-                        className="h-9 w-[150px] lg:w-[250px] overflow-hidden"
-                        setCondition={table.setCondition}
-                        removeCondition={table.removeCondition}
-                    />
-                )} */}
-
 				{facetedFilters?.map(({ accessoryKey, items }) => {
 					const column = table.getColumn(accessoryKey as string);
 
