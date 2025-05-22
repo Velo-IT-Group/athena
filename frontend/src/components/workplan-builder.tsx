@@ -251,7 +251,7 @@ const WorkplanBuilder = ({ params }: Props) => {
 												handleDeletion={() => handlePhaseDeletion({ id: columnValue })}
 												handleDuplication={() => {}}
 												handleUpdate={(phase) => handlePhaseUpdate({ id: columnValue, phase })}
-												params={{ id: phase.id, version: phase.version }}
+												params={params}
 											/>
 										</div>
 									</KanbanColumn>
