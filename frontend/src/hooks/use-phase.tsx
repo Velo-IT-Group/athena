@@ -70,8 +70,6 @@ export const usePhase = ({ params, initialData }: Props) => {
 
 			const newPhases = [...previousItems.filter((s) => s.id !== id), updatedSect];
 
-			console.log(newPhases);
-
 			// Optimistically update to the new value
 			queryClient.setQueryData(queryKey, newPhases);
 
