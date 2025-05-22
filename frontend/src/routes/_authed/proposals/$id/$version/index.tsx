@@ -88,7 +88,7 @@ function RouteComponent() {
 						</div>
 					</section>
 
-					<section>
+					{/* <section>
 						<div
 							className='EditableDescriptionOverviewSection-headingContainer'
 							style={{
@@ -112,7 +112,7 @@ function RouteComponent() {
 								<DropzoneContent />
 							</Dropzone>
 						</div>
-					</section>
+					</section> */}
 				</div>
 			</div>
 

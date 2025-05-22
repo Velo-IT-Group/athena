@@ -29,7 +29,6 @@ export const APIRoute = createAPIFileRoute("/api/auth/encrypt")({
 
         // const value = sign(
         //     data,
-        //     process.env.SECRET_KEY! + (user_id ?? data.user_id),
         //     {},
         // );
 

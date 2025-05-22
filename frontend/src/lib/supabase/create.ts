@@ -8,7 +8,6 @@ import {
 } from "../manage/create";
 import { updateProposal } from "./update";
 import { createServerFn } from "@tanstack/react-start";
-import { redirect } from "@tanstack/react-router";
 
 export const createPinnedItem = createServerFn().validator((
 	item: PinnedItemInsert,
@@ -82,7 +81,6 @@ export const createSection = createServerFn().validator((
 
 // 		const value = sign(
 // 			token,
-// 			process.env.SECRET_KEY! + (user_id ?? token.user_id),
 // 			{},
 // 		);
 
@@ -619,39 +617,38 @@ export const duplicateTicket = createServerFn().validator((id: string) => id)
 		});
 	});
 
-const getURL = () => {
-	const vercelEnv = process.env.VERCEL_ENV;
-	const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL!;
-	const stagingUrl = "staging.athena.velomethod.com";
+// const getURL = () => {
+// 	const vercelEnv = env.VERCEL_ENV;
+// 	const stagingUrl = "staging.athena.velomethod.com";
 
-	let url = !vercelEnv
-		? "http://localhost:3000"
-		: vercelEnv === "preview"
-		? stagingUrl
-		: productionUrl;
+// 	let url = !vercelEnv
+// 		? "http://localhost:3000"
+// 		: vercelEnv === "preview"
+// 		? stagingUrl
+// 		: productionUrl;
 
-	// Make sure to include `https://` when not localhost.
-	url = url.startsWith("http") ? url : `https://${url}`;
-	// Make sure to include a trailing `/`.
-	url = url.endsWith("/") ? url : `${url}`;
-	return url;
-};
+// 	// Make sure to include `https://` when not localhost.
+// 	url = url.startsWith("http") ? url : `https://${url}`;
+// 	// Make sure to include a trailing `/`.
+// 	url = url.endsWith("/") ? url : `${url}`;
+// 	return url;
+// };
 
-export const signInWithAzure = createServerFn().handler(async () => {
-	const supabase = createClient();
-	console.log("signInWithAzure");
-	const { data, error } = await supabase.auth.signInWithOAuth({
-		provider: "azure",
-		options: {
-			scopes:
-				"openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite",
-			redirectTo: `${getURL()}/auth/callback`,
-		},
-	});
+// export const signInWithAzure = createServerFn().handler(async () => {
+// 	const supabase = createClient();
+// 	console.log("signInWithAzure");
+// 	const { data, error } = await supabase.auth.signInWithOAuth({
+// 		provider: "azure",
+// 		options: {
+// 			scopes:
+// 				"openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite",
+// 			redirectTo: `${getURL()}/auth/callback`,
+// 		},
+// 	});
 
-	if (error) throw new Error(error.message);
+// 	if (error) throw new Error(error.message);
 
-	if (data.url) {
-		return redirect({ href: data.url }); // use the redirect API for your server framework
-	}
-});
+// 	if (data.url) {
+// 		return redirect({ href: data.url }); // use the redirect API for your server framework
+// 	}
+// });

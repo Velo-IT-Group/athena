@@ -1,8 +1,7 @@
-import { z } from 'zod';
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import type { QueryClient } from '@tanstack/react-query';
-import { dataTableFilterQuerySchema } from '@/components/ui/data-table';
+import { z } from "zod";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import type { QueryClient } from "@tanstack/react-query";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -10,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const sortSchema = z.object({
 	field: z.string(),
-	direction: z.enum(['asc', 'desc']).default('asc'),
+	direction: z.enum(["asc", "desc"]).default("asc"),
 });
 
 export const paginationSchema = z.object({
@@ -18,14 +17,14 @@ export const paginationSchema = z.object({
 	pageSize: z.number(),
 });
 
-export const filterSchema = z.object({
-	filter: dataTableFilterQuerySchema.optional(),
-	pagination: paginationSchema.optional(),
-	sort: sortSchema.optional(),
-});
+// export const filterSchema = z.object({
+// 	filter: dataTableFilterQuerySchema.optional(),
+// 	pagination: paginationSchema.optional(),
+// 	sort: sortSchema.optional(),
+// });
 
 const envSchema = z.object({
-	MODE: z.enum(['development', 'production', 'test']),
+	MODE: z.enum(["development", "production", "test"]),
 	VITE_ATLASSIAN_API_TOKEN: z.string(),
 	VITE_CONNECT_WISE_CLIENT_ID: z.string(),
 	VITE_CONNECT_WISE_PASSWORD: z.string(),
@@ -54,7 +53,8 @@ const envSchema = z.object({
 export const env = envSchema.parse(import.meta.env);
 
 export const delay = async (delay = 1000) => {
-	const delayPromise = (ms: number) => new Promise((res) => setTimeout(res, ms));
+	const delayPromise = (ms: number) =>
+		new Promise((res) => setTimeout(res, ms));
 	await delayPromise(delay);
 };
 
@@ -68,7 +68,7 @@ export const delay = async (delay = 1000) => {
 export const updateCacheItem = async <T>(
 	queryClient: QueryClient,
 	queryKey: readonly unknown[],
-	item: any
+	item: any,
 ): Promise<{ previousItem: T; newItem?: T }> => {
 	const previousItem = queryClient.getQueryData<T>(queryKey) ?? [];
 
@@ -101,7 +101,7 @@ export const updateArrayCacheItem = async <T>(
 	queryClient: QueryClient,
 	queryKey: readonly unknown[],
 	item: any,
-	comparisonFn: (item: T) => boolean
+	comparisonFn: (item: T) => boolean,
 ): Promise<{ previousItems: T[]; newItems: T[] }> => {
 	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
 
@@ -115,7 +115,10 @@ export const updateArrayCacheItem = async <T>(
 
 	const newItemTest = { ...updatedItem, ...item };
 
-	const newItems = [...previousItems.filter((item) => !comparisonFn(item)), newItemTest];
+	const newItems = [
+		...previousItems.filter((item) => !comparisonFn(item)),
+		newItemTest,
+	];
 
 	// Optimistically update to the new value
 	queryClient.setQueryData(queryKey, newItems);
@@ -127,7 +130,7 @@ export const updateArrayCacheItem = async <T>(
 export const deleteCacheItem = async <T>(
 	queryClient: QueryClient,
 	queryKey: readonly unknown[],
-	comparisonFn: (item: T) => boolean
+	comparisonFn: (item: T) => boolean,
 ): Promise<{ previousItems: T[]; newItems: T[] }> => {
 	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
 	const newItems = previousItems.filter((item) => !comparisonFn(item));
@@ -138,7 +141,7 @@ export const deleteCacheItem = async <T>(
 export const addCacheItem = async <T>(
 	queryClient: QueryClient,
 	queryKey: readonly unknown[],
-	item: T
+	item: T,
 ): Promise<{ previousItems: T[]; newItems: T[] }> => {
 	const previousItems = queryClient.getQueryData<T[]>(queryKey) ?? [];
 	const newItems = [...previousItems, item];
@@ -146,7 +149,11 @@ export const addCacheItem = async <T>(
 	return { previousItems, newItems };
 };
 
-export const moveTicketsBetweenPhases = (from: NestedPhase, to: NestedPhase, targetedIndex: number) => {
+export const moveTicketsBetweenPhases = (
+	from: NestedPhase,
+	to: NestedPhase,
+	targetedIndex: number,
+) => {
 	const fromPhaseTickets = from.tickets;
 	const toPhaseTickets = to.tickets;
 
@@ -154,7 +161,9 @@ export const moveTicketsBetweenPhases = (from: NestedPhase, to: NestedPhase, tar
 		return { fromPhase: from, toPhase: to };
 	}
 
-	const newFromPhaseTickets = fromPhaseTickets?.filter((ticket) => ticket.id !== to.id);
+	const newFromPhaseTickets = fromPhaseTickets?.filter((ticket) =>
+		ticket.id !== to.id
+	);
 	const newToPhaseTickets = [...toPhaseTickets, ...fromPhaseTickets];
 
 	const newFromPhase = { ...from, tickets: newFromPhaseTickets };
@@ -164,12 +173,12 @@ export const moveTicketsBetweenPhases = (from: NestedPhase, to: NestedPhase, tar
 };
 
 export const parsePhoneNumber = (phoneNumber: string) => {
-	const regex = '^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$';
+	const regex = "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$";
 	const isValid = phoneNumber.match(regex);
 
 	return {
 		isValid,
-		formattedNumber: phoneNumber.replace(regex, '+1 ($1) $2-$3'),
+		formattedNumber: phoneNumber.replace(regex, "+1 ($1) $2-$3"),
 	};
 };
 

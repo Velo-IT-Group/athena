@@ -59,8 +59,7 @@ import { getCurrencyString } from '@/utils/money';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { linksConfig } from '@/config/links';
-import { getPinnedItemQuery, getProposalQuery, getProposalTotalsQuery, getVersionsQuery } from '@/lib/supabase/api';
-import { usePinnedItems } from '@/hooks/use-pinned-items';
+import { getProposalQuery, getProposalTotalsQuery, getVersionsQuery } from '@/lib/supabase/api';
 import LabeledInput from '@/components/labeled-input';
 import { formatRelativeLocale } from '@/components/overview-right';
 import CurrencyInput from '@/components/currency-input';
@@ -75,16 +74,8 @@ export const Route = createFileRoute('/_authed/proposals/$id/$version')({
 function RouteComponent() {
 	const { id, version } = Route.useParams();
 
-	const [{ data: initialData }, { data: pinnedItem }, { data: versions }, { data: totals }] = useSuspenseQueries({
-		queries: [
-			getProposalQuery(id, version),
-			getPinnedItemQuery({
-				record_type: 'proposals',
-				identifier: id,
-			}),
-			getVersionsQuery(id),
-			getProposalTotalsQuery(id, version),
-		],
+	const [{ data: initialData }, { data: versions }, { data: totals }] = useSuspenseQueries({
+		queries: [getProposalQuery(id, version), getVersionsQuery(id), getProposalTotalsQuery(id, version)],
 	});
 
 	const {
@@ -102,7 +93,7 @@ function RouteComponent() {
 
 	const [open, setOpen] = useState(false);
 
-	const { data, handlePinnedItemDeletion, handlePinnedItemCreation } = usePinnedItems();
+	// const { data, handlePinnedItemDeletion, handlePinnedItemCreation } = usePinnedItems();
 
 	const { mutate: handleNewVersion, isPending: isNewVersionPending } = useMutation({
 		mutationFn: async () => await createVersion({ data: proposal?.id ?? '' }),
@@ -246,25 +237,25 @@ function RouteComponent() {
 											<Button
 												size='icon'
 												variant='ghost'
-												onClick={() =>
-													pinnedItem
-														? handlePinnedItemDeletion.mutate(pinnedItem.id)
-														: handlePinnedItemCreation.mutate({
-																pinnedItem: {
-																	record_type: 'proposals',
-																	identifier: proposal?.id ?? '',
-																	helper_name: proposal?.name ?? '',
-																	params: { id, version },
-																	path: '/proposals/$id/$version',
-																},
-														  })
-												}
+												// onClick={() =>
+												// 	pinnedItem
+												// 		? handlePinnedItemDeletion.mutate(pinnedItem.id)
+												// 		: handlePinnedItemCreation.mutate({
+												// 				pinnedItem: {
+												// 					record_type: 'proposals',
+												// 					identifier: proposal?.id ?? '',
+												// 					helper_name: proposal?.name ?? '',
+												// 					params: { id, version },
+												// 					path: '/proposals/$id/$version',
+												// 				},
+												// 		  })
+												// }
 											>
 												<Star
 													className={cn(
-														'shrink-0 size-5',
-														pinnedItem &&
-															'text-yellow-300 fill-yellow-300 stroke-yellow-300'
+														'shrink-0 size-5'
+														// pinnedItem &&
+														// 	'text-yellow-300 fill-yellow-300 stroke-yellow-300'
 													)}
 												/>
 											</Button>
@@ -608,7 +599,7 @@ function RouteComponent() {
 																				formatRelativeLocale[token],
 																		},
 																	}
-															  )
+																)
 															: 'No due date'}
 													</span>
 												</Button>

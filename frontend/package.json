@@ -58,6 +58,7 @@
     "tailwind-merge": "^3.3.0",
     "tiptap-markdown": "^0.8.10",
     "tw-animate-css": "^1.3.0",
+    "unenv": "^1.10.0",
     "vinxi": "0.5.3",
     "zod": "^3.25.20"
   },
@@ -89,6 +90,5 @@
     "typeGen:local": "supabase gen types --schema public,reporting,user_experience,taskrouter --local > ./src/types/supabase.ts",
     "typeGen:server": "bunx supabase gen types typescript --project-id 'qqfkxhqzsbqgydssvfss' --schema public,reporting,user_experience,taskrouter > types/supabase.ts"
   },
-  "sideEffects": false,
   "type": "module"
 }
