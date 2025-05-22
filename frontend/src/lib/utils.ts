@@ -1,4 +1,3 @@
-"use server";
 import { z } from "zod";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -26,15 +25,10 @@ export const paginationSchema = z.object({
 
 const envSchema = z.object({
 	MODE: z.enum(["development", "production", "test"]),
-	VITE_ATLASSIAN_API_TOKEN: z.string(),
 	VITE_CONNECT_WISE_CLIENT_ID: z.string(),
 	VITE_CONNECT_WISE_PASSWORD: z.string(),
 	VITE_CONNECT_WISE_URL: z.string(),
 	VITE_CONNECT_WISE_USERNAME: z.string(),
-	VITE_FLAGS_SECRET: z.string(),
-	VITE_JIRA_BASE_URL: z.string(),
-	VITE_JIRA_EMAIL: z.string(),
-	VITE_JIRA_PROJECT_KEY: z.string(),
 	VITE_SECRET_KEY: z.string(),
 	VITE_SUPABASE_ANON_KEY: z.string(),
 	VITE_SUPABASE_URL: z.string(),
@@ -50,8 +44,6 @@ const envSchema = z.object({
 	VITE_TWILIO_WORKFLOW_SID: z.string(),
 	VITE_TWILIO_WORKSPACE_SID: z.string(),
 });
-
-console.log(import.meta.env);
 
 export const env = envSchema.parse(import.meta.env);
 
