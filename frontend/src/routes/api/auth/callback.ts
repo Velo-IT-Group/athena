@@ -1,6 +1,4 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { createClient } from "@/lib/supabase/server";
-import { setCookie } from "@tanstack/start/server";
 
 export const APIRoute = createAPIFileRoute("/api/auth/callback")({
 	GET: async (
@@ -9,73 +7,77 @@ export const APIRoute = createAPIFileRoute("/api/auth/callback")({
 			params: Record<string, string | undefined>;
 		},
 	) => {
-		const url = new URL(request.url);
-		const { searchParams, origin } = url;
+		return Response.redirect(
+			`${origin}/`,
+		);
 
-		const code = searchParams.get("code");
-		const next = searchParams.get("next");
+		// const url = new URL(request.url);
+		// const { searchParams, origin } = url;
 
-		if (code) {
-			const supabase = createClient();
+		// const code = searchParams.get("code");
+		// const next = searchParams.get("next");
 
-			const {
-				data: { user },
-				error,
-			} = await supabase.auth.exchangeCodeForSession(code);
+		// if (code) {
+		// 	const supabase = createClient();
 
-			const { data, error: profile_key_error } = await supabase.from(
-				"profile_keys",
-			).select().single();
+		// 	const {
+		// 		data: { user },
+		// 		error,
+		// 	} = await supabase.auth.exchangeCodeForSession(code);
 
-			if (profile_key_error) {
-				return Response.redirect(
-					`${origin}/token-setup?user_id=${user?.id}`,
-				);
-			}
+		// 	const { data, error: profile_key_error } = await supabase.from(
+		// 		"profile_keys",
+		// 	).select().single();
 
-			setCookie("connect_wise:auth", JSON.stringify(data?.key));
-			setCookie("twilio:worker_sid", user?.user_metadata?.worker_sid);
+		// 	if (profile_key_error) {
+		// 		return Response.redirect(
+		// 			`${origin}/token-setup?user_id=${user?.id}`,
+		// 		);
+		// 	}
 
-			if (error) {
-				const urlParams = new URLSearchParams();
-				urlParams.append("error", error.message);
+		// 	setCookie("connect_wise:auth", JSON.stringify(data?.key));
+		// 	setCookie("twilio:worker_sid", user?.user_metadata?.worker_sid);
 
-				// return the user to an error page with instructions
-				return Response.redirect(
-					`${origin}/auth/auth-code-error?${urlParams.toString()}`,
-				);
-			}
+		// 	if (error) {
+		// 		const urlParams = new URLSearchParams();
+		// 		urlParams.append("error", error.message);
 
-			if (!user) {
-				const urlParams = new URLSearchParams();
-				urlParams.append("error", "No user found");
-				return Response.redirect(
-					`${origin}/auth/auth-code-error?${urlParams.toString()}`,
-				);
-			}
+		// 		// return the user to an error page with instructions
+		// 		return Response.redirect(
+		// 			`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+		// 		);
+		// 	}
 
-			// try {
-			// 	const newMetaData = await handleAuthenticatedUser(user);
-			// 	await supabase.auth.updateUser({ data: newMetaData });
-			// } catch (error) {
-			// 	console.error("Error updating user metadata", error);
-			// 	const urlParams = new URLSearchParams();
-			// 	urlParams.append(
-			// 		"error",
-			// 		"Error updating user metadata " + (error as Error).message,
-			// 	);
-			// 	return Response.redirect(
-			// 		`${origin}/auth/auth-code-error?${urlParams.toString()}`,
-			// 	);
-			// }
+		// 	if (!user) {
+		// 		const urlParams = new URLSearchParams();
+		// 		urlParams.append("error", "No user found");
+		// 		return Response.redirect(
+		// 			`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+		// 		);
+		// 	}
 
-			return Response.redirect(`${origin}${next ?? "/proposals"}`);
-		}
+		// 	// try {
+		// 	// 	const newMetaData = await handleAuthenticatedUser(user);
+		// 	// 	await supabase.auth.updateUser({ data: newMetaData });
+		// 	// } catch (error) {
+		// 	// 	console.error("Error updating user metadata", error);
+		// 	// 	const urlParams = new URLSearchParams();
+		// 	// 	urlParams.append(
+		// 	// 		"error",
+		// 	// 		"Error updating user metadata " + (error as Error).message,
+		// 	// 	);
+		// 	// 	return Response.redirect(
+		// 	// 		`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+		// 	// 	);
+		// 	// }
 
-		// return the user to an error page with instructions
-		return Response.json({
-			error: "Not authenticated",
-		});
+		// 	return Response.redirect(`${origin}${next ?? "/proposals"}`);
+		// }
+
+		// // return the user to an error page with instructions
+		// return Response.json({
+		// 	error: "Not authenticated",
+		// });
 	},
 });
 
