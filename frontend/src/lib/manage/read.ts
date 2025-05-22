@@ -1128,22 +1128,8 @@ export const getTemplates = createServerFn()
 		const templates: ProjectTemplate[] = await projectTemplateResponse
 			.json();
 
-		const workplansResponse = await Promise.all(
-			templates.map(({ id }) =>
-				fetch(
-					`${env
-						.VITE_CONNECT_WISE_URL!}/project/projectTemplates/${id}/workplan`,
-					{
-						headers: baseHeaders,
-					},
-				)
-			),
-		);
-
-		console.log(workplansResponse);
-
 		const workplans: ProjectWorkPlan[] = await Promise.all(
-			workplansResponse.map((r) => r.json()),
+			templates.map(({ id }) => getWorkplan({ data: { id } })),
 		);
 
 		console.log(workplans);
@@ -1397,22 +1383,29 @@ export const getSubCategories = async () => {
 	return await response.json();
 };
 
-export const getWorkplan = async (id: number) => {
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/project/projectTemplates/${id}/workplan?fields=phases/tickets/id,phases/tickets/summary`,
-		{
-			headers: baseHeaders,
-		},
-	);
+export const getWorkplan = createServerFn().validator((
+	params: { id: number; conditions?: Conditions<ProjectWorkPlan> },
+) => ({ id: params.id, conditions: generateParams(params.conditions) }))
+	.handler(async ({ data: { id, conditions } }) => {
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/project/projectTemplates/${id}/workplan${conditions}`,
+			// `${env.VITE_CONNECT_WISE_URL}/project/projectTemplates/${id}/workplan?fields=phases/tickets/id,phases/tickets/summary`,
+			{
+				headers: baseHeaders,
+			},
+		);
 
-	if (!response.ok) {
-		throw Error("Error fetching workplan...", {
-			cause: response.statusText,
-		});
-	}
+		if (!response.ok) {
+			throw new Error(
+				"Error fetching workplan... " + await response.json(),
+				{
+					cause: response.statusText,
+				},
+			);
+		}
 
-	return (await response.json()) as ProjectWorkPlan;
-};
+		return (await response.json()) as ProjectWorkPlan;
+	});
 
 export const getScheduleEntries = createServerFn()
 	.validator((conditions?: Conditions<ScheduleEntry>) =>
