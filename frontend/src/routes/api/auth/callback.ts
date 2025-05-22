@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 
 export const APIRoute = createAPIFileRoute("/api/auth/callback")({
@@ -7,23 +8,41 @@ export const APIRoute = createAPIFileRoute("/api/auth/callback")({
 			params: Record<string, string | undefined>;
 		},
 	) => {
+		const url = new URL(request.url);
+		const { searchParams, origin } = url;
+
+		const code = searchParams.get("code");
+		const next = searchParams.get("next");
+
+		if (!code) {
+			return Response.redirect(
+				`${origin}/auth/auth-code-error?error=No code found`,
+			);
+		}
+
+		const supabase = createClient();
+
+		const {
+			error,
+		} = await supabase.auth.exchangeCodeForSession(code);
+
+		if (error) {
+			return Response.redirect(
+				`${origin}/auth/auth-code-error?error=${error.message}`,
+			);
+		}
+
 		return Response.redirect(
 			`${origin}/`,
 		);
 
-		// const url = new URL(request.url);
-		// const { searchParams, origin } = url;
-
-		// const code = searchParams.get("code");
-		// const next = searchParams.get("next");
-
 		// if (code) {
-		// 	const supabase = createClient();
+		// const supabase = createClient();
 
-		// 	const {
-		// 		data: { user },
-		// 		error,
-		// 	} = await supabase.auth.exchangeCodeForSession(code);
+		// const {
+		// 	data: { user },
+		// 	error,
+		// } = await supabase.auth.exchangeCodeForSession(code);
 
 		// 	const { data, error: profile_key_error } = await supabase.from(
 		// 		"profile_keys",
