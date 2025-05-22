@@ -1128,8 +1128,6 @@ export const getTemplates = createServerFn()
 		const templates: ProjectTemplate[] = await projectTemplateResponse
 			.json();
 
-		console.log(templates);
-
 		const workplansResponse = await Promise.all(
 			templates.map(({ id }) =>
 				fetch(
@@ -1141,6 +1139,8 @@ export const getTemplates = createServerFn()
 				)
 			),
 		);
+
+		console.log(workplansResponse);
 
 		const workplans: ProjectWorkPlan[] = await Promise.all(
 			workplansResponse.map((r) => r.json()),
