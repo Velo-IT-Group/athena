@@ -1,4 +1,4 @@
-import { CurrentUserAvatar } from '@/components/current-user-avatar';
+import ManageUserAvatar from '@/components/avatar/manage-user-avatar';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
@@ -8,7 +8,7 @@ const SettingsDialogProfileForm = (props: Props) => {
 	return (
 		<form className='space-y-6'>
 			<section className='flex items-center gap-3'>
-				<CurrentUserAvatar size='xl' />
+				<ManageUserAvatar />
 
 				<label
 					className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
