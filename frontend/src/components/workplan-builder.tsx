@@ -228,9 +228,6 @@ const WorkplanBuilder = ({ params }: Props) => {
 							}
 						}}
 						getItemValue={(item) => item.id}
-						onDragEnd={() => {
-							console.log('drag end');
-						}}
 						autoScroll
 						orientation='vertical'
 					>
