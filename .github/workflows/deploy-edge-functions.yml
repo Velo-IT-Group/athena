@@ -3,7 +3,7 @@ name: Deploy Edge Functions
 on:
   push:
     paths:
-    - backend/supabase/functions/**
+    - backend/supabase/**
     branches:
       - main
   workflow_dispatch:
