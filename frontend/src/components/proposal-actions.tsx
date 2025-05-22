@@ -1,4 +1,4 @@
-import { AvatarStack } from '@/components/avatar-stack';
+import { ManageAvatarStack } from '@/components/manage-avatar-stack';
 import LabeledInput from '@/components/labeled-input';
 import { AsyncSelect } from '@/components/ui/async-select';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,7 @@ export function ProposalActions({
 					// },
 				},
 				fields: ['id', 'member'],
+				orderBy: { key: 'doneFlag', order: 'asc' },
 			}),
 		],
 	});
@@ -78,36 +79,12 @@ export function ProposalActions({
 					justifyContent: 'start',
 				}}
 			>
-				<AsyncSelect
-					fetcher={async (search) => await getProfiles({ data: { search: search ?? '' } })}
-					renderOption={(option: Profile) => (
-						<CommandItem
-							value={option.id}
-							onSelect={() => {
-								handleAddingFollower.mutate({ id: proposalId, version: versionId, user: option });
-							}}
-						>
-							{option.first_name} {option.last_name}
-						</CommandItem>
-					)}
-					getDisplayValue={(option) => `${option.first_name} ${option.last_name}`}
-					getOptionValue={(option) => option.id}
-					onChange={(value) => {
-						console.log(value);
-					}}
-					value=''
-					label='Add members'
-				>
-					<AvatarStack
-						avatars={scheduleEntries
-							.map((follower) => ({
-								name: follower.member.name,
-								image: '',
-							}))
-							.reverse()}
-						showDeletion
-					/>
-				</AsyncSelect>
+				<ManageAvatarStack
+					avatars={scheduleEntries.map((follower) => ({
+						name: follower.member.name,
+						memberId: follower.member.id,
+					}))}
+				/>
 
 				<Dialog>
 					<DialogTrigger asChild>

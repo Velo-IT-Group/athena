@@ -17,9 +17,9 @@ import { createClient } from '@/lib/supabase/server';
 import type { Session } from '@supabase/supabase-js';
 import { useNavigate } from '@tanstack/react-router';
 import { Bell, LogOut, Settings } from 'lucide-react';
-import type { WorkerInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/worker';
 import NotificationCenter from '@/components/notification-feed';
 import { Suspense } from 'react';
+import ManageUserAvatar from '@/components/avatar/manage-user-avatar';
 
 type Props = {
 	profile: Profile;
@@ -70,7 +70,7 @@ const GlobalNav = ({ profile, session }: Props) => {
 									size='icon'
 									className='rounded-full'
 								>
-									<CurrentUserAvatar />
+									<ManageUserAvatar memberId={profile.system_member_id ?? undefined} />
 								</Button>
 							</DropdownMenuTrigger>
 
@@ -82,7 +82,7 @@ const GlobalNav = ({ profile, session }: Props) => {
 							>
 								<DropdownMenuLabel className='p-0 font-normal'>
 									<div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
-										<CurrentUserAvatar />
+										<ManageUserAvatar memberId={profile.system_member_id ?? undefined} />
 
 										<div className='grid flex-1 text-left text-sm leading-tight'>
 											<span className='truncate font-semibold'>
@@ -94,7 +94,7 @@ const GlobalNav = ({ profile, session }: Props) => {
 								</DropdownMenuLabel>
 
 								<DropdownMenuSeparator />
-
+								{/* 
 								<DropdownMenuGroup>
 									<DialogTrigger asChild>
 										<DropdownMenuItem>
@@ -104,7 +104,7 @@ const GlobalNav = ({ profile, session }: Props) => {
 									</DialogTrigger>
 								</DropdownMenuGroup>
 
-								<DropdownMenuSeparator />
+								<DropdownMenuSeparator /> */}
 
 								<DropdownMenuGroup>
 									<DropdownMenuItem
