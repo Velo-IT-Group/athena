@@ -1,3 +1,4 @@
+"use server";
 import { z } from "zod";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -49,6 +50,8 @@ const envSchema = z.object({
 	VITE_TWILIO_WORKFLOW_SID: z.string(),
 	VITE_TWILIO_WORKSPACE_SID: z.string(),
 });
+
+console.log(import.meta.env);
 
 export const env = envSchema.parse(import.meta.env);
 
