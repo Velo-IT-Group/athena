@@ -13,6 +13,11 @@ export default defineConfig({
 				projects: ["./tsconfig.json"],
 			}),
 		],
+		build: {
+			rollupOptions: {
+				external: ["@tanstack/start/server"],
+			},
+		},
 	},
 	server: {
 		preset: "cloudflare-pages",
