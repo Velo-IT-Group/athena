@@ -1,11 +1,6 @@
 import type { ProjectTemplate } from "@/types/manage";
 import { createClient } from "@/lib/supabase/server";
 import { getTemplate } from "@/lib/manage/read";
-import {
-	createProjectPhase,
-	createProjectTask,
-	createProjectTicket,
-} from "../manage/create";
 import { updateProposal } from "./update";
 import { createServerFn } from "@tanstack/react-start";
 
@@ -502,86 +497,6 @@ export const createVersion = createServerFn().validator((proposal: string) =>
 	// revalidatePath('/proposals');
 	return data.id;
 });
-
-export const createPhaseWithTicketsAndTasks = createServerFn().validator(({
-	projectId,
-	phase,
-}: {
-	projectId: number;
-	phase: NestedPhase;
-}) => ({ projectId, phase })).handler(
-	async ({ data: { projectId, phase } }) => {
-		// Create phase
-		const createdPhase = await createProjectPhase(projectId, phase);
-
-		if (!createdPhase) return;
-
-		// Create tickets and tasks for the phase
-		if (!phase.tickets) return;
-
-		await Promise.all(
-			phase.tickets.map(async (ticket) => {
-				try {
-					const createdTicket = await createProjectTicket(
-						createdPhase.id,
-						ticket,
-					);
-
-					if (!createdTicket) return;
-
-					if (!ticket.tasks) return;
-					// Create tasks for the ticket
-					await Promise.all(
-						ticket.tasks.map(async (task) => {
-							try {
-								await createProjectTask(createdTicket.id, task);
-							} catch (error) {
-								console.error(
-									`Error creating task for ticket ${createdTicket.id}:`,
-									error,
-								);
-								// Handle task creation error
-							}
-						}),
-					);
-				} catch (error) {
-					console.error(
-						`Error creating ticket for phase ${createdPhase.id}:`,
-						error,
-					);
-					// Handle ticket creation error
-				}
-			}),
-		);
-	},
-);
-
-// Call the function for each phase
-export const createPhasesWithTicketsAndTasks = createServerFn().validator(({
-	projectId,
-	phases,
-}: {
-	projectId: number;
-	phases: NestedPhase[];
-}) => ({ projectId, phases })).handler(
-	async ({ data: { projectId, phases } }) => {
-		await Promise.all(
-			phases.map(async (phase) => {
-				try {
-					await createPhaseWithTicketsAndTasks({
-						data: { projectId, phase },
-					});
-				} catch (error) {
-					console.error(
-						`Error processing phase ${phase.id}:`,
-						error,
-					);
-					// Handle phase processing error
-				}
-			}),
-		);
-	},
-);
 
 // Call the function for each phase
 export const duplicateTicket = createServerFn().validator((id: string) => id)
