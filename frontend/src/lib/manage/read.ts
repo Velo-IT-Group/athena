@@ -1132,8 +1132,6 @@ export const getTemplates = createServerFn()
 			templates.map(({ id }) => getWorkplan({ data: { id } })),
 		);
 
-		console.log(workplans);
-
 		return templates.map((template) => {
 			return {
 				...template,
