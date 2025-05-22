@@ -33,7 +33,7 @@ export const APIRoute = createAPIFileRoute("/api/auth/callback")({
 		}
 
 		return Response.redirect(
-			`${origin}/`,
+			`${origin}/proposals`,
 		);
 
 		// if (code) {
