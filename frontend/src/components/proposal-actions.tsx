@@ -16,6 +16,7 @@ import NumberFlow from '@number-flow/react';
 import { useSuspenseQueries, useSuspenseQuery } from '@tanstack/react-query';
 import { Building2, Check, Link } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ManageUserAvatar from '@/components/avatar/manage-user-avatar';
 
 export function ProposalActions({
 	proposalId,
@@ -103,12 +104,35 @@ export function ProposalActions({
 							<DialogTitle>Share 2025 Velvet Refresh</DialogTitle>
 						</DialogHeader>
 
-						<div className='p-6 space-y-6'>
+						{/* <div className='p-6 space-y-6'>
 							<LabeledInput
 								label='Share via email'
 								name='email'
 								placeholder='Add members by name or email...'
 							/>
+						</div>
+
+						<Separator /> */}
+
+						<div className='px-6 space-y-3'>
+							<h2 className='text-lg font-semibold'>Resources</h2>
+
+							{scheduleEntries.map((entry) => (
+								<div
+									key={entry.id}
+									className='flex items-center gap-1.5'
+								>
+									<ManageUserAvatar
+										size='md'
+										memberId={entry.member.id}
+									/>
+
+									<div>
+										<p className='text-smfont-medium'>{entry.member.name}</p>
+										<p className='text-xs text-muted-foreground'>{entry.member.identifier}</p>
+									</div>
+								</div>
+							))}
 						</div>
 
 						<DialogFooter className='p-3 border-t'>
