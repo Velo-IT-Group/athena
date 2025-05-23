@@ -112,125 +112,128 @@ function RouteComponent() {
 			open={open}
 			onOpenChange={setOpen}
 		>
-			<Collapsible className='sticky top-0 bg-background z-50'>
-				<header className='flex min-h-16 items-center justify-start px-3 border-b'>
-					<div className='flex flex-1 flex-col items-stretch justify-around'>
-						<div className='flex w-full flex-1 items-stretch justify-start'>
-							<div className='flex-1 pt-3'>
-								<div className='flex space-x-3 pb-2'>
-									<div className='flex flex-1 flex-col items-start justify-center'>
-										<div className='flex max-w-full items-center justify-start'>
-											<h1 className='mr-1 text-2xl font-medium'>
-												<Editable
-													defaultValue={proposal?.name}
-													className='md:text-2xl cursor-pointer'
-													autosize
-													onSubmit={(name) =>
-														handleProposalUpdate.mutate({ proposal: { name } })
-													}
-												>
-													<EditableArea>
-														<EditablePreview className='md:text-2xl px-1.5 -ml-1.5 -mr-1.5' />
-														<EditableInput
-															className='md:text-2xl px-1.5 -ml-1.5 -mr-1.5'
-															placeholder='Search'
-														/>
-													</EditableArea>
-												</Editable>
-											</h1>
-
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button
-														size='icon'
-														variant='ghost'
+			<div className='flex flex-col min-h-[calc(100vh-var(--navbar-height))]'>
+				<Collapsible className='sticky top-0 bg-background z-50'>
+					<header className='flex min-h-16 items-center justify-start px-3 border-b'>
+						<div className='flex flex-1 flex-col items-stretch justify-around'>
+							<div className='flex w-full flex-1 items-stretch justify-start'>
+								<div className='flex-1 pt-3'>
+									<div className='flex space-x-3 pb-2'>
+										<div className='flex flex-1 flex-col items-start justify-center'>
+											<div className='flex max-w-full items-center justify-start'>
+												<h1 className='mr-1 text-2xl font-medium'>
+													<Editable
+														defaultValue={proposal?.name}
+														className='md:text-2xl cursor-pointer'
+														autosize
+														onSubmit={(name) =>
+															handleProposalUpdate.mutate({ proposal: { name } })
+														}
 													>
-														<ChevronDown className='shrink-0' />
-													</Button>
-												</DropdownMenuTrigger>
+														<EditableArea>
+															<EditablePreview className='md:text-2xl px-1.5 -ml-1.5 -mr-1.5' />
+															<EditableInput
+																className='md:text-2xl px-1.5 -ml-1.5 -mr-1.5'
+																placeholder='Search'
+															/>
+														</EditableArea>
+													</Editable>
+												</h1>
 
-												<DropdownMenuContent align='start'>
-													<DialogTrigger asChild>
-														<DropdownMenuItem
-															onSelect={() => setDialogContent('settings')}
-															disabled={proposal?.status === 'signed'}
+												<DropdownMenu>
+													<DropdownMenuTrigger asChild>
+														<Button
+															size='icon'
+															variant='ghost'
 														>
-															<PenLine className='mr-1.5' />
-															<span>Edit proposal details</span>
-														</DropdownMenuItem>
-													</DialogTrigger>
+															<ChevronDown className='shrink-0' />
+														</Button>
+													</DropdownMenuTrigger>
 
-													<DialogTrigger asChild>
-														<DropdownMenuItem
-															onSelect={() => setDialogContent('opportunity')}
-															disabled={proposal?.status !== 'signed'}
-														>
-															<BetweenHorizontalEnd className='mr-1.5' />
-															<span>Transfer to Manage</span>
-														</DropdownMenuItem>
-													</DialogTrigger>
+													<DropdownMenuContent align='start'>
+														<DialogTrigger asChild>
+															<DropdownMenuItem
+																onSelect={() => setDialogContent('settings')}
+																disabled={proposal?.status === 'signed'}
+															>
+																<PenLine className='mr-1.5' />
+																<span>Edit proposal details</span>
+															</DropdownMenuItem>
+														</DialogTrigger>
 
-													<DropdownMenuSeparator />
+														<DialogTrigger asChild>
+															<DropdownMenuItem
+																onSelect={() => setDialogContent('opportunity')}
+																disabled={proposal?.status !== 'signed'}
+															>
+																<BetweenHorizontalEnd className='mr-1.5' />
+																<span>Transfer to Manage</span>
+															</DropdownMenuItem>
+														</DialogTrigger>
 
-													<DialogTrigger asChild>
-														<DropdownMenuItem onSelect={() => setDialogContent('version')}>
-															<Copy className='mr-1.5' />
-															<span>Create New Version</span>
-														</DropdownMenuItem>
-													</DialogTrigger>
+														<DropdownMenuSeparator />
 
-													{versions && versions.length > 1 && (
-														<DropdownMenuSub>
-															<DropdownMenuSubTrigger>
-																<Undo2 className=' mr-1.5' />
-																<span>Revert back</span>
-															</DropdownMenuSubTrigger>
-															<DropdownMenuSubContent className='p-0'>
-																<ListSelector
-																	items={versions}
-																	currentValue={versions.find(
-																		({ id }) => id === version
-																	)}
-																	value={(version) =>
-																		`${version.id}-Version ${version.number}`
-																	}
-																	itemView={(version) => (
-																		<p>Version {version.number}</p>
-																	)}
-																	onSelect={({ id: versionId }) => {
-																		if (versionId !== version) {
-																			handleProposalUpdate.mutate({
-																				proposal: {
-																					working_version: versionId,
-																				},
-																			});
+														<DialogTrigger asChild>
+															<DropdownMenuItem
+																onSelect={() => setDialogContent('version')}
+															>
+																<Copy className='mr-1.5' />
+																<span>Create New Version</span>
+															</DropdownMenuItem>
+														</DialogTrigger>
 
-																			navigate({
-																				to: '/proposals/$id/$version',
-																				params: { id, version: versionId },
-																			});
+														{versions && versions.length > 1 && (
+															<DropdownMenuSub>
+																<DropdownMenuSubTrigger>
+																	<Undo2 className=' mr-1.5' />
+																	<span>Revert back</span>
+																</DropdownMenuSubTrigger>
+																<DropdownMenuSubContent className='p-0'>
+																	<ListSelector
+																		items={versions}
+																		currentValue={versions.find(
+																			({ id }) => id === version
+																		)}
+																		value={(version) =>
+																			`${version.id}-Version ${version.number}`
 																		}
-																	}}
-																/>
-															</DropdownMenuSubContent>
-														</DropdownMenuSub>
-													)}
+																		itemView={(version) => (
+																			<p>Version {version.number}</p>
+																		)}
+																		onSelect={({ id: versionId }) => {
+																			if (versionId !== version) {
+																				handleProposalUpdate.mutate({
+																					proposal: {
+																						working_version: versionId,
+																					},
+																				});
 
-													<DropdownMenuSeparator />
+																				navigate({
+																					to: '/proposals/$id/$version',
+																					params: { id, version: versionId },
+																				});
+																			}
+																		}}
+																	/>
+																</DropdownMenuSubContent>
+															</DropdownMenuSub>
+														)}
 
-													<DialogTrigger asChild>
-														<DropdownMenuItem
-															onSelect={() => setDialogContent('delete')}
-															className='text-red-600 focus:text-red-600 focus:bg-red-50'
-														>
-															<Trash className='mr-1.5' />
-															<span>Delete proposal</span>
-														</DropdownMenuItem>
-													</DialogTrigger>
-												</DropdownMenuContent>
-											</DropdownMenu>
+														<DropdownMenuSeparator />
 
-											{/* <Button
+														<DialogTrigger asChild>
+															<DropdownMenuItem
+																onSelect={() => setDialogContent('delete')}
+																className='text-red-600 focus:text-red-600 focus:bg-red-50'
+															>
+																<Trash className='mr-1.5' />
+																<span>Delete proposal</span>
+															</DropdownMenuItem>
+														</DialogTrigger>
+													</DropdownMenuContent>
+												</DropdownMenu>
+
+												{/* <Button
 												size='icon'
 												variant='ghost'
 												// onClick={() =>
@@ -256,189 +259,190 @@ function RouteComponent() {
 												/>
 											</Button> */}
 
-											<Popover>
-												<PopoverTrigger asChild>
-													<Button
-														variant='ghost'
-														size='sm'
-														className='group'
+												<Popover>
+													<PopoverTrigger asChild>
+														<Button
+															variant='ghost'
+															size='sm'
+															className='group'
+														>
+															{selectedStatus && (
+																<ColoredBadge
+																	variant={selectedStatus.color}
+																	className='capitalize'
+																>
+																	<selectedStatus.icon className='size-3 mr-1.5' />
+																	{selectedStatus.label}
+																</ColoredBadge>
+															)}
+
+															<ChevronDown className='group-hover:block hidden size-3.5 stroke-2' />
+														</Button>
+													</PopoverTrigger>
+
+													<PopoverContent
+														className='p-0 w-fit'
+														align='start'
 													>
-														{selectedStatus && (
-															<ColoredBadge
-																variant={selectedStatus.color}
-																className='capitalize'
-															>
-																<selectedStatus.icon className='size-3 mr-1.5' />
-																{selectedStatus.label}
-															</ColoredBadge>
-														)}
+														<ListSelector
+															currentValue={selectedStatus}
+															onSelect={(status) =>
+																handleProposalUpdate.mutate({
+																	proposal: { status: status.value as StatusEnum },
+																})
+															}
+															value={(status) => status.label}
+															items={proposalStatuses}
+															itemView={(status) => (
+																<ColoredBadge
+																	variant={status.color}
+																	className='capitalize'
+																>
+																	<status.icon className='size-3 mr-1.5' />
+																	{status.label}
+																</ColoredBadge>
+															)}
+														/>
 
-														<ChevronDown className='group-hover:block hidden size-3.5 stroke-2' />
-													</Button>
-												</PopoverTrigger>
+														<Separator />
+													</PopoverContent>
+												</Popover>
 
-												<PopoverContent
-													className='p-0 w-fit'
-													align='start'
-												>
-													<ListSelector
-														currentValue={selectedStatus}
-														onSelect={(status) =>
-															handleProposalUpdate.mutate({
-																proposal: { status: status.value as StatusEnum },
-															})
-														}
-														value={(status) => status.label}
-														items={proposalStatuses}
-														itemView={(status) => (
-															<ColoredBadge
-																variant={status.color}
-																className='capitalize'
-															>
-																<status.icon className='size-3 mr-1.5' />
-																{status.label}
-															</ColoredBadge>
-														)}
-													/>
-
-													<Separator />
-												</PopoverContent>
-											</Popover>
-
-											{proposal?.status === 'signed' && (
-												<DialogTrigger asChild>
-													<Button
-														variant='secondary'
-														size='sm'
-														onClick={() => setDialogContent('opportunity')}
-													>
-														{proposal.is_getting_converted ? (
-															<Loader2 className='animate-spin mr-1.5' />
-														) : (
-															<BetweenHorizontalEnd className='mr-1.5' />
-														)}
-														<span>
-															{proposal.is_getting_converted
-																? 'Converting...'
-																: 'Transfer to Manage'}
-														</span>
-													</Button>
-												</DialogTrigger>
-											)}
+												{proposal?.status === 'signed' && (
+													<DialogTrigger asChild>
+														<Button
+															variant='secondary'
+															size='sm'
+															onClick={() => setDialogContent('opportunity')}
+														>
+															{proposal.is_getting_converted ? (
+																<Loader2 className='animate-spin mr-1.5' />
+															) : (
+																<BetweenHorizontalEnd className='mr-1.5' />
+															)}
+															<span>
+																{proposal.is_getting_converted
+																	? 'Converting...'
+																	: 'Transfer to Manage'}
+															</span>
+														</Button>
+													</DialogTrigger>
+												)}
+											</div>
 										</div>
 									</div>
 								</div>
+
+								{proposal ? (
+									<ProposalActions
+										proposalId={proposal?.id ?? ''}
+										versionId={version}
+										serviceTicketId={proposal.service_ticket ?? 0}
+										total={totals?.total_price ?? 0}
+									/>
+								) : (
+									<div className='flex items-center justify-end'>
+										<Button
+											variant='secondary'
+											size='sm'
+										>
+											Create proposal
+										</Button>
+									</div>
+								)}
 							</div>
 
-							{proposal ? (
-								<ProposalActions
-									proposalId={proposal?.id ?? ''}
-									versionId={version}
-									serviceTicketId={proposal.service_ticket ?? 0}
-									total={totals?.total_price ?? 0}
-								/>
-							) : (
-								<div className='flex items-center justify-end'>
-									<Button
-										variant='secondary'
-										size='sm'
-									>
-										Create proposal
-									</Button>
-								</div>
-							)}
+							<CollapsibleContent className='grid grid-cols-4 gap-3 mb-1.5'>
+								<Card>
+									<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
+										<CardTitle className='text-sm font-medium'>Labor</CardTitle>
+
+										<ChartBarIncreasing className='text-muted-foreground' />
+									</CardHeader>
+
+									<CardContent className='px-3 pb-3'>
+										<div className='text-2xl font-bold'>
+											<NumberFlow
+												value={totals?.labor_cost ?? 0}
+												locales='en-US'
+												format={{ style: 'currency', currency: 'USD' }}
+											/>
+											{/* {getCurrencyString(totals?.labor_cost ?? 0)} */}
+										</div>
+									</CardContent>
+								</Card>
+
+								<Card>
+									<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
+										<CardTitle className='text-sm font-medium'>Recurring</CardTitle>
+
+										<CalendarSync className='text-muted-foreground' />
+									</CardHeader>
+
+									<CardContent className='px-3 pb-3'>
+										<div className='text-2xl font-bold'>
+											<NumberFlow
+												value={totals?.recurring_total ?? 0}
+												locales='en-US'
+												format={{ style: 'currency', currency: 'USD' }}
+											/>
+											{/* {getCurrencyString(totals?.recurring_total ?? 0)} */}
+										</div>
+									</CardContent>
+								</Card>
+
+								<Card>
+									<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
+										<CardTitle className='text-sm font-medium'>Product</CardTitle>
+
+										<CalendarSync className='text-muted-foreground' />
+									</CardHeader>
+
+									<CardContent className='px-3 pb-3'>
+										<div className='text-2xl font-bold'>
+											<NumberFlow
+												value={totals?.non_recurring_product_total ?? 0}
+												locales='en-US'
+												format={{ style: 'currency', currency: 'USD' }}
+											/>
+											{/* {getCurrencyString(totals?.non_recurring_product_total ?? 0)} */}
+										</div>
+									</CardContent>
+								</Card>
+
+								<Card>
+									<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
+										<CardTitle className='text-sm font-medium'>Total Quote Value</CardTitle>
+
+										<CircleDollarSign className='text-muted-foreground' />
+									</CardHeader>
+
+									<CardContent className='px-3 pb-3'>
+										<div className='text-2xl font-bold'>
+											<NumberFlow
+												value={totals?.total_price ?? 0}
+												locales='en-US'
+												format={{ style: 'currency', currency: 'USD' }}
+											/>
+											{/* {getCurrencyString(totals?.total_price ?? 0)} */}
+										</div>
+									</CardContent>
+								</Card>
+							</CollapsibleContent>
+
+							<TabsList
+								links={linksConfig.proposalTabs.map((tab) => ({
+									...tab,
+									params: { id: proposal?.id ?? '', version: proposal?.working_version ?? '' },
+								}))}
+								className='border-b-0'
+							/>
 						</div>
+					</header>
+				</Collapsible>
 
-						<CollapsibleContent className='grid grid-cols-4 gap-3 mb-1.5'>
-							<Card>
-								<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-									<CardTitle className='text-sm font-medium'>Labor</CardTitle>
-
-									<ChartBarIncreasing className='text-muted-foreground' />
-								</CardHeader>
-
-								<CardContent className='px-3 pb-3'>
-									<div className='text-2xl font-bold'>
-										<NumberFlow
-											value={totals?.labor_cost ?? 0}
-											locales='en-US'
-											format={{ style: 'currency', currency: 'USD' }}
-										/>
-										{/* {getCurrencyString(totals?.labor_cost ?? 0)} */}
-									</div>
-								</CardContent>
-							</Card>
-
-							<Card>
-								<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-									<CardTitle className='text-sm font-medium'>Recurring</CardTitle>
-
-									<CalendarSync className='text-muted-foreground' />
-								</CardHeader>
-
-								<CardContent className='px-3 pb-3'>
-									<div className='text-2xl font-bold'>
-										<NumberFlow
-											value={totals?.recurring_total ?? 0}
-											locales='en-US'
-											format={{ style: 'currency', currency: 'USD' }}
-										/>
-										{/* {getCurrencyString(totals?.recurring_total ?? 0)} */}
-									</div>
-								</CardContent>
-							</Card>
-
-							<Card>
-								<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-									<CardTitle className='text-sm font-medium'>Product</CardTitle>
-
-									<CalendarSync className='text-muted-foreground' />
-								</CardHeader>
-
-								<CardContent className='px-3 pb-3'>
-									<div className='text-2xl font-bold'>
-										<NumberFlow
-											value={totals?.non_recurring_product_total ?? 0}
-											locales='en-US'
-											format={{ style: 'currency', currency: 'USD' }}
-										/>
-										{/* {getCurrencyString(totals?.non_recurring_product_total ?? 0)} */}
-									</div>
-								</CardContent>
-							</Card>
-
-							<Card>
-								<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-									<CardTitle className='text-sm font-medium'>Total Quote Value</CardTitle>
-
-									<CircleDollarSign className='text-muted-foreground' />
-								</CardHeader>
-
-								<CardContent className='px-3 pb-3'>
-									<div className='text-2xl font-bold'>
-										<NumberFlow
-											value={totals?.total_price ?? 0}
-											locales='en-US'
-											format={{ style: 'currency', currency: 'USD' }}
-										/>
-										{/* {getCurrencyString(totals?.total_price ?? 0)} */}
-									</div>
-								</CardContent>
-							</Card>
-						</CollapsibleContent>
-
-						<TabsList
-							links={linksConfig.proposalTabs.map((tab) => ({
-								...tab,
-								params: { id: proposal?.id ?? '', version: proposal?.working_version ?? '' },
-							}))}
-							className='border-b-0'
-						/>
-					</div>
-				</header>
-			</Collapsible>
-
-			<Outlet />
+				<Outlet />
+			</div>
 
 			<DialogContent className='max-h-w-padding-padding min-h-0 flex flex-col overflow-auto'>
 				{dialogContent === 'opportunity' && (

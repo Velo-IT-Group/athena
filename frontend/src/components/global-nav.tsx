@@ -1,8 +1,7 @@
-import { CurrentUserAvatar } from '@/components/current-user-avatar';
 import { SettingsDialog } from '@/components/settings-dialog';
 import { AlertDialog } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -15,11 +14,20 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { createClient } from '@/lib/supabase/server';
 import type { Session } from '@supabase/supabase-js';
-import { useNavigate } from '@tanstack/react-router';
-import { Bell, LogOut, Settings } from 'lucide-react';
+import { redirect, useNavigate } from '@tanstack/react-router';
+import { Bell, LogOut } from 'lucide-react';
 import NotificationCenter from '@/components/notification-feed';
 import { Suspense } from 'react';
 import ManageUserAvatar from '@/components/avatar/manage-user-avatar';
+import { createServerFn } from '@tanstack/react-start';
+
+const logout = createServerFn().handler(async () => {
+	const supabase = createClient();
+	const { data, error } = await supabase.auth.getSession();
+	console.log(data, error);
+	await supabase.auth.signOut();
+	throw redirect({ to: '/login' });
+});
 
 type Props = {
 	profile: Profile;
@@ -107,13 +115,7 @@ const GlobalNav = ({ profile, session }: Props) => {
 								<DropdownMenuSeparator /> */}
 
 								<DropdownMenuGroup>
-									<DropdownMenuItem
-										onSelect={async () => {
-											const supabase = createClient();
-											await supabase.auth.signOut();
-											navigate({ to: '/login' });
-										}}
-									>
+									<DropdownMenuItem onSelect={async () => await logout()}>
 										<LogOut className='mr-1.5' />
 										<span>Log out</span>
 									</DropdownMenuItem>

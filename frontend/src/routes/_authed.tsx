@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import {
 	SidebarGroup,
@@ -16,79 +16,21 @@ import { linksConfig } from '@/config/links';
 import NavigationItem from '@/components/navigational-sidebar/navigation-item';
 import { useSuspenseQueries } from '@tanstack/react-query';
 import { getProfile } from '@/lib/supabase/read';
-import type { Session } from '@supabase/supabase-js';
-import GlobalNav from '@/components/global-nav';
 import { pinnedIcons } from '@/utils/icon-sets';
 import { getPinnedItemsQuery } from '@/lib/supabase/api';
 import { usePinnedItems } from '@/hooks/use-pinned-items';
-import { getCookie } from '@tanstack/react-start/server';
-import { jwtVerify } from 'jose';
-import type { WebToken } from '@/types/crypto';
-import { env } from '@/lib/utils';
-
-export const fetchSessionUser = createServerFn().handler(async () => {
-	const supabase = createClient();
-	const [
-		{
-			data: { session },
-			error,
-		},
-		{
-			data: { user },
-			error: userError,
-		},
-	] = await Promise.all([supabase.auth.getSession(), supabase.auth.getUser()]);
-
-	return JSON.parse(
-		JSON.stringify({
-			session,
-			user,
-			error: error ?? userError,
-		})
-	);
-});
-
-export const getUserCookie = createServerFn().handler(async () => {
-	const cookie = getCookie('connect_wise:auth');
-
-	if (!cookie) {
-		throw new Error('No cookie found');
-	}
-
-	const jwt = await jwtVerify(decodeURIComponent(cookie), new TextEncoder().encode(env.VITE_SECRET_KEY));
-
-	return jwt.payload as WebToken;
-});
+import GlobalNav from '@/components/global-nav';
+import type { Session } from '@supabase/supabase-js';
 
 export const Route = createFileRoute('/_authed')({
 	component: AuthComponent,
-	beforeLoad: async () => {
-		const { user, session, error } = await fetchSessionUser();
+	beforeLoad: async ({ context }) => {
+		console.log(context.session);
+		if (!context.session) throw redirect({ to: '/login' });
 
-		// const cookie = getCookie('connect_wise:auth');
+		const profile = await getProfile({ data: context.session.user.id });
 
-		// if (!cookie) {
-		// 	throw new Error('No cookie found');
-		// }
-
-		// const jwt = await jwtVerify(decodeURIComponent(cookie), new TextEncoder().encode(env.VITE_SECRET_KEY));
-
-		// const decryptedCookie = jwt.payload as WebToken;
-		// const headers = new AxiosHeaders();
-		// headers.set('clientId', env.VITE_CONNECT_WISE_CLIENT_ID!);
-		// headers.set('Content-Type', 'application/json');
-		// headers.set(
-		// 	'Authorization',
-		// 	'Basic ' + btoa(decryptedCookie.connect_wise.public_key + ':' + decryptedCookie.connect_wise.secret_key)
-		// );
-
-		// if (!user || !session) {
-		// 	throw redirect({ to: '/login', statusCode: 301, params: { error } });
-		// }
-
-		const profile = await getProfile({ data: user.id });
-
-		return { user, session, profile, features: { hideQueueStatus: false } };
+		return { profile };
 	},
 });
 

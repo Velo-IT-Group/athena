@@ -1,7 +1,7 @@
 import { getProposalFollowersQuery, getProposalSettingsQuery, getProposalsQuery } from '@/lib/supabase/api';
 
-import { createProposal, createProposalFollower } from '@/lib/supabase/create';
 import { deleteProposal } from '@/lib/supabase/delete';
+import { createProposal, createProposalFollower, createVersion } from '@/lib/supabase/create';
 import { updateProposal, updateProposalSettings } from '@/lib/supabase/update';
 
 import { addCacheItem, deleteCacheItem, env, updateArrayCacheItem, updateCacheItem } from '@/lib/utils';
@@ -155,6 +155,19 @@ export const useProposals = ({ initialData }: Props) => {
 			const { queryKey: followersQueryKey } = followersQuery;
 			await queryClient.invalidateQueries({
 				queryKey: followersQueryKey,
+			});
+		},
+	});
+
+	const handleNewVersion = useMutation({
+		mutationFn: async ({ id }: { id: string }) => await createVersion({ data: id }),
+		onSuccess: (data, variables, context) => {
+			navigate({
+				to: '/proposals/$id/$version',
+				params: {
+					id: variables.id,
+					version: data,
+				},
 			});
 		},
 	});

@@ -9,6 +9,7 @@ import { env } from "@/lib/utils";
 import { createServerFn } from "@tanstack/react-start";
 import { jwtVerify } from "jose";
 import type { WebToken } from "@/types/crypto";
+import type { Session } from "@supabase/supabase-js";
 
 export const createClient = () =>
 	createServerClient<Database>(
@@ -61,30 +62,14 @@ export async function getSafeSession() {
 	};
 }
 
-export const fetchSessionUser = createServerFn().handler(async () => {
-	const supabase = createClient();
-	const [
-		{
-			data: { session },
-			error,
-		},
-		{
-			data: { user },
-			error: userError,
-		},
-	] = await Promise.all([
-		supabase.auth.getSession(),
-		supabase.auth.getUser(),
-	]);
+export const fetchSessionUser = createServerFn().handler(
+	async () => {
+		const supabase = createClient();
+		const { data: { session } } = await supabase.auth.getSession();
 
-	return JSON.parse(
-		JSON.stringify({
-			session,
-			user,
-			error: error ?? userError,
-		}),
-	);
-});
+		return { session: session as Session };
+	},
+);
 
 export const getUserCookie = createServerFn().handler(async () => {
 	const cookie = getCookie("connect_wise:auth");

@@ -14,7 +14,7 @@ export const createNestedPhaseFromTemplate = (
 				id: phaseId,
 				description: description,
 				hours: 0,
-				order: destinationIndex + 1,
+				order: destinationIndex + index,
 				visible: true,
 				version,
 				reference_id: null,

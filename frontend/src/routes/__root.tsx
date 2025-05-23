@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router';
+import { HeadContent, Outlet, Scripts, createRootRoute, createRootRouteWithContext } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { DefaultCatchBoundary } from '@/components/DefaultCatchBoundary';
 import { NotFound } from '@/components/NotFound';
@@ -10,6 +10,18 @@ import { seo } from '@/utils/seo';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import { Toaster } from 'sonner';
+import { createClient } from '@/lib/supabase/server';
+import { createServerFn } from '@tanstack/react-start';
+import type { Session } from '@supabase/supabase-js';
+
+export const fetchSessionUser = createServerFn().handler<Session | null>(async () => {
+	const supabase = createClient();
+	const {
+		data: { session },
+	} = await supabase.auth.getSession();
+
+	return { session };
+});
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -57,6 +69,10 @@ export const Route = createRootRoute({
 	},
 	notFoundComponent: () => <NotFound />,
 	component: RootComponent,
+	beforeLoad: async ({ context }) => {
+		const { session } = await fetchSessionUser();
+		return { session };
+	},
 });
 
 function RootComponent() {
