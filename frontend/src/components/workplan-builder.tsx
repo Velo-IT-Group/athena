@@ -241,7 +241,7 @@ const WorkplanBuilder = ({ params }: Props) => {
 									<KanbanColumn
 										key={columnValue}
 										value={columnValue}
-										className='bg-background border-none p-0'
+										className='!bg-transparent border-none p-0'
 										asChild
 									>
 										<div>
