@@ -802,6 +802,7 @@ export type Database = {
           contact_id: number | null
           created_at: string
           created_by: string | null
+          date_approved: string | null
           embedding: string | null
           expiration_date: string | null
           fts: unknown | null
@@ -830,6 +831,7 @@ export type Database = {
           contact_id?: number | null
           created_at?: string
           created_by?: string | null
+          date_approved?: string | null
           embedding?: string | null
           expiration_date?: string | null
           fts?: unknown | null
@@ -858,6 +860,7 @@ export type Database = {
           contact_id?: number | null
           created_at?: string
           created_by?: string | null
+          date_approved?: string | null
           embedding?: string | null
           expiration_date?: string | null
           fts?: unknown | null
@@ -1369,6 +1372,10 @@ export type Database = {
         Args: { task_id: string; ticket_id: number }
         Returns: string
       }
+      delete_non_working_versions_for_old_proposals: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       duplicate_phases: {
         Args: { old_version: string; new_version: string }
         Returns: string[]
@@ -1426,6 +1433,7 @@ export type Database = {
           contact_id: number | null
           created_at: string
           created_by: string | null
+          date_approved: string | null
           embedding: string | null
           expiration_date: string | null
           fts: unknown | null
@@ -1775,6 +1783,95 @@ export type Database = {
       [_ in never]: never
     }
   }
+  taskrouter: {
+    Tables: {
+      blacklisted_phone_numbers: {
+        Row: {
+          number: string
+          organization_id: string
+        }
+        Insert: {
+          number: string
+          organization_id: string
+        }
+        Update: {
+          number?: string
+          organization_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          reservation_sid: string
+          task_sid: string
+        }
+        Insert: {
+          created_at?: string
+          reservation_sid: string
+          task_sid: string
+        }
+        Update: {
+          created_at?: string
+          reservation_sid?: string
+          task_sid?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  user_experience: {
+    Tables: {
+      views: {
+        Row: {
+          created_at: string
+          creator: string | null
+          filters: Json
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          creator?: string | null
+          filters: Json
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          creator?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
 type DefaultSchema = Database[Extract<keyof Database, "public">]
@@ -1891,6 +1988,12 @@ export const Constants = {
     },
   },
   reporting: {
+    Enums: {},
+  },
+  taskrouter: {
+    Enums: {},
+  },
+  user_experience: {
     Enums: {},
   },
 } as const
