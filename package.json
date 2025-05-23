@@ -1,4 +1,6 @@
 {
+  "name": "athena",
+  "version": "1.1.2",
   "scripts": {
     "typeGen:server": "bunx supabase gen types typescript --project-id 'qqfkxhqzsbqgydssvfss' --schema public,reporting,user_experience,taskrouter > types/supabase.ts",
     "typeGen:local": "cd backend && supabase gen types --schema public,reporting,user_experience,taskrouter --local > ../frontend/src/types/supabase.ts"
