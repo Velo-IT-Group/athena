@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServerFn } from '@tanstack/react-start';
 import type { Session } from '@supabase/supabase-js';
 
-export const fetchSessionUser = createServerFn().handler<Session | null>(async () => {
+export const fetchSessionUser = createServerFn().handler<{ session: Session | null }>(async () => {
 	const supabase = createClient();
 	const {
 		data: { session },
@@ -89,10 +89,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
 		<html className='text-sm'>
 			<head>
-				<script
-					crossOrigin='anonymous'
-					src='//unpkg.com/react-scan/dist/auto.global.js'
-				/>
 				<HeadContent />
 			</head>
 
@@ -104,8 +100,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						<Toaster richColors />
 
 						<TanStackRouterDevtools position='bottom-left' />
-
-						<Scripts />
 					</QueryProvider>
 				</ThemeProvider>
 			</body>
