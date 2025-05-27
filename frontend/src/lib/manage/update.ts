@@ -28,17 +28,16 @@ export const updateTicket = createServerFn().middleware([authMiddleware])
 	) => ({ id, operation })).handler(
 		async ({ data: { id, operation }, context }) => {
 			const config: AxiosRequestConfig = {
-				headers: context.userHeaders,
+				headers,
 			};
 
-			console.log(config);
-			// const { data } = await axios.patch(
-			// 	`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}`,
-			// 	operation,
-			// 	config,
-			// );
+			const { data } = await axios.patch(
+				`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}`,
+				operation,
+				config,
+			);
 
-			// return data;
+			return data;
 		},
 	);
 

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import useProposal from '@/hooks/use-proposal';
+import useServiceTicket from '@/hooks/use-service-ticket';
 import {
 	getPhasesQuery,
 	getProductsQuery,
@@ -22,6 +23,7 @@ import {
 	getProposalTotalsQuery,
 	getSectionsQuery,
 } from '@/lib/supabase/api';
+import { Operation } from '@/types';
 import { calculateTotals } from '@/utils/helpers';
 import { getCurrencyString } from '@/utils/money';
 import { useQueries } from '@tanstack/react-query';
@@ -59,6 +61,11 @@ function RouteComponent() {
 		version: versionParam,
 		initialData: initialProposal,
 	});
+	
+	const { handleTicketUpdate } = useServiceTicket({
+		id: proposal?.service_ticket ?? -1,
+	});
+
 	const proposalExpirationDate = new Date(proposal?.expiration_date ?? '');
 
 	const today = new Date(); // Get today's date
@@ -118,6 +125,12 @@ function RouteComponent() {
 							onSubmit={(e) => {
 								e.preventDefault();
 								const data = new FormData(e.currentTarget);
+								handleTicketUpdate({
+									operation: [{
+									op: Operation.Replace,
+									path: '/status/id',
+									value: 1195,
+								}]})
 								handleProposalUpdate.mutate({
 									proposal: {
 										status: 'signed',
