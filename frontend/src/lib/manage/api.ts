@@ -152,6 +152,7 @@ export const getTicketQuery = (
 ) => queryOptions({
 	queryKey: ["tickets", id, conditions],
 	queryFn: () => getTicket({ data: { id, conditions } }),
+	enabled: id > 0,
 });
 
 export const ticketConfigurationsQuery = (id: number) =>
