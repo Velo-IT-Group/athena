@@ -61,7 +61,7 @@ function RouteComponent() {
 		version: versionParam,
 		initialData: initialProposal,
 	});
-	
+
 	const { handleTicketUpdate } = useServiceTicket({
 		id: proposal?.service_ticket ?? -1,
 	});
@@ -125,21 +125,28 @@ function RouteComponent() {
 							onSubmit={(e) => {
 								e.preventDefault();
 								const data = new FormData(e.currentTarget);
+								data.set('dateSigned', new Date().toISOString());
+
+								const approval_info: Record<string, string> = {};
+								data.forEach((value, key) => {
+									if (value.toString().length > 0) {
+										approval_info[key] = value as string;
+									}
+								});
+
 								handleTicketUpdate({
-									operation: [{
-									op: Operation.Replace,
-									path: '/status/id',
-									value: 1195,
-								}]})
+									operation: [
+										{
+											op: Operation.Replace,
+											path: '/status/id',
+											value: 1195,
+										},
+									],
+								});
 								handleProposalUpdate.mutate({
 									proposal: {
 										status: 'signed',
-										approval_info: {
-											po: data.get('po') as string,
-											name: data.get('name') as string,
-											initials: data.get('initials') as string,
-											dateSigned: new Date().toISOString(),
-										},
+										approval_info,
 									},
 								});
 							}}
@@ -156,10 +163,11 @@ function RouteComponent() {
 
 								<div className='flex flex-col space-y-1.5'>
 									<LabeledInput
-										label='Initals'
-										name='initals'
+										label='Email'
+										name='email'
+										type='email'
 										required
-										placeholder='JD'
+										placeholder='jon@example.com'
 									/>
 								</div>
 
