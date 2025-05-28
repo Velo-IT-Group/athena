@@ -1,8 +1,4 @@
-import { env } from "@/lib/utils";
-import type { WebToken } from "@/types/crypto";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-import pkg from "jsonwebtoken";
-const { verify } = pkg;
 
 export const decryptSymmetric = (
 	key: string,
@@ -23,9 +19,6 @@ export const decryptSymmetric = (
 
 	return plaintext;
 };
-
-export const decryptToken = (token: string, user_id: string) =>
-	verify(token, env.VITE_SECRET_KEY + user_id) as WebToken;
 
 export const encryptSymmetric = (key: string, plaintext: string) => {
 	const iv = randomBytes(12).toString("base64");

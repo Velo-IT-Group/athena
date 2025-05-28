@@ -3,8 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 
 const avatarStackVariants = cva('flex -space-x-4 -space-y-4', {
 	variants: {
@@ -60,13 +58,19 @@ const AvatarStack = ({
 							)}
 						>
 							<AvatarImage src={image} />
-							<AvatarFallback>
-								{name
+							<AvatarFallback
+								style={{
+									backgroundColor: `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(
+										Math.random() * 255
+									)}, ${Math.floor(Math.random() * 255)})`,
+								}}
+							/>
+							{/* {name
 									?.split(' ')
 									?.map((word) => word[0])
 									?.join('')
-									?.toUpperCase()}
-							</AvatarFallback>
+									?.toUpperCase()} */}
+							{/* </AvatarFallback> */}
 						</Avatar>
 					</TooltipTrigger>
 					<TooltipContent>
@@ -78,7 +82,14 @@ const AvatarStack = ({
 			{hiddenAvatars.length ? (
 				<Tooltip key='hidden-avatars'>
 					<TooltipTrigger asChild>
-						<Avatar>
+						<Avatar
+							className={cn(
+								'hover:z-10 size-7 group',
+								avatarSize === 'md' && 'size-9',
+								avatarSize === 'lg' && 'size-12',
+								avatarSize === 'xl' && 'size-16'
+							)}
+						>
 							<AvatarFallback>+{avatars.length - shownAvatars.length}</AvatarFallback>
 						</Avatar>
 					</TooltipTrigger>

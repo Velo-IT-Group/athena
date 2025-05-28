@@ -10,7 +10,7 @@ import useServiceTicket from '@/hooks/use-service-ticket';
 import type { VariantProps } from 'class-variance-authority';
 import { ColoredBadge, type coloredBadgeVariants } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ListSelector } from '@/components/status-selector';
+import { ListSelector } from '@/components/list-selector';
 import { AsyncSelect } from '@/components/ui/async-select';
 import type { Contact } from '@/types/manage';
 import { getContacts, searchContacts } from '@/lib/manage/read';

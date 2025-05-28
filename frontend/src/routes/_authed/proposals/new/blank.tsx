@@ -66,7 +66,7 @@ function RouteComponent() {
 											? {
 													value: `'${query}'`,
 													comparison: 'contains',
-											  }
+												}
 											: undefined,
 									},
 									page,
@@ -166,7 +166,7 @@ function RouteComponent() {
 											? {
 													value: query,
 													comparison: 'contains',
-											  }
+												}
 											: undefined,
 									},
 									page,
@@ -244,9 +244,17 @@ function RouteComponent() {
 				<img
 					alt='This is a preview of your project'
 					src='https://d3ki9tyy5l5ruj.cloudfront.net/obj/5b2813529d7aa52400e966efad11bfc51dcc7c10/Updated_Light_List.png'
-					className='bg-background rounded-xl max-w-none'
+					className='dark:hidden block bg-background rounded-xl max-w-none'
 					style={{ width: 942 }}
 				/>
+
+				<img
+					alt='This is a preview of your project'
+					src='https://d3ki9tyy5l5ruj.cloudfront.net/obj/b74d7cc7e55c806b01707a426441e05449754a02/Updated_Dark_List.png'
+					className='hidden dark:block bg-background rounded-xl max-w-none'
+					style={{ width: 942 }}
+				/>
+
 				<span
 					className='absolute'
 					style={{ top: 21, left: 84 }}

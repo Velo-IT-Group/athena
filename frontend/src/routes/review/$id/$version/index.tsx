@@ -14,11 +14,19 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import useProposal from '@/hooks/use-proposal';
-import { getPhases, getProposal, getProposalSettings, getProposalTotals, getSections } from '@/lib/supabase/read';
-import { updateProposal } from '@/lib/supabase/update';
+import useServiceTicket from '@/hooks/use-service-ticket';
+import {
+	getPhasesQuery,
+	getProductsQuery,
+	getProposalQuery,
+	getProposalSettingsQuery,
+	getProposalTotalsQuery,
+	getSectionsQuery,
+} from '@/lib/supabase/api';
+import { Operation } from '@/types';
 import { calculateTotals } from '@/utils/helpers';
 import { getCurrencyString } from '@/utils/money';
-import { useSuspenseQueries } from '@tanstack/react-query';
+import { useQueries } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ClockIcon } from 'lucide-react';
 import { Fragment } from 'react/jsx-runtime';
@@ -30,47 +38,37 @@ export const Route = createFileRoute('/review/$id/$version/')({
 function RouteComponent() {
 	const { id, version: versionParam } = Route.useParams();
 
-	const [{ data: initialProposal }, { data: sections }, { data: totals }, { data: settings }, { data: phases }] =
-		useSuspenseQueries({
-			queries: [
-				{
-					queryKey: ['proposals', id, versionParam],
-					queryFn: () => getProposal({ data: id }),
-				},
-				{
-					queryKey: ['proposals', id, versionParam, 'sections'],
-					queryFn: () => getSections({ data: { proposalId: id, versionId: versionParam } }),
-				},
-				{
-					queryKey: ['proposals', id, versionParam, 'totals'],
-					queryFn: () => getProposalTotals({ data: { id, version: versionParam } }),
-				},
-				{
-					queryKey: ['proposals', id, versionParam, 'settings'],
-					queryFn: () => getProposalSettings({ data: { id, version: versionParam } }),
-				},
-				{
-					queryKey: ['phases', id, versionParam],
-					queryFn: () =>
-						getPhases({ data: { proposalId: id, versionId: versionParam } }) as Promise<NestedPhase[]>,
-				},
-			],
-		});
+	const [
+		{ data: initialProposal },
+		{ data: sections },
+		{ data: totals },
+		{ data: settings },
+		{ data: phases },
+		{ data: products },
+	] = useQueries({
+		queries: [
+			getProposalQuery(id, versionParam),
+			getSectionsQuery(id, versionParam),
+			getProposalTotalsQuery(id, versionParam),
+			getProposalSettingsQuery(id, versionParam),
+			getPhasesQuery(id, versionParam),
+			getProductsQuery(versionParam),
+		],
+	});
 
 	const { data: proposal, handleProposalUpdate } = useProposal({
 		id,
 		version: versionParam,
 		initialData: initialProposal,
 	});
-	const proposalExpirationDate = new Date(proposal.expiration_date ?? '');
+
+	const { handleTicketUpdate } = useServiceTicket({
+		id: proposal?.service_ticket ?? -1,
+	});
+
+	const proposalExpirationDate = new Date(proposal?.expiration_date ?? '');
 
 	const today = new Date(); // Get today's date
-
-	// const { recurringTotal, laborTotal, totalPrice } = calculateTotals(
-	// 	(sections as NestedSection[]).flatMap((s) => s.products).filter(Boolean) as NestedProduct[],
-	// 	phases ?? [],
-	// 	proposal.labor_rate
-	// );
 
 	const todayWithoutTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 	const dateToCompareWithoutTime = new Date(
@@ -79,7 +77,7 @@ function RouteComponent() {
 		proposalExpirationDate.getDate()
 	);
 
-	if (proposal.status === 'signed')
+	if (proposal?.status === 'signed')
 		return <div className='relative bg-secondary/25 dark:bg-background flex-1 min-h-screen'>Approved</div>;
 
 	if (todayWithoutTime > dateToCompareWithoutTime)
@@ -127,15 +125,28 @@ function RouteComponent() {
 							onSubmit={(e) => {
 								e.preventDefault();
 								const data = new FormData(e.currentTarget);
-								handleProposalUpdate({
+								data.set('dateSigned', new Date().toISOString());
+
+								const approval_info: Record<string, string> = {};
+								data.forEach((value, key) => {
+									if (value.toString().length > 0) {
+										approval_info[key] = value as string;
+									}
+								});
+
+								handleTicketUpdate({
+									operation: [
+										{
+											op: Operation.Replace,
+											path: '/status/id',
+											value: 1195,
+										},
+									],
+								});
+								handleProposalUpdate.mutate({
 									proposal: {
 										status: 'signed',
-										approval_info: {
-											po: data.get('po') as string,
-											name: data.get('name') as string,
-											initials: data.get('initials') as string,
-											dateSigned: new Date().toISOString(),
-										},
+										approval_info,
 									},
 								});
 							}}
@@ -152,10 +163,11 @@ function RouteComponent() {
 
 								<div className='flex flex-col space-y-1.5'>
 									<LabeledInput
-										label='Initals'
-										name='initals'
+										label='Email'
+										name='email'
+										type='email'
 										required
-										placeholder='JD'
+										placeholder='jon@example.com'
 									/>
 								</div>
 
@@ -220,7 +232,7 @@ function RouteComponent() {
 										<ProductCard
 											key={section.id}
 											title={section.name}
-											products={section.products ?? []}
+											products={products?.filter((p) => p.section === section.id) ?? []}
 										/>
 									);
 								})}
@@ -283,7 +295,7 @@ function RouteComponent() {
 													/mo
 												</p>
 												<p className='text-sm text-muted-foreground text-right col-span-2'>
-													{getCurrencyString(totals.labor_cost ?? 0)}
+													{getCurrencyString(totals?.labor_cost ?? 0)}
 												</p>
 											</div>
 										</div>
@@ -295,13 +307,13 @@ function RouteComponent() {
 											<div className='grid gap-2 justify-items-end grid-cols-3 col-span-3'>
 												<p className='text-sm text-muted-foreground text-right'>
 													<span className='font-medium'>
-														{getCurrencyString(totals.recurring_total ?? 0)}
+														{getCurrencyString(totals?.recurring_total ?? 0)}
 														/mo
 													</span>
 												</p>
 												<p className='text-sm text-muted-foreground text-right col-span-2'>
 													<span className='font-medium'>
-														{getCurrencyString(totals.total_price ?? 0)}
+														{getCurrencyString(totals?.total_price ?? 0)}
 													</span>
 												</p>
 											</div>
@@ -379,9 +391,6 @@ function RouteComponent() {
 															))}
 													</ul>
 												</div>
-												{/* {!phase.description.includes('Backoffice Coordination') && (
-													
-												)} */}
 											</Fragment>
 										))}
 								</div>

@@ -262,80 +262,41 @@ secret = "env(AUTH_AZURE_SECRET)"
 url = "env(AUTH_AZURE_TENANT_URL)"
 redirect_uri = "http://localhost:54321/auth/v1/callback"
 
-[functions.stripe-webhook]
-# other entries
-entrypoint = './functions/stripe/webhook/index.ts' # path must be relative to config.toml
-
-[functions.stripe-trigger-dns-updated]
-# other entries
-entrypoint = './functions/stripe/trigger/dns-updated/index.ts' # path must be relative to config.toml
-
-[functions.stripe-action-update-dns]
-# other entries
-entrypoint = './functions/stripe/action/update-dns/index.ts' # path must be relative to config.toml
-
-[functions.log-taskrouter-event]
+[functions.automatic-wrapup]
 enabled = true
 verify_jwt = false
-import_map = "./functions/log-taskrouter-event/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/log-taskrouter-event/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/log-taskrouter-event/*.html" ]
-
-[functions.process-transcript]
-enabled = true
-verify_jwt = true
-import_map = "./functions/process-transcript/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/process-transcript/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/process-transcript/*.html" ]
-
-[functions.process-recording]
-enabled = true
-verify_jwt = true
-import_map = "./functions/process-recording/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/process-recording/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/process-recording/*.html" ]
-
-[functions.generate-goals]
-enabled = true
-verify_jwt = true
-import_map = "./functions/generate-goals/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/generate-goals/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/generate-goals/*.html" ]
+entrypoint = "./functions/automatic-wrapup/index.ts"
 
 [functions.convert-proposal-to-project]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/convert-proposal-to-project/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/convert-proposal-to-project/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/convert-proposal-to-project/*.html" ]
 
-[functions.hybrid-search]
+[functions.event-streams]
 enabled = true
-verify_jwt = true
-import_map = "./functions/hybrid-search/deno.json"
+verify_jwt = false
+entrypoint = "./functions/event-streams/index.ts"
+
+[functions.process-recording]
+enabled = true
+verify_jwt = false
+import_map = "./functions/process-recording/deno.json"
+entrypoint = "./functions/process-recording/index.ts"
+
+[functions.process-transcript]
+enabled = true
+verify_jwt = false
+import_map = "./functions/process-transcript/deno.json"
+entrypoint = "./functions/process-transcript/index.ts"
+
+[functions.process-event-stream]
+enabled = true
+verify_jwt = false
+import_map = "./functions/process-event-stream/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/hybrid-search/index.ts"
+entrypoint = "./functions/process-event-stream/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/hybrid-search/*.html" ]
+# static_files = [ "./functions/process-event-stream/*.html" ]

@@ -195,6 +195,7 @@ export type Database = {
           id: string
           is_read: boolean
           read_at: string | null
+          resource_name: string | null
           resource_params: Json | null
           resource_path: string
           type: string
@@ -206,6 +207,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           read_at?: string | null
+          resource_name?: string | null
           resource_params?: Json | null
           resource_path: string
           type: string
@@ -217,6 +219,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           read_at?: string | null
+          resource_name?: string | null
           resource_params?: Json | null
           resource_path?: string
           type?: string
@@ -799,6 +802,8 @@ export type Database = {
           contact_id: number | null
           created_at: string
           created_by: string | null
+          date_approved: string | null
+          embedding: string | null
           expiration_date: string | null
           fts: unknown | null
           id: string
@@ -826,6 +831,8 @@ export type Database = {
           contact_id?: number | null
           created_at?: string
           created_by?: string | null
+          date_approved?: string | null
+          embedding?: string | null
           expiration_date?: string | null
           fts?: unknown | null
           id?: string
@@ -853,6 +860,8 @@ export type Database = {
           contact_id?: number | null
           created_at?: string
           created_by?: string | null
+          date_approved?: string | null
+          embedding?: string | null
           expiration_date?: string | null
           fts?: unknown | null
           id?: string
@@ -1217,7 +1226,7 @@ export type Database = {
           budget_hours?: number
           created_at?: string
           id?: string
-          order?: number
+          order: number
           phase: string
           reference_id?: number | null
           summary: string
@@ -1363,6 +1372,10 @@ export type Database = {
         Args: { task_id: string; ticket_id: number }
         Returns: string
       }
+      delete_non_working_versions_for_old_proposals: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       duplicate_phases: {
         Args: { old_version: string; new_version: string }
         Returns: string[]
@@ -1399,6 +1412,45 @@ export type Database = {
           slug: string
           default_template: number
           visibility_settings: Json
+        }[]
+      }
+      hybrid_search: {
+        Args: {
+          query_text: string
+          query_embedding: string
+          match_count: number
+          full_text_weight?: number
+          semantic_weight?: number
+          rrf_k?: number
+        }
+        Returns: {
+          approval_info: Json | null
+          catalog_items: number[] | null
+          company: Json | null
+          company_id: number | null
+          company_name: string | null
+          contact: Json | null
+          contact_id: number | null
+          created_at: string
+          created_by: string | null
+          date_approved: string | null
+          embedding: string | null
+          expiration_date: string | null
+          fts: unknown | null
+          id: string
+          is_conversion_completed: boolean
+          is_getting_converted: boolean
+          labor_hours: number
+          labor_rate: number
+          name: string
+          opportunity_id: number | null
+          organization: string | null
+          project_id: number | null
+          service_ticket: number | null
+          status: Database["public"]["Enums"]["status"]
+          templates_used: number[] | null
+          updated_at: string
+          working_version: string | null
         }[]
       }
       is_organization_member: {
@@ -1731,6 +1783,95 @@ export type Database = {
       [_ in never]: never
     }
   }
+  taskrouter: {
+    Tables: {
+      blacklisted_phone_numbers: {
+        Row: {
+          number: string
+          organization_id: string
+        }
+        Insert: {
+          number: string
+          organization_id: string
+        }
+        Update: {
+          number?: string
+          organization_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          reservation_sid: string
+          task_sid: string
+        }
+        Insert: {
+          created_at?: string
+          reservation_sid: string
+          task_sid: string
+        }
+        Update: {
+          created_at?: string
+          reservation_sid?: string
+          task_sid?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  user_experience: {
+    Tables: {
+      views: {
+        Row: {
+          created_at: string
+          creator: string | null
+          filters: Json
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          creator?: string | null
+          filters: Json
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          creator?: string | null
+          filters?: Json
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
 type DefaultSchema = Database[Extract<keyof Database, "public">]
@@ -1847,6 +1988,12 @@ export const Constants = {
     },
   },
   reporting: {
+    Enums: {},
+  },
+  taskrouter: {
+    Enums: {},
+  },
+  user_experience: {
     Enums: {},
   },
 } as const

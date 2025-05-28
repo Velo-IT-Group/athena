@@ -5,52 +5,57 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 /// <reference types="https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts" />
 
-import { createClient } from 'npm:@supabase/supabase-js'
+import { createClient } from "npm:@supabase/supabase-js";
 
 Deno.serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    {
-		db: {
-			schema: 'taskrouter',
+	const supabase = createClient(
+		Deno.env.get("SUPABASE_URL")!,
+		Deno.env.get("SUPABASE_ANON_KEY")!,
+		{
+			db: {
+				schema: "taskrouter",
+			},
 		},
-    },
-  )
-	const response = await req.json()
-	  
-  response.forEach(({ type, data }: { type: EventType; data: any }) => {
+	);
+	const response = await req.json();
+
+	response.forEach(({ type, data }: { type: EventType; data: any }) => {
 		const payload: TaskRouterPayload = data.payload;
 		const parameters: VoiceParameters = data.request?.parameters;
 		const attributes = payload ? JSON.parse(payload.task_attributes) : {};
+		console.log("testing");
 
 		switch (type) {
-			case 'com.twilio.taskrouter.reservation.wrapup':
+			case "com.twilio.taskrouter.reservation.wrapup":
 				supabase
-					.from('tasks')
+					.from("tasks")
 					.insert({
 						task_sid: payload.task_sid,
 						reservation_sid: payload.reservation_sid,
 					})
-					.then(({data, error}) => {
+					.then(({ data, error }) => {
 						if (error) {
-							console.error('com.twilio.taskrouter.reservation.wrapup: ', error, payload)
+							console.error(
+								"com.twilio.taskrouter.reservation.wrapup: ",
+								error,
+								payload,
+							);
 						} else {
 							console.log(data);
 						}
 					});
 				break;
 			default:
-				console.log('UNKNOWN EVENT', data, type);
+				console.log("UNKNOWN EVENT", data, type);
 				break;
 		}
 	});
 
-  return new Response(
-    JSON.stringify({ status: 200 }),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+	return new Response(
+		JSON.stringify({ status: 200 }),
+		{ headers: { "Content-Type": "application/json" } },
+	);
+});
 
 /* To invoke locally:
 

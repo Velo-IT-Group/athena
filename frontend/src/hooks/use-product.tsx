@@ -5,46 +5,35 @@ import { createProduct } from '@/lib/supabase/create';
 import { deleteProduct } from '@/lib/supabase/delete';
 import { updateProduct } from '@/lib/supabase/update';
 
-import { getSectionProducts } from '@/lib/supabase/read';
-import { updateArrayQueryCache } from '@/lib/utils';
-import { getProposalTotalsQuery, getSectionProductsQuery, getSectionsQuery } from '@/lib/supabase/api';
+import { getProductsQuery, getProposalTotalsQuery, getSectionsQuery } from '@/lib/supabase/api';
 import { useCallback } from 'react';
+import { addCacheItem, deleteCacheItem, updateArrayCacheItem } from '@/lib/utils';
 
 type Props = {
 	initialData: NestedProduct[];
 	params: { id: string; version: string };
-	sectionId: string;
 };
 
-export const useProduct = ({ initialData, params, sectionId }: Props) => {
-	const query = getSectionProductsQuery({
-		proposalId: params.id,
-		versionId: params.version,
-		sectionId,
-	});
+export const useProduct = ({ initialData, params }: Props) => {
+	const query = getProductsQuery(params.version);
 	const { queryKey } = query;
 	const queryClient = useQueryClient();
 
-	const { data } = useQuery(query);
+	const { data: products } = useQuery({ ...query, initialData });
 
-	const updateProposalTotals = useCallback((newProduct: NestedProduct) => {
+	const updateProposalTotals = useCallback((allProducts: NestedProduct[]) => {
 		const previousTotals = queryClient.getQueryData<ProposalTotals>(
 			getProposalTotalsQuery(params.id, params.version).queryKey
 		);
-		const proposalSections = queryClient.getQueryData<NestedSection[]>(
-			getSectionsQuery(params.id, params.version).queryKey
-		);
-
-		const products = proposalSections?.flatMap((s) => s.products ?? []);
-		const allProducts = [...(products?.filter((p) => p.unique_id !== newProduct.unique_id) ?? []), newProduct];
 
 		const recurringProducts = allProducts?.filter((p) => p.recurring_flag && p.recurring_bill_cycle === 2);
 		const nonRecurringProducts = allProducts?.filter((p) => !p.recurring_flag);
 
-		const recurringTotal = recurringProducts?.reduce((acc, p) => acc + (p.extended_price ?? 0), 0);
-		const nonRecurringTotal = nonRecurringProducts?.reduce((acc, p) => acc + (p.extended_price ?? 0), 0);
-		const recurringCost = recurringProducts?.reduce((acc, p) => acc + (p.extended_cost ?? 0), 0);
-		const nonRecurringCost = nonRecurringProducts?.reduce((acc, p) => acc + (p.extended_cost ?? 0), 0);
+		const recurringTotal = recurringProducts?.reduce((acc, p) => acc + (p.quantity ?? 0) * (p.price ?? 0), 0);
+		const nonRecurringTotal = nonRecurringProducts?.reduce((acc, p) => acc + (p.quantity ?? 0) * (p.price ?? 0), 0);
+		const recurringCost = recurringProducts?.reduce((acc, p) => acc + (p.quantity ?? 0) * (p.cost ?? 0), 0);
+		const nonRecurringCost = nonRecurringProducts?.reduce((acc, p) => acc + (p.quantity ?? 0) * (p.cost ?? 0), 0);
+
 		if (!previousTotals) return;
 
 		const newTotals: ProposalTotals = {
@@ -62,7 +51,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		queryClient.setQueryData(getProposalTotalsQuery(params.id, params.version).queryKey, newTotals);
 	}, []);
 
-	const { mutate: handleProductUpdate } = useMutation({
+	const handleProductUpdate = useMutation({
 		mutationFn: async ({ id, product }: { id: string; product: ProductUpdate }) =>
 			updateProduct({ data: { id, product } }),
 		onMutate: async ({ id, product }) => {
@@ -70,8 +59,9 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 
 			const updatedProduct = previousTodo?.find((s) => s.unique_id === id);
 
-			// @ts-expect-error types are seperate
-			const newProduct: Product = {
+			if (!updatedProduct) throw new Error('Product not found');
+
+			const newProduct: NestedProduct = {
 				...updatedProduct,
 				...product,
 				extended_price:
@@ -84,9 +74,16 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 					(product.quantity ?? updatedProduct?.quantity ?? 0) * (product.cost ?? updatedProduct?.cost ?? 0),
 			};
 
-			updateProposalTotals(newProduct);
+			const cachedData = await updateArrayCacheItem<NestedProduct>(
+				queryClient,
+				queryKey,
+				newProduct,
+				(p) => p.unique_id === id
+			);
 
-			return updateArrayQueryCache(queryClient, queryKey, newProduct, (p) => p.unique_id === id);
+			updateProposalTotals(cachedData.newItems);
+
+			return cachedData;
 		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
@@ -100,18 +97,23 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		},
 	});
 
-	const { mutate: handleProductInsert } = useMutation({
+	const handleProductInsert = useMutation({
 		mutationFn: async ({ product, bundledItems }: { product: ProductInsert; bundledItems?: ProductInsert[] }) =>
 			createProduct({ data: { product, bundledItems } }),
-		onMutate: async ({ product, bundledItems }) =>
-			updateArrayQueryCache(queryClient, queryKey, {
-				...product,
-				products: bundledItems,
-			}),
+		onMutate: async ({ product, bundledItems }) => {
+			const cachedItems = await addCacheItem<NestedProduct>(queryClient, queryKey, {
+				...(product as NestedProduct),
+				products: bundledItems as NestedProduct[],
+			});
+
+			updateProposalTotals(cachedItems.newItems);
+
+			return cachedItems;
+		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newProduct, context) => {
-			queryClient.setQueryData([queryKey], context?.previousItems);
+			queryClient.setQueryData<NestedProduct[]>(queryKey, context?.previousItems);
 		},
 		onSettled: async () => {
 			await queryClient.invalidateQueries({
@@ -120,25 +122,14 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 		},
 	});
 
-	const { mutate: handleProductDeletion } = useMutation({
+	const handleProductDeletion = useMutation({
 		mutationFn: async ({ id }: { id: string }) => deleteProduct({ data: id }),
 		onMutate: async ({ id }) => {
-			// Cancel any outgoing refetches
-			// (so they don't overwrite our optimistic update)
-			await queryClient.cancelQueries({
-				queryKey,
-			});
+			const cachedItems = await deleteCacheItem<NestedProduct>(queryClient, queryKey, (p) => p.unique_id === id);
 
-			// Snapshot the previous value
-			const previousItems = queryClient.getQueryData<NestedProduct[]>(queryKey) ?? [];
+			updateProposalTotals(cachedItems.newItems);
 
-			const newItems: NestedProduct[] = [...previousItems.filter((p) => p.unique_id !== id)];
-
-			// Optimistically update to the new value
-			queryClient.setQueryData(queryKey, newItems);
-
-			// Return a context with the previous and new items
-			return { previousItems, newItems };
+			return cachedItems;
 		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
@@ -153,7 +144,7 @@ export const useProduct = ({ initialData, params, sectionId }: Props) => {
 	});
 
 	return {
-		data,
+		data: products,
 		handleProductUpdate,
 		handleProductInsert,
 		handleProductDeletion,

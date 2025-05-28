@@ -1,14 +1,8 @@
 import type { ProjectTemplate } from "@/types/manage";
 import { createClient } from "@/lib/supabase/server";
 import { getTemplate } from "@/lib/manage/read";
-import {
-	createProjectPhase,
-	createProjectTask,
-	createProjectTicket,
-} from "../manage/create";
 import { updateProposal } from "./update";
 import { createServerFn } from "@tanstack/react-start";
-import { redirect } from "@tanstack/react-router";
 
 export const createPinnedItem = createServerFn().validator((
 	item: PinnedItemInsert,
@@ -82,7 +76,6 @@ export const createSection = createServerFn().validator((
 
 // 		const value = sign(
 // 			token,
-// 			process.env.SECRET_KEY! + (user_id ?? token.user_id),
 // 			{},
 // 		);
 
@@ -116,8 +109,6 @@ export const newTemplate = createServerFn().validator(({
 			throw new Error("Invalid template structure.");
 		}
 
-		console.log(order);
-
 		// Await all phase creation promises
 		await Promise.all(
 			template.workplan.phases.map((phase, phaseIndex) =>
@@ -142,7 +133,6 @@ export const newTemplate = createServerFn().validator(({
 										ticket: "",
 										order: index,
 									};
-									console.log(taskInsert);
 									return taskInsert;
 								}) ?? [],
 							})),
@@ -158,11 +148,19 @@ export const newTemplate = createServerFn().validator(({
  * Creates Ticket in Supabase.
  * @param {TaskInsert} task - The object that will be used to create the task.
  */
-export const createTask = createServerFn().validator((task: TaskInsert) => task)
+export const createTask = createServerFn().validator((
+	task: TaskInsert | TaskInsert[],
+) => task)
 	.handler(async ({ data: task }) => {
 		const supabase = createClient();
-		const { error } = await supabase.from("tasks").insert(task);
-		console.log("CREATE TASK FUNCTION", task);
+		const { error } = await supabase.from("tasks").insert(
+			Array.isArray(task)
+				? task.map((t) => {
+					delete t.id;
+					return t;
+				})
+				: [task],
+		);
 
 		if (error) {
 			console.error(error);
@@ -263,14 +261,12 @@ export const duplicateProposal = createServerFn().validator((
 			.returns<Array<{ id: string }>>()
 			.single();
 
-		if (error || !returnedProposal) {
-			console.log(error);
+		if (error) {
+			console.error(error);
 			throw new Error("Error duplicating proposal.", { cause: error });
 		}
 
 		const version = await createVersion({ data: returnedProposal.id });
-
-		console.log(version, proposal?.working_version);
 
 		await supabase.rpc("copy_version_data", {
 			old_version: proposal.id ?? "",
@@ -281,16 +277,25 @@ export const duplicateProposal = createServerFn().validator((
 	});
 
 export const createPhase = createServerFn().validator((
-	{ phase, tickets }: {
-		phase: PhaseInsert;
-		tickets: Array<TicketInsert & { tasks?: Array<TaskInsert> }>;
+	{ phase }: {
+		phase: PhaseInsert | PhaseInsert[];
+		// tickets: Array<TicketInsert & { tasks?: Array<TaskInsert> }>;
 	},
-) => ({ phase, tickets })).handler(async ({ data: { phase, tickets } }) => {
+) => ({ phase })).handler(async ({ data: { phase } }) => {
 	const supabase = createClient();
 	// @ts-ignore
 	delete phase.tickets;
-	const { data, error } = await supabase.from("phases").insert(phase).select()
-		.single();
+	console.log(phase);
+	const { data, error } = await supabase.from("phases").insert(
+		Array.isArray(phase)
+			? phase.map((p) => {
+				delete p.id;
+				return p;
+			})
+			: [phase],
+	)
+		.select();
+	// .single();
 
 	if (error) {
 		console.error(error);
@@ -299,30 +304,30 @@ export const createPhase = createServerFn().validator((
 		});
 	}
 
-	if (tickets.length) {
-		const seteteled = await Promise.allSettled(
-			tickets.map((ticket) => {
-				const ticketTasks = ticket.tasks;
-				delete ticket.tasks;
-				console.log(ticketTasks, ticket);
-				return createTicket({
-					data: {
-						ticket: {
-							...ticket,
-							phase: data.id,
-						},
-						tasks: ticketTasks ?? [],
-					},
-				});
-			}),
-		);
+	// if (tickets.length) {
+	// 	const seteteled = await Promise.allSettled(
+	// 		tickets.map((ticket) => {
+	// 			const ticketTasks = ticket.tasks;
+	// 			delete ticket.tasks;
+	// 			console.log(ticket, ticketTasks);
+	// 			return createTicket({
+	// 				data: {
+	// 					ticket: {
+	// 						...ticket,
+	// 						phase: data.id,
+	// 					},
+	// 					tasks: ticketTasks ?? [],
+	// 				},
+	// 			});
+	// 		}),
+	// 	);
 
-		seteteled.map((result) => {
-			if (result.status === "rejected") {
-				throw new Error("Error creating ticket... " + result.reason);
-			}
-		});
-	}
+	// 	seteteled.map((result) => {
+	// 		if (result.status === "rejected") {
+	// 			throw new Error("Error creating ticket... " + result.reason);
+	// 		}
+	// 	});
+	// }
 
 	return data;
 });
@@ -346,15 +351,23 @@ export const createProposalSettings = createServerFn().validator((
 
 export const createTicket = createServerFn().validator(({
 	ticket,
-	tasks,
+	// tasks,
 }: {
-	ticket: TicketInsert;
-	tasks: Array<TaskInsert>;
-}) => ({ ticket, tasks })).handler(async ({ data: { ticket, tasks } }) => {
+	ticket: TicketInsert | TicketInsert[];
+	// tasks: Array<TaskInsert>;
+}) => ({ ticket })).handler(async ({ data: { ticket } }) => {
 	const supabase = createClient();
+	console.log(ticket);
 
-	const { data, error } = await supabase.from("tickets").insert(ticket)
-		.select().single();
+	const { data, error } = await supabase.from("tickets").insert(
+		Array.isArray(ticket)
+			? ticket.map((t) => {
+				delete t.id;
+				return t;
+			})
+			: [ticket],
+	)
+		.select();
 
 	if (error) {
 		console.error(error);
@@ -363,24 +376,24 @@ export const createTicket = createServerFn().validator(({
 		});
 	}
 
-	if (tasks?.length) {
-		const seteteled = await Promise.allSettled(
-			tasks.map((task) =>
-				createTask({
-					data: {
-						...task,
-						ticket: data.id,
-					},
-				})
-			),
-		);
+	// if (tasks?.length) {
+	// 	const seteteled = await Promise.allSettled(
+	// 		tasks.map((task) =>
+	// 			createTask({
+	// 				data: {
+	// 					...task,
+	// 					ticket: data.id,
+	// 				},
+	// 			})
+	// 		),
+	// 	);
 
-		seteteled.map((result) => {
-			if (result.status === "rejected") {
-				throw new Error("Error creating task... " + result.reason);
-			}
-		});
-	}
+	// 	seteteled.map((result) => {
+	// 		if (result.status === "rejected") {
+	// 			throw new Error("Error creating task... " + result.reason);
+	// 		}
+	// 	});
+	// }
 
 	return data;
 });
@@ -505,86 +518,6 @@ export const createVersion = createServerFn().validator((proposal: string) =>
 	return data.id;
 });
 
-export const createPhaseWithTicketsAndTasks = createServerFn().validator(({
-	projectId,
-	phase,
-}: {
-	projectId: number;
-	phase: NestedPhase;
-}) => ({ projectId, phase })).handler(
-	async ({ data: { projectId, phase } }) => {
-		// Create phase
-		const createdPhase = await createProjectPhase(projectId, phase);
-
-		if (!createdPhase) return;
-
-		// Create tickets and tasks for the phase
-		if (!phase.tickets) return;
-
-		await Promise.all(
-			phase.tickets.map(async (ticket) => {
-				try {
-					const createdTicket = await createProjectTicket(
-						createdPhase.id,
-						ticket,
-					);
-
-					if (!createdTicket) return;
-
-					if (!ticket.tasks) return;
-					// Create tasks for the ticket
-					await Promise.all(
-						ticket.tasks.map(async (task) => {
-							try {
-								await createProjectTask(createdTicket.id, task);
-							} catch (error) {
-								console.error(
-									`Error creating task for ticket ${createdTicket.id}:`,
-									error,
-								);
-								// Handle task creation error
-							}
-						}),
-					);
-				} catch (error) {
-					console.error(
-						`Error creating ticket for phase ${createdPhase.id}:`,
-						error,
-					);
-					// Handle ticket creation error
-				}
-			}),
-		);
-	},
-);
-
-// Call the function for each phase
-export const createPhasesWithTicketsAndTasks = createServerFn().validator(({
-	projectId,
-	phases,
-}: {
-	projectId: number;
-	phases: NestedPhase[];
-}) => ({ projectId, phases })).handler(
-	async ({ data: { projectId, phases } }) => {
-		await Promise.all(
-			phases.map(async (phase) => {
-				try {
-					await createPhaseWithTicketsAndTasks({
-						data: { projectId, phase },
-					});
-				} catch (error) {
-					console.error(
-						`Error processing phase ${phase.id}:`,
-						error,
-					);
-					// Handle phase processing error
-				}
-			}),
-		);
-	},
-);
-
 // Call the function for each phase
 export const duplicateTicket = createServerFn().validator((id: string) => id)
 	.handler(async ({ data: id }) => {
@@ -619,39 +552,37 @@ export const duplicateTicket = createServerFn().validator((id: string) => id)
 		});
 	});
 
-const getURL = () => {
-	const vercelEnv = process.env.VERCEL_ENV;
-	const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL!;
-	const stagingUrl = "staging.athena.velomethod.com";
+// const getURL = () => {
+// 	const vercelEnv = env.VERCEL_ENV;
+// 	const stagingUrl = "staging.athena.velomethod.com";
 
-	let url = !vercelEnv
-		? "http://localhost:3000"
-		: vercelEnv === "preview"
-		? stagingUrl
-		: productionUrl;
+// 	let url = !vercelEnv
+// 		? "http://localhost:3000"
+// 		: vercelEnv === "preview"
+// 		? stagingUrl
+// 		: productionUrl;
 
-	// Make sure to include `https://` when not localhost.
-	url = url.startsWith("http") ? url : `https://${url}`;
-	// Make sure to include a trailing `/`.
-	url = url.endsWith("/") ? url : `${url}`;
-	return url;
-};
+// 	// Make sure to include `https://` when not localhost.
+// 	url = url.startsWith("http") ? url : `https://${url}`;
+// 	// Make sure to include a trailing `/`.
+// 	url = url.endsWith("/") ? url : `${url}`;
+// 	return url;
+// };
 
-export const signInWithAzure = createServerFn().handler(async () => {
-	const supabase = createClient();
-	console.log("signInWithAzure");
-	const { data, error } = await supabase.auth.signInWithOAuth({
-		provider: "azure",
-		options: {
-			scopes:
-				"openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite",
-			redirectTo: `${getURL()}/auth/callback`,
-		},
-	});
+// export const signInWithAzure = createServerFn().handler(async () => {
+// 	const supabase = createClient();
+// 	const { data, error } = await supabase.auth.signInWithOAuth({
+// 		provider: "azure",
+// 		options: {
+// 			scopes:
+// 				"openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite",
+// 			redirectTo: `${getURL()}/auth/callback`,
+// 		},
+// 	});
 
-	if (error) throw new Error(error.message);
+// 	if (error) throw new Error(error.message);
 
-	if (data.url) {
-		return redirect({ href: data.url }); // use the redirect API for your server framework
-	}
-});
+// 	if (data.url) {
+// 		return redirect({ href: data.url }); // use the redirect API for your server framework
+// 	}
+// });

@@ -1,9 +1,18 @@
-import { parseCookies, setCookie } from "@tanstack/react-start/server";
+"use server";
+import {
+	getCookie,
+	parseCookies,
+	setCookie,
+} from "@tanstack/react-start/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "@/lib/utils";
+import { createServerFn } from "@tanstack/react-start";
+import { jwtVerify } from "jose";
+import type { WebToken } from "@/types/crypto";
+import type { Session } from "@supabase/supabase-js";
 
-export function createClient() {
-	return createServerClient<Database>(
+export const createClient = () =>
+	createServerClient<Database>(
 		env.VITE_SUPABASE_URL!,
 		env.VITE_SUPABASE_ANON_KEY!,
 		{
@@ -25,7 +34,6 @@ export function createClient() {
 			},
 		},
 	);
-}
 
 export async function getSafeSession() {
 	const supabase = createClient();
@@ -53,3 +61,27 @@ export async function getSafeSession() {
 		error: null,
 	};
 }
+
+export const fetchSessionUser = createServerFn().handler(
+	async () => {
+		const supabase = createClient();
+		const { data: { session } } = await supabase.auth.getSession();
+
+		return { session: session as Session };
+	},
+);
+
+export const getUserCookie = createServerFn().handler(async () => {
+	const cookie = getCookie("connect_wise:auth");
+
+	if (!cookie) {
+		throw new Error("No cookie found");
+	}
+
+	const jwt = await jwtVerify(
+		decodeURIComponent(cookie),
+		new TextEncoder().encode(env.VITE_SECRET_KEY),
+	);
+
+	return jwt.payload as WebToken;
+});

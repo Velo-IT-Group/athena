@@ -1,4 +1,4 @@
-import { useQuery, type UseMutateFunction, type UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { DataTableFilter } from '@/components/data-table-filter';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
@@ -6,7 +6,6 @@ import {
 	type ColumnFiltersState,
 	type ExpandedState,
 	type PaginationState,
-	type RowData,
 	type RowSelectionState,
 	type SortingState,
 	type VisibilityState,
@@ -26,7 +25,6 @@ import { cn, paginationSchema, sortSchema } from '@/lib/utils';
 import { DataTablePagination } from '@/components/ui/data-table/pagination';
 import { z } from 'zod';
 import { parseAsJson, useQueryState } from 'nuqs';
-import type { LinkOptions } from '@tanstack/react-router';
 import { Skeleton } from '@/components/ui/skeleton';
 import DataTableDisplay from '@/components/ui/data-table/display';
 
@@ -40,15 +38,6 @@ export const dataTableFilterQuerySchema = z
 	})
 	.array()
 	.min(0);
-
-// export const dataTableFilterQuerySchemas = z
-// 	.object({
-// 		filters: dataTableFilterQuerySchema,
-// 		sort: z.string().optional(),
-// 		page: z.number().optional(),
-// 		pageSize: z.number().optional(),
-// 	})
-// 	.optional();
 
 type DataTableFilterQuerySchema = z.infer<typeof dataTableFilterQuerySchema>;
 
@@ -73,35 +62,6 @@ function initializeFiltersFromQuery<TData, TValue>(
 				};
 		  })
 		: [];
-}
-
-declare module '@tanstack/react-table' {
-	interface TableMeta<TData extends RowData> {
-		rowLink?: LinkOptions;
-		updateProduct?: UseMutateFunction<
-			void,
-			Error,
-			{
-				id: string;
-				product: ProductUpdate;
-			},
-			{
-				previousItems: NestedProduct[] | undefined;
-				newItems: NestedProduct[];
-			}
-		>;
-		deleteProduct?: UseMutateFunction<
-			void,
-			Error,
-			{
-				id: string;
-			},
-			{
-				previousItems: NestedProduct[];
-				newItems: NestedProduct[];
-			}
-		>;
-	}
 }
 
 export interface DataTableProps<TData, TValue> {
@@ -155,7 +115,7 @@ export function DataTable<TData, TValue>({
 
 	// Step 5: Create our TanStack Table instance
 	const table = useReactTable({
-		data: initialData?.data ?? [],
+		data: initialData?.data ?? initialData ?? [],
 		columns,
 		onSortingChange: setSorting,
 		enableGrouping: true,
@@ -177,7 +137,7 @@ export function DataTable<TData, TValue>({
 		manualPagination: true,
 		manualFiltering: true,
 		manualSorting: true,
-		rowCount: initialData?.count ?? 0,
+		rowCount: initialData?.count ?? initialData?.length ?? 0,
 		state: {
 			sorting,
 			columnVisibility,
@@ -216,7 +176,7 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<section className={cn('space-y-3 overflow-x-auto p-[4px]', className)}>
-			{!hideFilter && <DataTableFilter table={table} />}
+			{/* {!hideFilter && <DataTableFilter table={table} />} */}
 
 			<DataTableDisplay
 				table={table}

@@ -1,9 +1,8 @@
 import { getPhasesQuery } from '@/lib/supabase/api';
 import { createPhase, newTemplate } from '@/lib/supabase/create';
 import { deletePhase } from '@/lib/supabase/delete';
-import { getPhases } from '@/lib/supabase/read';
 import { updatePhase } from '@/lib/supabase/update';
-import { updateArrayQueryCache } from '@/lib/utils';
+import { updateArrayCacheItem, updateCacheItem } from '@/lib/utils';
 import type { ProjectTemplate } from '@/types/manage';
 import { createNestedPhaseFromTemplate } from '@/utils/helpers';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -27,7 +26,7 @@ export const usePhase = ({ params, initialData }: Props) => {
 		mutationFn: async ({ id, phase }: { id: string; phase: PhaseUpdate }) =>
 			await updatePhase({ data: { id, phase } }),
 		onMutate: async ({ id, phase }) =>
-			updateArrayQueryCache(queryClient, queryKey, phase, (item) => item.id === id),
+			updateArrayCacheItem<NestedPhase>(queryClient, queryKey, phase, (item) => item.id === id),
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newPhase, context) => {
@@ -70,8 +69,6 @@ export const usePhase = ({ params, initialData }: Props) => {
 			};
 
 			const newPhases = [...previousItems.filter((s) => s.id !== id), updatedSect];
-
-			console.log(newPhases);
 
 			// Optimistically update to the new value
 			queryClient.setQueryData(queryKey, newPhases);
@@ -145,35 +142,12 @@ export const usePhase = ({ params, initialData }: Props) => {
 			const previousItems = queryClient.getQueryData<NestedPhase[]>(queryKey);
 			console.log(createNestedPhaseFromTemplate(workplan, version, destinationIndex), previousItems);
 
-			return updateArrayQueryCache(
+			return updateArrayCacheItem<NestedPhase>(
 				queryClient,
 				queryKey,
-				createNestedPhaseFromTemplate(workplan, version, destinationIndex)
+				createNestedPhaseFromTemplate(workplan, version, destinationIndex),
+				(item) => item.id === id
 			);
-
-			// // Cancel any outgoing refetches
-			// // (so they don't overwrite our optimistic update)
-			// await queryClient.cancelQueries({
-			// 	queryKey,
-			// });
-
-			// // Snapshot the previous value
-			// const previousPhases = queryClient.getQueryData<NestedPhase[]>(queryKey) ?? [];
-
-			// // const updatedItem = previousPhases?.find((s) => s.id === id)
-
-			// const createdPhases = createNestedPhaseFromTemplate(workplan, version, destinationIndex);
-			// const slicedPhases = previousPhases ? [...previousPhases.slice(destinationIndex)] : [];
-			// slicedPhases.forEach((phase, index) => (phase.order = createdPhases.length + destinationIndex + index + 1));
-			// console.log(createdPhases, slicedPhases);
-
-			// const newPhases = [...previousPhases.slice(0, destinationIndex), ...createdPhases, ...slicedPhases];
-
-			// // Optimistically update to the new value
-			// // queryClient.setQueryData(queryKey, newPhases);
-
-			// // Return a context with the previous and new phases
-			// return { previousPhases, newPhases };
 		},
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back

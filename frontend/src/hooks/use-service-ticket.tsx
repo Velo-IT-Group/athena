@@ -21,7 +21,7 @@ const useServiceTicket = ({ id, initialData }: Props) => {
 	});
 
 	const { mutate: handleTicketUpdate } = useMutation({
-		mutationFn: async ({ operation }: { operation: PatchOperation[] }) =>
+		mutationFn: async ({ operation }: { operation: PatchOperation<ServiceTicket>[] }) =>
 			await updateTicket({ data: { id, operation } }),
 		onMutate: async ({ operation }) => {
 			const previousItem = queryClient.getQueryData<ServiceTicket>(queryKey);
@@ -78,8 +78,6 @@ const useServiceTicket = ({ id, initialData }: Props) => {
 					}
 				}
 			});
-
-			console.log(newItem);
 
 			// Optimistically update to the new value
 			queryClient.setQueryData(queryKey, newItem);

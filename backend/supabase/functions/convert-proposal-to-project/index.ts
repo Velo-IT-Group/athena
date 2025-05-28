@@ -46,10 +46,10 @@ Deno.serve(async (req: Request) => {
       "id",
       proposalId,
     ).single(),
-    supabase.from("products").select("*").eq(
+    supabase.from("products").select("*, products(*)").eq(
       "version",
       versionId,
-    ),
+    ).is("parent", null),
     supabase.from("phases").select("*, tickets(*, tasks(*))").eq(
       "version",
       versionId,
@@ -94,19 +94,21 @@ Deno.serve(async (req: Request) => {
     proposalId,
   );
 
-  // Create default service product
-  await createManageProduct(
-    {
-      catalogItem: { id: 15 },
-      price: proposal.labor_rate,
-      quantity: phases.reduce(
-        (acc, current) => acc + current.hours,
-        0,
-      ),
-      opportunity: { id: opportunityId },
-      billableOption: "Billable",
-    },
-  );
+  // Create default service product if doesn't exist
+  if (!products.some((product) => product.id === 15)) {
+    await createManageProduct(
+      {
+        catalogItem: { id: 15 },
+        price: proposal.labor_rate,
+        quantity: phases.reduce(
+          (acc, current) => acc + current.hours,
+          0,
+        ),
+        opportunity: { id: opportunityId },
+        billableOption: "Billable",
+      },
+    );
+  }
 
   // // Create all products
   for (const product of products) {
@@ -119,6 +121,27 @@ Deno.serve(async (req: Request) => {
       billableOption: "Billable",
     });
   }
+
+  const flattendProducts = products?.flatMap((product) =>
+    product.products ?? []
+  );
+
+  const opportunityProducts = await getOpportunityProducts(opportunityId);
+  // Filter bundled products to update the sub items prices
+  const bundledProducts = opportunityProducts.filter((product) =>
+    flattendProducts.some((p) => p && p.catalog_item === product.catalogItem.id)
+  );
+
+  const bundledChanges = await Promise.all(bundledProducts
+    .map((b) => {
+      const product = flattendProducts.find((p) => p!.id === b.catalogItem.id);
+      if (!product) return null;
+
+      return updateManageProduct(b.id, [
+        { op: "replace", path: "/price", value: product!.price },
+        { op: "replace", path: "/cost", value: product!.cost },
+      ]);
+    }));
 
   let projectId: number | null = proposal.project_id;
 
@@ -253,6 +276,23 @@ const throttledCreateProjectTask = asyncThrottle(
     wait: 200,
   },
 );
+
+export const getOpportunityProducts = async (opportunityId: number) => {
+  const response = await fetch(
+    `${url}/procurement/products?conditions=opportunity/id=${opportunityId}`,
+    {
+      headers,
+    },
+  );
+
+  if (!response.ok) {
+    throw Error("Error fetching products... " + await response.json(), {
+      cause: response.statusText,
+    });
+  }
+
+  return await response.json();
+};
 
 export const createOpportunity = async (opportunity: any) => {
   const body = JSON.stringify(opportunity);
@@ -429,6 +469,22 @@ export const updateManageProject = async (
     throw new Error(
       "Error updating manage project " +
         JSON.stringify(await response.json()),
+    );
+  }
+
+  return await response.json();
+};
+
+export const updateManageProduct = async (id: number, operation: any) => {
+  const response = await fetch(`${url}/procurement/products/${id}`, {
+    method: "PATCH",
+    headers: userHeaders,
+    body: JSON.stringify(operation),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      "Error updating manage product " + JSON.stringify(await response.json()),
     );
   }
 

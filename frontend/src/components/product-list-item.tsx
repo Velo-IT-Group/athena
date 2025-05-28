@@ -41,18 +41,18 @@ const ProductListItem = ({ product, handleDeletion, handleProductUpdate, classNa
 			>
 				<div className='grid grid-cols-9 items-center gap-3 group hover:bg-muted/50 py-0.5 [&[data-active=open]]:bg-blue-500'>
 					<div className='flex items-center'>
-						<SortableItemHandle asChild>
-							<Button
-								variant='ghost'
-								size='smIcon'
-								className={cn(
-									'opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground mr-6',
-									product.product_class !== 'Bundle' && 'mr-6'
-								)}
-							>
-								<GripVertical />
-							</Button>
-						</SortableItemHandle>
+						<Button
+							variant='ghost'
+							size='smIcon'
+							className={cn(
+								'opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground mr-6',
+								product.product_class !== 'Bundle' && 'mr-6'
+							)}
+						>
+							<GripVertical />
+						</Button>
+						{/* <SortableItemHandle asChild>
+						</SortableItemHandle> */}
 
 						{product.product_class === 'Bundle' && (
 							<CollapsibleTrigger asChild>

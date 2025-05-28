@@ -20,6 +20,7 @@ export const Route = createFileRoute('/_authed/proposals/')({
 
 function Proposals() {
 	const { filter } = Route.useSearch();
+	console.log('not triggering actions');
 
 	return (
 		<main className='p-6 space-y-6'>

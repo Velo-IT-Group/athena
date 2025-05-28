@@ -964,7 +964,4 @@ export function isFilterableColumn<TData>(column: Column<TData>) {
 }
 
 function warn(...messages: string[]) {
-  if (process.env.NODE_ENV !== "production") {
-    console.warn("[◐] [filters]", ...messages);
-  }
 }

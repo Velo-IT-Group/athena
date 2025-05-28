@@ -8,6 +8,7 @@ yarn.lock
 .vercel
 .output
 .vinxi
+dist/
 
 /build/
 /api/
@@ -20,3 +21,10 @@ yarn.lock
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+node_modules
+
+/.cache
+/build
+.env
+.env.*

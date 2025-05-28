@@ -75,35 +75,6 @@ const NewProposalForm = () => {
 						<ChevronsUpDown className='opacity-50' />
 					</Button>
 				</AsyncSelect>
-				{/* <Popover>
-					<PopoverTrigger asChild>
-						<Button
-							variant='outline'
-							role='combobox'
-							className={cn('justify-between', !selectedTicket && 'text-muted-foreground')}
-						>
-							{selectedTicket
-								? `#${selectedTicket.id} - ${selectedTicket.summary}`
-								: 'Select a ticket...'}
-							<ChevronsUpDown className='opacity-50' />
-						</Button>
-					</PopoverTrigger>
-
-					<ModalPopoverContent className='w-[var(--radix-popover-trigger-width)] p-0'>
-						
-						<ListSelector
-							items={tickets}
-							currentValue={tickets.find((t) => t.id === selectedTicket?.id)}
-							onSelect={(e) => setSelectedTicket(e)}
-							itemView={(item) => (
-								<div>
-									#{item.id} - {item.summary}
-								</div>
-							)}
-							value={(item) => `#${item.id} - ${item.summary}`}
-						/>
-					</ModalPopoverContent>
-				</Popover> */}
 
 				<Input
 					hidden

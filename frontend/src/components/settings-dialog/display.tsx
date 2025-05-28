@@ -1,9 +1,9 @@
 import LabeledInput from '@/components/labeled-input';
-import { ListSelector } from '@/components/status-selector';
+import { ListSelector } from '@/components/list-selector';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useTheme, type Theme } from '@/providers/theme-provider';
-import { ChevronDown, Monitor } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 type Props = {};
 

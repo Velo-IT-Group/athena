@@ -7,11 +7,8 @@ import {
 	type ProductsItem,
 	type Project,
 	type ProjectPhase,
-	type ProjectTemplateTask,
-	type ProjectTemplateTicket,
 } from "@/types/manage";
 import { baseHeaders } from "@/utils/manage/params";
-import { createClient } from "@/lib/supabase/server";
 import axios, {
 	AxiosHeaders,
 	type AxiosRequestConfig,
@@ -275,7 +272,7 @@ export const createCompanyNote = createServerFn().validator((
 ) => ({ companyId, note })).handler(
 	async ({ data: { companyId, note } }) => {
 		const config: AxiosRequestConfig = {
-			headers,
+			headers: baseHeaders,
 		};
 
 		const data = await axios.post(
@@ -291,190 +288,5 @@ export const createCompanyNote = createServerFn().validator((
 			);
 		}
 		return data.data;
-	},
-);
-
-export const convertToManage = createServerFn().validator((
-	{ proposalId, versionId }: { proposalId: string; versionId: string },
-) => ({ proposalId, versionId })).handler(
-	async ({ data: { proposalId, versionId } }) => {
-		const supabase = createClient();
-
-		const { error: proposalUpdateError } = await supabase.from("proposals")
-			.update({ is_getting_converted: true }).eq(
-				"id",
-				proposalId,
-			);
-
-		if (proposalUpdateError) {
-			throw new Error(proposalUpdateError.message);
-		}
-
-		const [
-			{ data: proposal, error: proposalError },
-			{ data: products, error: productsError },
-			{ data: phases, error: phasesError },
-		] = await Promise.all([
-			supabase.from("proposals").select(
-				"*, created_by(system_member_id)",
-			).eq(
-				"id",
-				proposalId,
-			).single(),
-			supabase.from("products").select("*").eq(
-				"version",
-				versionId,
-			),
-			supabase.from("phases").select("*, tickets(*, tasks(*))").eq(
-				"version",
-				versionId,
-			),
-		]);
-
-		if (proposalError || productsError || phasesError) {
-			throw new Error(
-				proposalError?.message || productsError?.message ||
-					phasesError?.message,
-			);
-		}
-
-		let opportunityId: number | null = proposal.opportunity_id;
-
-		if (!opportunityId) {
-			const opportunity = await createOpportunity({
-				data: {
-					name: proposal.name,
-					type: { id: 5 },
-					primarySalesRep: {
-						id: proposal.created_by?.system_member_id ?? -1,
-					},
-					company: { id: proposal.company_id ?? -1 },
-					contact: { id: proposal.contact_id ?? -1 },
-					// stage: { id: 6 },
-					// status: { id: 2 },
-				},
-			});
-
-			opportunityId = opportunity.id;
-		} else {
-			opportunityId = proposal.opportunity_id;
-		}
-
-		if (!opportunityId) {
-			throw new Error("Error creating opportunity");
-		}
-
-		await supabase.from("proposals").update({
-			opportunity_id: opportunityId,
-		}).eq(
-			"id",
-			proposalId,
-		);
-
-		// Create default service product
-		await createManageProduct(
-			{
-				data: {
-					catalogItem: { id: 15 },
-					price: proposal.labor_rate,
-					quantity: phases.reduce(
-						(acc, current) => acc + current.hours,
-						0,
-					),
-					opportunity: { id: opportunityId },
-					billableOption: "Billable",
-				},
-			},
-		);
-
-		// // Create all products
-		for (const product of products) {
-			await throttledCreateManageProduct({
-				catalogItem: { id: product.id! },
-				opportunity: { id: opportunityId },
-				quantity: product.quantity,
-				price: product.price ?? undefined,
-				cost: product.cost ?? undefined,
-				billableOption: "Billable",
-			});
-		}
-
-		let projectId: number | null = proposal.project_id;
-
-		if (!projectId) {
-			const project = await convertOpportunityToProject({
-				data: {
-					id: opportunityId,
-					body: {
-						includeAllProductsFlag: true,
-						board: { id: 51 },
-						estimatedStart: new Date().toISOString().split(".")[0] +
-							"Z",
-						estimatedEnd: new Date(
-							new Date().setDate(new Date().getDate() + 30),
-						)
-							.toISOString()
-							.split(".")[0] + "Z",
-					},
-				},
-			});
-
-			projectId = project.id;
-		} else {
-			projectId = proposal.project_id;
-		}
-
-		if (!projectId) {
-			throw new Error("Error creating project");
-		}
-
-		await supabase.from("proposals")
-			.update({ project_id: projectId }).eq(
-				"id",
-				proposalId,
-			);
-
-		const estimatedHours = phases.reduce(
-			(acc, current) => acc + current.hours,
-			0,
-		);
-
-		// await updateManageProject({
-		// 	data: {
-		// 		id: projectId,
-		// 		operation: [
-		// 			{
-		// 				op: Operation.Replace,
-		// 				path: "/billProjectAfterClosedFlag",
-		// 				value: true,
-		// 			},
-		// 			{
-		// 				op: Operation.Replace,
-		// 				path: "/budgetFlag",
-		// 				value: true,
-		// 			},
-		// 			{
-		// 				op: Operation.Replace,
-		// 				path: "/estimatedHours",
-		// 				value: estimatedHours,
-		// 			},
-		// 			{
-		// 				op: Operation.Replace,
-		// 				path: "/billingMethod",
-		// 				value: "FixedFee",
-		// 			},
-		// 		],
-		// 	},
-		// });
-
-		for (const phase of phases.sort((a, b) => a.order - b.order)) {
-			await throttledCreateProjectPhase({ projectId, phase });
-		}
-
-		await supabase.from("proposals")
-			.update({ is_getting_converted: false }).eq(
-				"id",
-				proposalId,
-			);
 	},
 );

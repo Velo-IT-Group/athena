@@ -101,8 +101,6 @@ export function AsyncSelect<T>({
 
 	const options = useMemo(() => {
 		return data?.pages.reduce((acc, page) => {
-			console.log(page);
-
 			return [...acc, ...(page ?? [])];
 		}, []);
 	}, [data]);
