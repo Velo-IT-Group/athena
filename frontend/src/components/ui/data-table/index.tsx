@@ -28,6 +28,7 @@ import { z } from 'zod';
 import { parseAsJson, useQueryState } from 'nuqs';
 import type { LinkOptions } from '@tanstack/react-router';
 import { Skeleton } from '@/components/ui/skeleton';
+import DataTableDisplay from '@/components/ui/data-table/display';
 
 export const dataTableFilterQuerySchema = z
 	.object({
@@ -217,79 +218,10 @@ export function DataTable<TData, TValue>({
 		<section className={cn('space-y-3 overflow-x-auto p-[4px]', className)}>
 			{!hideFilter && <DataTableFilter table={table} />}
 
-			<div className='rounded-md border'>
-				<Table>
-					{!hideHeader && (
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow key={headerGroup.id}>
-									{headerGroup.headers.map((header) => {
-										return (
-											<TableHead
-												key={header.id}
-												colSpan={header.colSpan}
-												className='text-sm'
-											>
-												{header.isPlaceholder
-													? null
-													: flexRender(header.column.columnDef.header, header.getContext())}
-											</TableHead>
-										);
-									})}
-								</TableRow>
-							))}
-						</TableHeader>
-					)}
-
-					<TableBody className='overflow-x-auto'>
-						{isLoading ? (
-							<>
-								{new Array(10).fill(null).map((_, index) => (
-									<TableRow key={index}>
-										{new Array(10).fill(null).map((_, index) => (
-											<TableCell key={index}>
-												<div className='h-9 flex items-center'>
-													<Skeleton className='h-5 w-3/4' />
-												</div>
-											</TableCell>
-										))}
-									</TableRow>
-								))}
-							</>
-						) : (
-							<>
-								{table.getRowModel().rows?.length ? (
-									table.getRowModel().rows.map((row) => (
-										<TableRow
-											key={row.id}
-											data-state={row.getIsSelected() && 'selected'}
-											className={cn(row.depth ? 'bg-muted/50' : '', 'relative')}
-										>
-											{row.getVisibleCells().map((cell) => (
-												<TableCell
-													key={cell.id}
-													className='text-sm'
-												>
-													{flexRender(cell.column.columnDef.cell, cell.getContext())}
-												</TableCell>
-											))}
-										</TableRow>
-									))
-								) : (
-									<TableRow>
-										<TableCell
-											colSpan={columns.length}
-											className='h-24 text-center'
-										>
-											No results.
-										</TableCell>
-									</TableRow>
-								)}
-							</>
-						)}
-					</TableBody>
-				</Table>
-			</div>
+			<DataTableDisplay
+				table={table}
+				columns={columns}
+			/>
 
 			{!hidePagination && <DataTablePagination table={table} />}
 		</section>

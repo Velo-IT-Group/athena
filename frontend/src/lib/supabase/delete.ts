@@ -17,13 +17,20 @@ export const deletePinnedItem = createServerFn().validator((id: string) => id)
 		}
 	});
 
-export const deleteProposal = createServerFn().validator((id: string) => id)
+export const deleteProposal = createServerFn().validator((
+	id: string | string[],
+) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
-		const { error } = await supabase.from("proposals").delete().eq(
-			"id",
-			id,
-		);
+		const query = supabase.from("proposals").delete();
+
+		if (Array.isArray(id)) {
+			query.in("id", id);
+		} else {
+			query.eq("id", id);
+		}
+
+		const { error } = await query;
 
 		if (error) {
 			throw new Error("Error deleting proposal " + error.message, {

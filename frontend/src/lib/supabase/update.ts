@@ -85,21 +85,31 @@ export const updateProduct = createServerFn().validator((
  * @param {ProposalUpdate} proposal - The proposal you're wanting to update.
  */
 export const updateProposal = createServerFn().validator((
-  { id, proposal }: { id: string; proposal: ProposalUpdate },
-) => ({ id, proposal })).handler(async ({ data: { id, proposal } }) => {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("proposals")
-    .update(proposal)
-    .eq("id", id);
+  { id, proposal }: {
+    id?: string;
+    proposal: ProposalUpdate | ProposalUpdate[];
+  },
+) => ({ id, proposal })).handler<undefined>(
+  async ({ data: { id, proposal } }) => {
+    const supabase = createClient();
+    const query = supabase.from("proposals");
 
-  if (error) {
-    console.error(error);
-    throw new Error("Error updating proposal " + error.message, {
-      cause: error,
-    });
-  }
-});
+    if (Array.isArray(proposal)) {
+      query.upsert(proposal as ProposalInsert[]);
+    } else if (id) {
+      query.update(proposal).eq("id", id);
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      console.error(error);
+      throw new Error("Error updating proposal " + error.message, {
+        cause: error,
+      });
+    }
+  },
+);
 
 /**
  * Updates Ticket In Supabase.

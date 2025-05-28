@@ -5,9 +5,30 @@ import { format } from 'date-fns';
 import { Badge, ColoredBadge } from '@/components/ui/badge';
 import { Building, SearchIcon, User } from 'lucide-react';
 import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
-import Search from '@/components/search';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export const columns: ColumnDef<NestedProposal>[] = [
+	{
+		id: 'select',
+		header: ({ table }) => (
+			<Checkbox
+				checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+				onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+				aria-label='Select all'
+				// className='translate-y-[2px]'
+			/>
+		),
+		cell: ({ row }) => (
+			<Checkbox
+				checked={row.getIsSelected()}
+				onCheckedChange={(value) => row.toggleSelected(!!value)}
+				aria-label='Select row'
+				// className='translate-y-[2px]'
+			/>
+		),
+		enableSorting: false,
+		enableHiding: false,
+	},
 	{
 		id: 'name',
 		accessorKey: 'name',
