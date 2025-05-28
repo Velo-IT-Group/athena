@@ -1,4 +1,4 @@
-import { ListSelector } from '@/components/status-selector';
+import { ListSelector } from '@/components/list-selector';
 import { ColoredBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

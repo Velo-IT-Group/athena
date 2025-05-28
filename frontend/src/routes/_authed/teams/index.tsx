@@ -1,6 +1,6 @@
 import { activityOrder } from '@/components/activity-list';
 import ActivityListItem from '@/components/activity-list-item';
-import { ListSelector } from '@/components/status-selector';
+import { ListSelector } from '@/components/list-selector';
 import Timer from '@/components/timer';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

@@ -10,7 +10,7 @@ import { MoreHorizontal, Pen, Phone, Plus, ShieldCheck, TabletSmartphone, Tag, T
 import { Editable, EditableLabel } from '@/components/ui/editable';
 import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ListSelector } from '@/components/status-selector';
+import { ListSelector } from '@/components/list-selector';
 import {
 	getCommunicationTypesQuery,
 	getContactImageBlobQuery,
