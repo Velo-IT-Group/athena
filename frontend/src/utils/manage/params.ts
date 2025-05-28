@@ -270,11 +270,14 @@ const generateParams = <T>(init?: Conditions<T>): string => {
 };
 
 const baseHeaders = new AxiosHeaders();
-baseHeaders.set("clientId", env.VITE_CONNECT_WISE_CLIENT_ID);
+baseHeaders.set("clientId", import.meta.env.VITE_CONNECT_WISE_CLIENT_ID);
 baseHeaders.set(
   "Authorization",
   "Basic " +
-    btoa(env.VITE_CONNECT_WISE_USERNAME + ":" + env.VITE_CONNECT_WISE_PASSWORD),
+    btoa(
+      import.meta.env.VITE_CONNECT_WISE_USERNAME + ":" +
+        import.meta.env.VITE_CONNECT_WISE_PASSWORD,
+    ),
 );
 baseHeaders.set("Content-Type", "application/json");
 baseHeaders.set("Access-Control-Allow-Origin", "*");

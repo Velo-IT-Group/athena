@@ -26,7 +26,7 @@ import { Operation } from "@/types";
 
 const headers = new AxiosHeaders(baseHeaders);
 
-headers.set("clientId", env.VITE_CONNECT_WISE_CLIENT_ID!);
+headers.set("clientId", import.meta.env.VITE_CONNECT_WISE_CLIENT_ID!);
 headers.set("Content-Type", "application/json");
 
 headers.set(
