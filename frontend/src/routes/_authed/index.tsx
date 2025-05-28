@@ -30,7 +30,7 @@ function Home() {
 		{ name: 'my-goals', order: 1 },
 		{ name: 'private-notepad', order: 2 },
 		{ name: 'my-tickets', order: 3 },
-		{ name: 'my-proposals', order: 4 },
+		// { name: 'my-proposals', order: 4 },
 	]);
 
 	return (
@@ -65,7 +65,7 @@ function Home() {
 									{widget.name === 'my-goals' && <MyGoals />}
 									{widget.name === 'private-notepad' && <PrivateNotepad />}
 									{widget.name === 'my-tickets' && <MyTickets />}
-									{widget.name === 'my-proposals' && <MyProposals />}
+									{/* {widget.name === 'my-proposals' && <MyProposals />} */}
 								</>
 							</SortableItem>
 						))}
