@@ -32,7 +32,6 @@ export const useProposals = ({ initialData }: Props) => {
 		// If the mutation fails,
 		// use the context returned from onMutate to roll back
 		onError: (err, newProduct, context) => {
-			console.log(context);
 			queryClient.setQueryData<NestedProposal[]>(queryKey, context?.previousItems ?? []);
 		},
 		onSuccess: async (data, variables, context) => {

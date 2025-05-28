@@ -764,7 +764,6 @@ export const getProposalSettings = createServerFn()
 	}))
 	.handler(async ({ data: { id, version } }) => {
 		const supabase = createClient();
-		console.log(version, id);
 
 		const { data, error } = await supabase
 			.from("proposal_settings")
@@ -774,8 +773,6 @@ export const getProposalSettings = createServerFn()
 				proposal: id,
 			})
 			.single();
-
-		console.log(data);
 
 		if (error) {
 			throw new Error(
