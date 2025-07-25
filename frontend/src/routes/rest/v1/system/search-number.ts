@@ -1,6 +1,6 @@
 import { getCompanies, getCompany, getContacts } from "@/lib/manage/read";
 import { createClient } from "@/utils/twilio";
-import { attributeIdentifier } from "@/types/twilio";
+import { attributeIdentifier } from "@athena/utils";
 import { createServerFileRoute } from "@tanstack/react-start/server";
 
 export const ServerRoute = createServerFileRoute(
