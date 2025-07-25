@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "@twilio-labs/serverless-runtime-types": "^4.0.0",
+    "@twilio/runtime-handler": "2.0.1",
+    "twilio": "5.0.3"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "twilio-run": "^4.2.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "name": "taskrouter",
+  "private": true,
+  "scripts": {
+    "build": "tsc && npm run build:copy-assets",
+    "build:copy-assets": "copyfiles src/assets/* src/assets/**/* --up 2 --exclude **/*.ts dist/assets/",
+    "deploy": "twilio-run deploy --functions-folder dist/functions --assets-folder dist/assets",
+    "predeploy": "npm run build",
+    "prestart": "npm run build",
+    "start": "twilio-run --functions-folder dist/functions --assets-folder dist/assets",
+    "test": "tsc --noEmit"
+  },
+  "version": "0.0.0"
+}

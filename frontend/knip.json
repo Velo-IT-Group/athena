@@ -1,0 +1,8 @@
+{
+	"entry": [
+		"src/routes/**",
+		"src/router.tsx",
+		"src/routeTree.gen.ts",
+		"src/server.tsx"
+	]
+}
