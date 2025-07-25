@@ -1,3 +1,6 @@
 {
-  "imports": {}
+	"imports": {
+		"@athena/utils": "../../../../packages/utils/types/twilio/index.ts",
+		"@supabase/supabase-js": "npm:@supabase/supabase-js"
+	}
 }

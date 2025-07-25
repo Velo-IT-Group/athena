@@ -1,2 +1,6 @@
 {
+	"imports": {
+		"twilio": "npm:twilio",
+		"@supabase/supabase-js": "npm:@supabase/supabase-js"
+	}
 }

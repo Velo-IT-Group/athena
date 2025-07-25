@@ -18,6 +18,7 @@ export interface EngagementQueryOptions {
 	call_date?: string | string[];
 	contactId?: number;
 	companyId?: number;
+	in_business_hours?: boolean;
 }
 
 export interface EngagementSortOptions {
@@ -139,6 +140,10 @@ export const getEngagements = createServerFn()
 
 			query.eq("workspace_sid", env.VITE_TWILIO_WORKSPACE_SID);
 
+			if (options?.in_business_hours) {
+				query.eq("in_business_hours", options?.in_business_hours);
+			}
+
 			if (pagination) {
 				query.range(
 					(pagination?.pageSize ?? 25) * (pagination?.page ?? 1),
@@ -146,7 +151,7 @@ export const getEngagements = createServerFn()
 						(pagination?.pageSize ?? 25),
 				);
 			} else {
-				// query.range(0, 25);
+				query.range(0, 25);
 			}
 			const { data, error, count } = await query;
 

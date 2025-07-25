@@ -29,9 +29,9 @@ function ListGroup({
 					aria-owns=':r2q:'
 					className='top-8 flex gap-1 h-8 flex-[1_1_auto] px-4 py-2 bg-muted sticky z-[1] inset-shadow-[0_-1px_0px_0px_var(--border)]'
 				>
-					<div className='flex items-center justify-start gap-1'>
+					<div className='flex items-center justify-start gap-1 grow'>
 						<div
-							className='text-xs font-medium tracking-tight text-muted-foreground data-truncate:truncate date-numeric:tabular-nums data-uppercase:uppercase'
+							className='text-xs font-medium tracking-tight text-muted-foreground data-truncate:truncate date-numeric:tabular-nums data-uppercase:uppercase grow'
 							data-truncate={false}
 							data-numeric={false}
 							data-uppercase={false}

@@ -140,13 +140,15 @@ export const TwilioProvider = ({
 
 			await res.conference({
 				// beep: false,
-				// record: 'record-from-start',
-				// conferenceRecord: 'record-from-start',
+				record: 'record-from-start',
+				conferenceRecord: 'record-from-start',
 				startConferenceOnEnter: true,
-				endConferenceOnExit: true,
+				endConferenceOnExit: false,
 				endConferenceOnCustomerExit: true,
-				// transcribe: true,
-				// transcriptionConfiguration: 'Athena',
+				transcribe: true,
+				transcriptionConfiguration: 'Athena',
+				recordingStatusCallback:
+					'https://qqfkxhqzsbqgydssvfss.supabase.co/functions/v1/process-recording',
 			});
 
 			if (isOutbound) {

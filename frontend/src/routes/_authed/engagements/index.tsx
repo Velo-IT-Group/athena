@@ -70,22 +70,21 @@ function RouteComponent() {
 			f.value.operator === 'less_than_or_equal_to'
 	)?.value?.values;
 	const inSla = filter?.find((f) => f.id === 'within_sla_hours')?.value
-		?.values;
+		?.values?.[0];
 
+	console.log(inSla);
 	const call_date =
 		startDate && endDate
 			? [
-					new Date(
-						new Date(startDate).setHours(inSla ? 8 : 0)
-					).toISOString(),
-					(inSla
-						? new Date(new Date(startDate).setHours(inSla ? 17 : 0))
-						: endOfDay(new Date(endDate))
-					).toISOString(),
+					startOfDay(new Date(startDate)).toISOString(),
+					endOfDay(new Date(endDate)).toISOString(),
 				]
 			: undefined;
 
-	const queryFilter: EngagementQueryOptions = { call_date };
+	const queryFilter: EngagementQueryOptions = {
+		call_date,
+		in_business_hours: inSla,
+	};
 
 	const engagementQuery = getEngagementsQuery(
 		queryFilter,
@@ -96,7 +95,7 @@ function RouteComponent() {
 		// { pageSize: 1000, page: 0 }
 	);
 
-	const { data } = useQuery(engagementQuery);
+	const { data, isLoading } = useQuery(engagementQuery);
 
 	// const totalCalls =
 	// 	engagements?.reduce((acc, engagement) => {
@@ -319,8 +318,36 @@ function RouteComponent() {
 					</div>
 				</div>
 
+				{isLoading ? (
+					<div>
+						<ListGroup
+							heading={
+								<Skeleton className='w-1/8 h-4 brightness-150' />
+							}
+							className='top-0'
+						>
+							{Array.from({ length: 25 }).map((_, index) => (
+								<ListItem
+									key={index}
+									className='grid grid-cols-[0.25fr_1fr_1fr_1fr_1fr_1fr] min-h-12 max-h-12 py-3 px-4 items-center max-w-full gap-8 flex-[1_1_auto] inset-shadow-[0px_-1px_0px_0px_var(--border)]'
+								>
+									<Skeleton className='size-5' />
+									<Skeleton className='h-full w-full' />
+									<Skeleton className='h-full w-full' />
+									<Skeleton className='h-full w-full' />
+									<Skeleton className='h-full w-full' />
+									<Skeleton className='h-full w-full' />
+								</ListItem>
+							))}
+						</ListGroup>
+					</div>
+				) : (
+					<></>
+				)}
+
 				{Object.entries(groupedDays).map(([day, engagements]) => (
 					<ListGroup
+						key={day}
 						heading={day}
 						className='top-0'
 					>
@@ -459,20 +486,21 @@ import {
 	endOfWeek,
 	formatRelative,
 	FormatRelativeToken,
+	startOfDay,
 	startOfMonth,
 	startOfWeek,
 	startOfYesterday,
 	subWeeks,
 } from 'date-fns';
 import type { EngagementQueryOptions } from '@/lib/supabase/read';
-import { List, ListGroup, ListItem } from '@/components/ui/list';
-import { ColoredBadge } from '@/components/ui/badge';
+import { ListGroup, ListItem } from '@/components/ui/list';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AvatarStack } from '@/components/avatar-stack';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { voiceAttributesSchema } from '@/types/twilio';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { InfiniteList } from '@/components/infinite-list';
 
 const formSchema = z.object({
 	start_date: z.string().optional(),
@@ -531,7 +559,7 @@ export default function DateRangeDisplay({
 			)?.value.values,
 			within_sla_hours:
 				defaultValues?.find((f) => f.id === 'within_sla_hours')?.value
-					.values ?? true,
+					.values?.[0] ?? true,
 		},
 	});
 
@@ -562,6 +590,13 @@ export default function DateRangeDisplay({
 								},
 							}
 						: null,
+					{
+						id: 'within_sla_hours',
+						value: {
+							operator: 'eq',
+							values: [values.within_sla_hours],
+						},
+					},
 				].filter(Boolean) as z.infer<typeof filterSchema>,
 			},
 		});
