@@ -1,0 +1,8 @@
+{
+	"name": "@athena/backend",
+	"version": "1.1.2",
+	"private": true,
+	"scripts": {
+		"dev": "supabase start && supabase functions serve --no-verify-jwt --env-file ./.env"
+	}
+}
