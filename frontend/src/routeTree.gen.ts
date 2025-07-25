@@ -52,7 +52,6 @@ import { Route as AuthedProposalsIdVersionIndexRouteImport } from './routes/_aut
 import { Route as AuthedProposalsIdVersionWorkplanRouteImport } from './routes/_authed/proposals/$id/$version/workplan'
 import { Route as AuthedProposalsIdVersionSettingsRouteImport } from './routes/_authed/proposals/$id/$version/settings'
 import { Route as AuthedProposalsIdVersionProductsRouteImport } from './routes/_authed/proposals/$id/$version/products'
-import { ServerRoute as SendNotificationServerRouteImport } from './routes/send-notification'
 import { ServerRoute as AuthCallbackServerRouteImport } from './routes/auth/callback'
 import { ServerRoute as ApiWorkerSyncServerRouteImport } from './routes/api/worker-sync'
 import { ServerRoute as ApiWebhookServerRouteImport } from './routes/api/webhook'
@@ -292,11 +291,6 @@ const AuthedProposalsIdVersionProductsRoute =
     path: '/products',
     getParentRoute: () => AuthedProposalsIdVersionRouteRoute,
   } as any)
-const SendNotificationServerRoute = SendNotificationServerRouteImport.update({
-  id: '/send-notification',
-  path: '/send-notification',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
 const AuthCallbackServerRoute = AuthCallbackServerRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -654,7 +648,6 @@ export interface RootRouteChildren {
   ReviewIdVersionIndexRoute: typeof ReviewIdVersionIndexRoute
 }
 export interface FileServerRoutesByFullPath {
-  '/send-notification': typeof SendNotificationServerRoute
   '/api/conversations': typeof ApiConversationsServerRoute
   '/api/template': typeof ApiTemplateServerRoute
   '/api/webhook': typeof ApiWebhookServerRoute
@@ -675,7 +668,6 @@ export interface FileServerRoutesByFullPath {
   '/rest/v1/taskrouter/blacklisted-phone-number': typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
 export interface FileServerRoutesByTo {
-  '/send-notification': typeof SendNotificationServerRoute
   '/api/conversations': typeof ApiConversationsServerRoute
   '/api/template': typeof ApiTemplateServerRoute
   '/api/webhook': typeof ApiWebhookServerRoute
@@ -697,7 +689,6 @@ export interface FileServerRoutesByTo {
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
-  '/send-notification': typeof SendNotificationServerRoute
   '/api/conversations': typeof ApiConversationsServerRoute
   '/api/template': typeof ApiTemplateServerRoute
   '/api/webhook': typeof ApiWebhookServerRoute
@@ -720,7 +711,6 @@ export interface FileServerRoutesById {
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
   fullPaths:
-    | '/send-notification'
     | '/api/conversations'
     | '/api/template'
     | '/api/webhook'
@@ -741,7 +731,6 @@ export interface FileServerRouteTypes {
     | '/rest/v1/taskrouter/blacklisted-phone-number'
   fileServerRoutesByTo: FileServerRoutesByTo
   to:
-    | '/send-notification'
     | '/api/conversations'
     | '/api/template'
     | '/api/webhook'
@@ -762,7 +751,6 @@ export interface FileServerRouteTypes {
     | '/rest/v1/taskrouter/blacklisted-phone-number'
   id:
     | '__root__'
-    | '/send-notification'
     | '/api/conversations'
     | '/api/template'
     | '/api/webhook'
@@ -784,7 +772,6 @@ export interface FileServerRouteTypes {
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
-  SendNotificationServerRoute: typeof SendNotificationServerRoute
   ApiConversationsServerRoute: typeof ApiConversationsServerRoute
   ApiTemplateServerRoute: typeof ApiTemplateServerRoute
   ApiWebhookServerRoute: typeof ApiWebhookServerRoute
@@ -1098,13 +1085,6 @@ declare module '@tanstack/react-router' {
 }
 declare module '@tanstack/react-start/server' {
   interface ServerFileRoutesByPath {
-    '/send-notification': {
-      id: '/send-notification'
-      path: '/send-notification'
-      fullPath: '/send-notification'
-      preLoaderRoute: typeof SendNotificationServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -1387,7 +1367,6 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
-  SendNotificationServerRoute: SendNotificationServerRoute,
   ApiConversationsServerRoute: ApiConversationsServerRoute,
   ApiTemplateServerRoute: ApiTemplateServerRoute,
   ApiWebhookServerRoute: ApiWebhookServerRoute,
