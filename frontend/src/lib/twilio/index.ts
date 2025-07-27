@@ -43,7 +43,8 @@ export const createAccessToken = createServerFn()
 			signingKeySecret,
 			{
 				identity,
-				ttl: 3600, // 1 hour in seconds
+				// ttl: 3600, // 1 hour in seconds
+				ttl: 30, // 30 seconds
 			},
 		);
 

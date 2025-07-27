@@ -90,6 +90,12 @@ const useSyncMap = ({ token, mapKey }: { token: string; mapKey: string }) => {
     map.on("itemRemoved", handleItemRemoved);
 
     return () => {
+      map.off("itemUpdated", handleItemUpdated);
+
+      map.on("itemAdded", handleItemAdded);
+
+      map.off("itemRemoved", handleItemRemoved);
+
       map.close();
     };
   }, [data]);

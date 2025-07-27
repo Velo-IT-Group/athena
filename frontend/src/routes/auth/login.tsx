@@ -4,24 +4,29 @@ import { Separator } from '@/components/ui/separator';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import {
+	createFileRoute,
+	redirect,
+	useNavigate,
+	useRouteContext,
+} from '@tanstack/react-router';
+import { zodValidator } from '@tanstack/zod-adapter';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import z from 'zod';
 
 export const Route = createFileRoute('/auth/login')({
 	component: RouteComponent,
-	// ssr: false,
-	// beforeLoad: async () => {
-	// 	const supabase = createClient();
-
-	// 	const { error } = await supabase.auth.signOut();
-
-	// 	if (error) throw error;
-	// },
+	validateSearch: zodValidator(
+		z.object({
+			redirect: z.string().optional(),
+		})
+	),
 });
 
 function RouteComponent() {
 	const navigate = useNavigate();
+	const { redirect } = Route.useSearch();
 
 	const handlePassswordLogin = useMutation({
 		mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
@@ -35,7 +40,7 @@ function RouteComponent() {
 
 			if (error) throw error;
 
-			redirect({ to: '/' });
+			// redirect({ to: '/' });
 		},
 		onError(error) {
 			console.log(error);
@@ -50,11 +55,19 @@ function RouteComponent() {
 		mutationFn: async () => {
 			const supabase = createClient();
 
+			const params = new URLSearchParams();
+
+			if (redirect) {
+				params.set('next', redirect);
+			}
+
 			const { error } = await supabase.auth.signInWithOAuth({
 				provider: 'azure',
 				options: {
 					scopes: 'offline_access openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite',
-					redirectTo: `${window.location.origin}/rest/v1/auth/callback`,
+					redirectTo:
+						`${window.location.origin}/rest/v1/auth/callback` +
+						`?${params.toString()}`,
 				},
 			});
 

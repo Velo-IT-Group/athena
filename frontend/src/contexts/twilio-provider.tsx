@@ -24,6 +24,7 @@ import {
 import { env } from '@/lib/utils';
 import { lookupPhoneNumber } from '@/lib/twilio/phoneNumbers';
 import { getAccessTokenQuery } from '@/lib/twilio/api';
+import { toast } from 'sonner';
 
 interface TwilioVoiceContextType {
 	device: Device | null;
@@ -102,10 +103,12 @@ export const TwilioProvider = ({
 				workerSid,
 			});
 			const newToken = await client.fetchQuery(query);
-			console.log('new token: ', newToken);
+			console.log('handleTokenExpiration NEW TOKEN: ', newToken);
 			client.invalidateQueries({ queryKey: query.queryKey });
 			client.setQueryData(query.queryKey, newToken);
 			device.updateToken(newToken);
+			console.log('handleTokenExpiration AFTER UPDATE: ', device.token);
+			toast.success('Token successfully updated');
 		},
 		[token, identity, workerSid]
 	);
@@ -119,7 +122,11 @@ export const TwilioProvider = ({
 
 	const handleReservationConference = useCallback(
 		async (res: Reservation) => {
-			if (res.task.taskChannelUniqueName !== 'voice') return;
+			if (
+				res.task.taskChannelUniqueName !== 'voice' ||
+				res.task.attributes.taskType === 'voicemail'
+			)
+				return;
 			if (!device.isRegistered) {
 				setWaitingReservation(res);
 				return;
@@ -164,12 +171,10 @@ export const TwilioProvider = ({
 	);
 
 	const handleWorkerReady = useCallback((worker: Worker) => {
-		const wrappingReservation = Array.from(
-			worker.reservations.values()
-		).find((res) => ['accepted', 'wrapping'].includes(res.status));
-		if (wrappingReservation) {
+		const reservations = Array.from(worker.reservations.values());
+		if (reservations.length) {
 			setActiveEngagement({
-				reservation: wrappingReservation,
+				reservation: reservations[0],
 			});
 		}
 	}, []);
@@ -182,7 +187,16 @@ export const TwilioProvider = ({
 		onReservationAccepted: (res) =>
 			setActiveEngagement((prev) => ({ ...prev, reservation: res })),
 		onReservationCompleted: () => setActiveEngagement(undefined),
-		onReservationCreated: handleReservationConference,
+		onReservationCreated: (reservation) => {
+			if (
+				reservation.task.taskChannelUniqueName !== 'voice' ||
+				reservation.task.attributes.taskType === 'voicemail'
+			) {
+				setActiveEngagement({ reservation });
+				return;
+			}
+			handleReservationConference(reservation);
+		},
 		onWorkerReady: handleWorkerReady,
 	});
 

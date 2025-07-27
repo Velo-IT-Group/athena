@@ -15,13 +15,7 @@ import type { WorkerInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/wor
 
 import { activityOrder } from '@/components/activity-list';
 import { columns } from '@/components/table-columns/teams';
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import DataTableDisplay from '@/components/ui/data-table/display';
-import TableSkeleton from '@/components/ui/data-table/skeleton';
 import useSyncMap from '@/hooks/use-sync-map';
 import {
 	Sheet,
@@ -34,8 +28,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ColoredBadge } from '@/components/ui/badge';
 import { WorkerPane } from '@/components/panes/worker-pane';
 import { ListGroup, ListItem } from '@/components/ui/list';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import ManageUserAvatar from '@/components/avatar/manage-user-avatar';
+import { Separator } from '@/components/ui/separator';
+import ActivityListItem from '@/components/activity-list-item';
+import Timer from '@/components/timer';
+import { getDateOffset } from '@/utils/date';
 
 const schema = z.object({
 	pane: z.enum(['worker', 'call']).optional(),
@@ -118,12 +115,12 @@ function RouteComponent() {
 
 					<div className='flex items-center justify-start gap-1 overflow-hidden text-xs text-muted-foreground'>
 						<Phone className='size-3' />
-						<span>Source</span>
+						<span>Calls</span>
 					</div>
 
 					<div className='flex items-center justify-start gap-1 overflow-hidden text-xs text-muted-foreground'>
-						<MessageCircle className='size-3' />
-						<span>Chats</span>
+						{/* <MessageCircle className='size-3' />
+						<span>Chats</span> */}
 					</div>
 				</div>
 
@@ -138,42 +135,82 @@ function RouteComponent() {
 							key={activityName}
 							heading={activityName}
 						>
-							{filterWorkers.map((w) => (
-								<ListItem
-									key={w.id}
-									className='gap-8 grid grid-cols-[3fr_2fr_2fr_1fr_1.2fr_1.2fr_1fr]'
-								>
-									<Link
-										to='/teams'
-										search={{
-											pane: 'worker',
-											itemId: w.sid,
-										}}
-										className='flex items-center px-3 py-4 gap-1.5'
+							{filterWorkers
+								.sort(
+									(a, b) =>
+										new Date(
+											b.dateStatusChanged
+										).getTime() -
+										new Date(a.dateStatusChanged).getTime()
+								)
+								.map((w) => (
+									<ListItem
+										key={w.id}
+										className='gap-8 grid grid-cols-[3fr_2fr_2fr_1fr_1.2fr_1.2fr_1fr] items-center inset-shadow-[0px_-1px_0px_0px_var(--border)]'
 									>
-										<ManageUserAvatar
-											memberId={
-												JSON.parse(
-													JSON.stringify(w.attributes)
-												).member_id
-											}
-										/>
+										<Link
+											to='/teams'
+											search={{
+												pane: 'worker',
+												itemId: w.sid,
+											}}
+											className='flex items-center px-3 py-4 gap-1.5'
+										>
+											<ManageUserAvatar
+												memberId={
+													JSON.parse(
+														JSON.stringify(
+															w.attributes
+														)
+													).member_id
+												}
+											/>
 
-										<p className='text-sm font-medium tracking-tight'>
-											{
-												JSON.parse(
-													JSON.stringify(w.attributes)
-												).full_name
-											}
-										</p>
-									</Link>
+											<div className='flex flex-col items-start'>
+												<p>
+													{
+														(
+															w.attributes as unknown as Record<
+																string,
+																any
+															>
+														).full_name
+													}
+												</p>
 
-									<div
-										className='rounded pattern-diagonal-lines pattern-primary pattern-bg-background
+												<div className='flex items-center gap-1.5'>
+													<ActivityListItem
+														activityName={
+															w.activityName
+														}
+													/>
+
+													{/* <Separator
+														orientation='vertical'
+														className='data-[orientation=vertical]:h-2.5'
+													/>
+
+													<Timer
+														stopwatchSettings={{
+															offsetTimestamp:
+																getDateOffset(
+																	new Date(
+																		w.dateStatusChanged
+																	)
+																),
+															autoStart: true,
+														}}
+													/> */}
+												</div>
+											</div>
+										</Link>
+
+										<div
+											className='rounded pattern-diagonal-lines pattern-primary pattern-bg-background
   pattern-size-2 pattern-opacity-15 w-full h-12 border border-primary'
-									/>
-								</ListItem>
-							))}
+										/>
+									</ListItem>
+								))}
 						</ListGroup>
 					))}
 			</div>

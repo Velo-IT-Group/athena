@@ -114,14 +114,14 @@ export const linksConfig: LinksConfig = {
 	teamTabs: [
 		{
 			title: "Overview",
-			icon: Home,
+			icon: LayoutDashboard,
 			to: "/teams/$id",
 		},
 	],
 	contactTabs: [
 		{
 			title: "Overview",
-			icon: Home,
+			icon: LayoutDashboard,
 			to: "/contacts/$id",
 		},
 		{
@@ -145,7 +145,7 @@ export const linksConfig: LinksConfig = {
 			items: [
 				{
 					title: "Overview",
-					icon: ClipboardList,
+					icon: LayoutDashboard,
 					to: "/proposals/$id/$version",
 				},
 			],

@@ -1,4 +1,10 @@
-import { ChevronDown, Ellipsis, GripVertical, Pencil, Trash2 } from 'lucide-react';
+import {
+	ChevronDown,
+	Ellipsis,
+	GripVertical,
+	Pencil,
+	Trash2,
+} from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -10,7 +16,11 @@ import { getCurrencyString } from '@/utils/money';
 import CurrencyInput from '@/components/currency-input';
 
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -18,12 +28,29 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { EditableArea, EditableInput, EditablePreview, Editable, EditableTrigger } from '@/components/ui/editable';
+import {
+	EditableArea,
+	EditableInput,
+	EditablePreview,
+	Editable,
+	EditableTrigger,
+} from '@/components/ui/editable';
 import { AsyncSelect } from '@/components/ui/async-select';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import { CommandItem } from '@/components/ui/command';
-import { KanbanColumnHandle, KanbanItem, KanbanItemHandle } from '@/components/ui/kanban';
+import {
+	KanbanColumnHandle,
+	KanbanItem,
+	KanbanItemHandle,
+} from '@/components/ui/kanban';
 import { Input } from '@/components/ui/input';
 import {
 	AlertDialog,
@@ -35,6 +62,11 @@ import {
 	AlertDialogFooter,
 	AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface Props {
 	section: NestedSection;
@@ -43,7 +75,10 @@ interface Props {
 	handleSectionUpdate: (section: SectionUpdate) => void;
 	handleSectionDeletion: () => void;
 	handleProductUpdate: (id: string, product: ProductUpdate) => void;
-	handleProductInsert: (product: ProductInsert, bundledItems?: ProductInsert[]) => void;
+	handleProductInsert: (
+		product: ProductInsert,
+		bundledItems?: ProductInsert[]
+	) => void;
 	handleProductDeletion: (id: string) => void;
 }
 
@@ -64,7 +99,10 @@ const SectionItem = ({
 
 		// If scores are equal, then sort by created_at in ascending order
 		// return 0;
-		return new Date(a.created_at ?? '').getTime() - new Date(b.created_at ?? '').getTime();
+		return (
+			new Date(a.created_at ?? '').getTime() -
+			new Date(b.created_at ?? '').getTime()
+		);
 	});
 
 	return (
@@ -125,7 +163,9 @@ const SectionItem = ({
 									</DropdownMenuItem>
 								</EditableTrigger>
 
-								<DropdownMenuItem onSelect={() => handleSectionDeletion()}>
+								<DropdownMenuItem
+									onSelect={() => handleSectionDeletion()}
+								>
 									<Trash2 className='mr-1.5 text-red-500' />
 									<span>Delete section</span>
 								</DropdownMenuItem>
@@ -138,7 +178,12 @@ const SectionItem = ({
 			<CollapsibleContent>
 				<Table>
 					<TableHeader>
-						<TableRow className={cn('text-sm', orderedProducts.length > 0 ? '' : '!border-0')}>
+						<TableRow
+							className={cn(
+								'text-sm',
+								orderedProducts.length > 0 ? '' : '!border-0'
+							)}
+						>
 							<TableHead className='-ml-3 w-12' />
 
 							<TableHead className='-ml-3'>
@@ -212,19 +257,34 @@ const SectionItem = ({
 						</>
 					)} */}
 
-												<span>{product.identifier ?? product.manufacturer_part_number}</span>
+												<span>
+													{product.identifier ??
+														product.manufacturer_part_number}
+												</span>
 											</div>
 										</TableCell>
 
 										<TableCell>
 											<Input
 												className='w-[500px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
-												defaultValue={product.description ?? ''}
+												defaultValue={
+													product.description ?? ''
+												}
 												onBlur={(e) => {
-													if (e.currentTarget.value !== product.description) {
-														handleProductUpdate(product.unique_id, {
-															description: e.currentTarget.value,
-														});
+													if (
+														e.currentTarget
+															.value !==
+														product.description
+													) {
+														handleProductUpdate(
+															product.unique_id,
+															{
+																description:
+																	e
+																		.currentTarget
+																		.value,
+															}
+														);
 													}
 												}}
 											/>
@@ -233,9 +293,12 @@ const SectionItem = ({
 										<TableCell>
 											<CurrencyInput
 												handleBlurChange={(cost) => {
-													handleProductUpdate(product.unique_id, {
-														cost,
-													});
+													handleProductUpdate(
+														product.unique_id,
+														{
+															cost,
+														}
+													);
 													// handleProductUpdate.mutate({
 													// 	id: product.unique_id,
 													// 	product: {
@@ -243,7 +306,9 @@ const SectionItem = ({
 													// 	},
 													// });
 												}}
-												defaultValue={product.cost ?? ''}
+												defaultValue={
+													product.cost ?? ''
+												}
 												className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
 											/>
 										</TableCell>
@@ -251,11 +316,16 @@ const SectionItem = ({
 										<TableCell>
 											<CurrencyInput
 												handleBlurChange={(price) => {
-													handleProductUpdate(product.unique_id, {
-														price,
-													});
+													handleProductUpdate(
+														product.unique_id,
+														{
+															price,
+														}
+													);
 												}}
-												defaultValue={product.price ?? ''}
+												defaultValue={
+													product.price ?? ''
+												}
 												className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
 											/>
 										</TableCell>
@@ -265,10 +335,20 @@ const SectionItem = ({
 												type='number'
 												defaultValue={product.quantity}
 												onBlur={async (e) => {
-													if (e.currentTarget.valueAsNumber !== product.quantity) {
-														handleProductUpdate(product.unique_id, {
-															quantity: e.currentTarget.valueAsNumber,
-														});
+													if (
+														e.currentTarget
+															.valueAsNumber !==
+														product.quantity
+													) {
+														handleProductUpdate(
+															product.unique_id,
+															{
+																quantity:
+																	e
+																		.currentTarget
+																		.valueAsNumber,
+															}
+														);
 													}
 												}}
 												className='w-[100px] border border-transparent hover:border-border hover:cursor-default rounded-lg shadow-none px-2 -mx-2 py-2 -my-2 truncate font-medium flex-1'
@@ -277,7 +357,9 @@ const SectionItem = ({
 
 										<TableCell>
 											<span className='w-[100px] text-right font-medium'>
-												{getCurrencyString(product.extended_price ?? 0)}
+												{getCurrencyString(
+													product.extended_price ?? 0
+												)}
 											</span>
 										</TableCell>
 
@@ -289,25 +371,42 @@ const SectionItem = ({
 															variant='ghost'
 															size='icon'
 														>
-															<span className='sr-only'>Delete item</span>
+															<span className='sr-only'>
+																Delete item
+															</span>
 															<Trash2 className='text-red-500' />
 														</Button>
 													</AlertDialogTrigger>
 													<AlertDialogContent>
 														<AlertDialogHeader>
-															<AlertDialogTitle>Are you sure?</AlertDialogTitle>
+															<AlertDialogTitle>
+																Are you sure?
+															</AlertDialogTitle>
 															<AlertDialogDescription>
-																This action cannot be undone. This will permanently
-																delete the product from our servers.
+																This action
+																cannot be
+																undone. This
+																will permanently
+																delete the
+																product from our
+																servers.
 															</AlertDialogDescription>
 														</AlertDialogHeader>
 														<AlertDialogFooter>
-															<AlertDialogCancel>Cancel</AlertDialogCancel>
+															<AlertDialogCancel>
+																Cancel
+															</AlertDialogCancel>
 
 															<Button
-																onClick={() => handleProductDeletion(product.unique_id)}
+																onClick={() =>
+																	handleProductDeletion(
+																		product.unique_id
+																	)
+																}
 															>
-																<span>Continue</span>
+																<span>
+																	Continue
+																</span>
 															</Button>
 														</AlertDialogFooter>
 													</AlertDialogContent>
@@ -349,122 +448,156 @@ const SectionItem = ({
 					</TableBody>
 				</Table>
 
-				<AsyncSelect
-					fetcher={async (query, page) => {
-						return await searchCatalogItems({ data: { query, page } });
-					}}
-					renderOption={(item) => (
-						<CommandItem
-							value={item.id.toString()}
-							onSelect={() => {
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button
+							className='text-muted-foreground w-full justify-start'
+							size='sm'
+							variant='ghost'
+						>
+							<span className='px-9'>Add product...</span>
+						</Button>
+					</PopoverTrigger>
+
+					<PopoverContent align='start'>
+						<AsyncSelect
+							fetcher={async (query, page) =>
+								await searchCatalogItems({
+									data: { query, page },
+								})
+							}
+							renderOption={(item) => (
+								<CommandItem
+									value={item.id.toString()}
+									onSelect={() => {
+										const snakedObj: ProductInsert = {
+											// @ts-ignore
+											...convertToSnakeCase(item),
+											version: params.version,
+											section: section.id,
+										};
+										const newProduct = convertToProduct(
+											snakedObj
+										) as ProductInsert;
+
+										const bundledItems =
+											item.bundledItems?.map((b) => {
+												// @ts-ignore
+												const snakedObj =
+													convertToSnakeCase(b);
+												// @ts-ignore
+												const snakedFixed = {
+													...snakedObj,
+													// @ts-ignore
+													id: b.catalogItem.id,
+													version: params.version,
+													// @ts-ignore
+													identifier: b.identifier,
+													section: section.id,
+												};
+												// @ts-ignore
+												const newObj = convertToProduct(
+													snakedFixed
+												) as ProductInsert;
+
+												return newObj;
+											});
+
+										// @ts-ignore
+										delete newProduct['bundled_items'];
+
+										handleProductInsert(
+											newProduct,
+											bundledItems
+										);
+									}}
+								>
+									<div className='flex items-center gap-2'>
+										<div className='flex flex-col'>
+											<div className='font-medium'>
+												{item.description}
+											</div>
+											<div className='text-xs text-muted-foreground'>
+												{item.identifier}
+												{item.productClass ===
+													'Bundle' && (
+													<Badge
+														variant='outline'
+														className='ml-1.5'
+													>
+														Bundle
+													</Badge>
+												)}
+											</div>
+										</div>
+									</div>
+								</CommandItem>
+							)}
+							getOptionValue={(item) => item.id.toString()}
+							// getDisplayValue={(item) => (
+							// 	<div className='flex items-center gap-2'>
+							// 		<div className='flex flex-col'>
+							// 			<div className='font-medium'>
+							// 				{item.description}
+							// 			</div>
+							// 			<div className='text-xs text-muted-foreground'>
+							// 				{item.id}
+							// 			</div>
+							// 		</div>
+							// 	</div>
+							// )}
+							notFound={
+								<div className='py-6 text-center text-sm'>
+									No products found
+								</div>
+							}
+							label='Products'
+							placeholder='Search products...'
+							value={''}
+							onChange={(value) => {
+								if (!value) return;
 								const snakedObj: ProductInsert = {
 									// @ts-ignore
-									...convertToSnakeCase(item),
+									...convertToSnakeCase(value),
 									version: params.version,
 									section: section.id,
 								};
-								const newProduct = convertToProduct(snakedObj) as ProductInsert;
+								const newProduct = convertToProduct(
+									snakedObj
+								) as ProductInsert;
 
-								const bundledItems = item.bundledItems?.map((b) => {
-									// @ts-ignore
-									const snakedObj = convertToSnakeCase(b);
-									// @ts-ignore
-									const snakedFixed = {
-										...snakedObj,
+								const bundledItems = value.bundledItems?.map(
+									(b) => {
 										// @ts-ignore
-										id: b.catalogItem.id,
-										version: params.version,
+										const snakedObj = convertToSnakeCase(b);
 										// @ts-ignore
-										identifier: b.identifier,
-										section: section.id,
-									};
-									// @ts-ignore
-									const newObj = convertToProduct(snakedFixed) as ProductInsert;
+										const snakedFixed = {
+											...snakedObj,
+											// @ts-ignore
+											id: b.catalogItem.id,
+											version: params.version,
+											// @ts-ignore
+											identifier: b.identifier,
+											section: section.id,
+										};
+										// @ts-ignore
+										const newObj = convertToProduct(
+											snakedFixed
+										) as ProductInsert;
 
-									return newObj;
-								});
+										return newObj;
+									}
+								);
 
 								// @ts-ignore
 								delete newProduct['bundled_items'];
 
 								handleProductInsert(newProduct, bundledItems);
 							}}
-						>
-							<div className='flex items-center gap-2'>
-								<div className='flex flex-col'>
-									<div className='font-medium'>{item.description}</div>
-									<div className='text-xs text-muted-foreground'>
-										{item.identifier}
-										{item.productClass === 'Bundle' && (
-											<Badge
-												variant='outline'
-												className='ml-1.5'
-											>
-												Bundle
-											</Badge>
-										)}
-									</div>
-								</div>
-							</div>
-						</CommandItem>
-					)}
-					getOptionValue={(item) => item.id.toString()}
-					getDisplayValue={(item) => (
-						<div className='flex items-center gap-2'>
-							<div className='flex flex-col'>
-								<div className='font-medium'>{item.description}</div>
-								<div className='text-xs text-muted-foreground'>{item.id}</div>
-							</div>
-						</div>
-					)}
-					notFound={<div className='py-6 text-center text-sm'>No products found</div>}
-					label='Products'
-					placeholder='Search products...'
-					value={''}
-					onChange={(value) => {
-						if (!value) return;
-						const snakedObj: ProductInsert = {
-							// @ts-ignore
-							...convertToSnakeCase(value),
-							version: params.version,
-							section: section.id,
-						};
-						const newProduct = convertToProduct(snakedObj) as ProductInsert;
-
-						const bundledItems = value.bundledItems?.map((b) => {
-							// @ts-ignore
-							const snakedObj = convertToSnakeCase(b);
-							// @ts-ignore
-							const snakedFixed = {
-								...snakedObj,
-								// @ts-ignore
-								id: b.catalogItem.id,
-								version: params.version,
-								// @ts-ignore
-								identifier: b.identifier,
-								section: section.id,
-							};
-							// @ts-ignore
-							const newObj = convertToProduct(snakedFixed) as ProductInsert;
-
-							return newObj;
-						});
-
-						// @ts-ignore
-						delete newProduct['bundled_items'];
-
-						handleProductInsert(newProduct, bundledItems);
-					}}
-					className='min-w-[375px] max-w-fit'
-				>
-					<Button
-						className='text-muted-foreground w-full justify-start'
-						size='sm'
-						variant='ghost'
-					>
-						<span className='px-9'>Add product...</span>
-					</Button>
-				</AsyncSelect>
+							className='min-w-[375px] max-w-fit'
+						/>
+					</PopoverContent>
+				</Popover>
 			</CollapsibleContent>
 		</Collapsible>
 	);

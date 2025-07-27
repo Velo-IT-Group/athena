@@ -43,8 +43,12 @@ const schema = z.object({
 export const Route = createFileRoute('/_authed')({
 	component: AuthComponent,
 	validateSearch: zodValidator(schema),
-	beforeLoad: async ({ context }) => {
-		if (!context.session) throw redirect({ to: '/auth/login' });
+	beforeLoad: async ({ context, location }) => {
+		if (!context.session)
+			throw redirect({
+				to: '/auth/login',
+				search: { redirect: location.href },
+			});
 
 		const { session, user } = context;
 

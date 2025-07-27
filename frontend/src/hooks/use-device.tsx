@@ -22,7 +22,6 @@ export const useDevice = ({
 	onDeviceRegistration,
 }: Props) => {
 	const deviceRef = useRef<Device>(null);
-	const device = useMemo(() => deviceRef.current, [deviceRef.current]);
 
 	const [errors, setErrors] = useState<TwilioError.TwilioError[]>([]);
 	const [isRegistered, setIsRegistered] = useState(false);
@@ -45,60 +44,24 @@ export const useDevice = ({
 		console.log('Device registered successfully');
 
 		try {
-			if (
-				device?.audio?.availableInputDevices.has(
-					localStorage.getItem(
-						MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY
-					)!
-				)
-			) {
-				await device?.audio?.setInputDevice(
-					localStorage.getItem(
-						MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY
-					)!
-				);
-			} else {
-				await device?.audio?.setInputDevice('default');
-				localStorage.setItem(
-					MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY,
-					'default'
-				);
-			}
-
+			await deviceRef.current?.audio?.setInputDevice('default');
 			console.log('Audio input device set to default');
 		} catch (error) {
 			console.error('Error setting audio input device: ', error);
+			await deviceRef.current?.audio?.setInputDevice('Default');
 		}
 
 		try {
-			if (
-				device?.audio?.availableOutputDevices.has(
-					localStorage.getItem(SPEAKER_DEVICE_ID_LOCAL_STORAGE_KEY)!
-				)
-			) {
-				await device?.audio?.speakerDevices.set(
-					localStorage.getItem(SPEAKER_DEVICE_ID_LOCAL_STORAGE_KEY)!
-				);
-			} else {
-				await device?.audio?.speakerDevices.set(
-					localStorage.getItem('Default')!
-				);
-				localStorage.setItem(
-					SPEAKER_DEVICE_ID_LOCAL_STORAGE_KEY,
-					'default'
-				);
-			}
-
-			console.log('Audio output device set to default');
+			await deviceRef.current?.audio?.speakerDevices.set('default');
 		} catch (error) {
 			console.error('Error setting audio output device: ', error);
-			await device?.audio?.speakerDevices.set(
-				localStorage.getItem('default')!
+			await deviceRef.current?.audio?.speakerDevices.set(
+				localStorage.getItem('Default')!
 			);
 		}
 
 		onDeviceRegistration?.();
-	}, [onDeviceRegistration, device]);
+	}, [onDeviceRegistration, deviceRef]);
 
 	const handleUnregistration = useCallback(() => {
 		setIsRegistered(false);
@@ -112,18 +75,26 @@ export const useDevice = ({
 	}, []);
 
 	const handleTokenExpiration = useCallback(() => {
-		if (!device) return;
+		if (!deviceRef.current) return;
+		console.log(
+			'USE DEVICE TOKEN BEFORE UPDATE: ',
+			deviceRef.current.token
+		);
+
 		if (
 			!toast.getToasts().some((t) => t.id === 'token-expiration-warning')
 		) {
-			toast.warning('Token will expire', {
+			toast.warning('Token will expire, attempting to refresh...', {
 				duration: 10000,
 				id: 'token-expiration-warning',
 			});
 		}
 		setIsTokenExpiring(true);
-		onTokenExpiring?.(device);
-	}, [device, onTokenExpiring]);
+		setTimeout(() => {
+			onTokenExpiring?.(deviceRef.current!);
+		}, 1000);
+		console.log('USE DEVICE TOKEN AFTER UPDATE: ', deviceRef.current.token);
+	}, [deviceRef, onTokenExpiring]);
 
 	const handleError = useCallback((twilioError: TwilioError.TwilioError) => {
 		console.error(twilioError);
@@ -219,7 +190,7 @@ export const useDevice = ({
 	]);
 
 	const runPreflightTest = useCallback(() => {
-		if (!device) return;
+		if (!deviceRef.current) return;
 		const preflightTest = Device.runPreflight(token, {
 			fakeMicInput: true,
 		});
@@ -230,11 +201,11 @@ export const useDevice = ({
 		preflightTest.on('failed', (error) => {
 			console.log(error);
 		});
-	}, [device, token]);
+	}, [deviceRef.current, token]);
 
 	return {
 		token,
-		device,
+		device: deviceRef.current,
 		isRegistered,
 		errors,
 		isTokenExpiring,

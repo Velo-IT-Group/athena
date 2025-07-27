@@ -37,6 +37,8 @@ const DevicePicker = () => {
 			device?.audio?.availableOutputDevices.get('default')
 	);
 
+	console.log(device?.audio?.inputDevice);
+
 	const { data, isLoading, error } = useQuery({
 		queryKey: ['inputDevices', navigator],
 		queryFn: async () => {

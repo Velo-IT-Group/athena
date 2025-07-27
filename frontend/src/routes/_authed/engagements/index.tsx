@@ -270,23 +270,27 @@ function RouteComponent() {
 					</PopoverContent>
 				</Popover>
 
-				<Button
-					variant='outline'
-					className={cn(
-						'ml-auto',
-						live && 'border-primary text-primary'
-					)}
-					onClick={() => {
-						setLive((prev) => !prev);
-					}}
-				>
-					{live ? (
-						<PauseCircle className='stroke-current' />
-					) : (
-						<PlayCircle className='stroke-current' />
-					)}
-					<span>{live ? 'Pause' : 'Live'}</span>
-				</Button>
+				<div className='ml-auto flex items-center gap-2'>
+					<Expandable placeholder='Search engagements...' />
+
+					<Button
+						variant='outline'
+						className={cn(
+							// 'ml-auto',
+							live && 'border-primary text-primary'
+						)}
+						onClick={() => {
+							setLive((prev) => !prev);
+						}}
+					>
+						{live ? (
+							<PauseCircle className='stroke-current' />
+						) : (
+							<PlayCircle className='stroke-current' />
+						)}
+						<span>{live ? 'Pause' : 'Live'}</span>
+					</Button>
+				</div>
 			</div>
 
 			<div className='w-full relative'>
@@ -437,7 +441,7 @@ function RouteComponent() {
 											) : (
 												<AvatarStack
 													avatars={
-														engagement.reservations.map(
+														engagement.reservations?.map(
 															(e) => ({
 																image: '',
 																name: e.worker_sid,
@@ -500,7 +504,7 @@ import { voiceAttributesSchema } from '@/types/twilio';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { InfiniteList } from '@/components/infinite-list';
+import Expandable from '@/components/ui/expandable';
 
 const formSchema = z.object({
 	start_date: z.string().optional(),
@@ -760,6 +764,7 @@ export default function DateRangeDisplay({
 						variant='outline'
 						className='ml-auto'
 						type='button'
+						onClick={() => {}}
 					>
 						Cancel
 					</Button>

@@ -321,7 +321,9 @@ function RouteComponent() {
 					}),
 			}}
 		>
-			<Outlet />
+			<div className='overflow-hidden'>
+				<Outlet />
+			</div>
 		</AppRecordShell>
 	);
 }

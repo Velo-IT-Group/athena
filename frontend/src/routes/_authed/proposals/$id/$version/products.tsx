@@ -28,39 +28,35 @@ function RouteComponent() {
 	console.log(invoice.lines.data);
 
 	return (
-		<main className='grow px-6 py-4 w-full flex flex-col items-start space-y-3'>
-			<h1 className='text-2xl font-semibold'>Products</h1>
-
-			<Suspense
-				fallback={
-					<div className='w-full'>
-						{Array.from({ length: 10 }).map((_, index) => (
-							<div
-								key={index}
-								className='h-12 flex items-center'
+		<Suspense
+			fallback={
+				<div className='w-full'>
+					{Array.from({ length: 10 }).map((_, index) => (
+						<div
+							key={index}
+							className='h-12 flex items-center'
+						>
+							<Button
+								variant='ghost'
+								size='icon'
 							>
-								<Button
-									variant='ghost'
-									size='icon'
-								>
-									{/* <ChevronUp /> */}
-								</Button>
+								{/* <ChevronUp /> */}
+							</Button>
 
-								<Button
-									variant='ghost'
-									size='icon'
-								>
-									<ChevronUp />
-								</Button>
+							<Button
+								variant='ghost'
+								size='icon'
+							>
+								<ChevronUp />
+							</Button>
 
-								<Skeleton className='h-6 w-48' />
-							</div>
-						))}
-					</div>
-				}
-			>
-				<SectionTabs params={Route.useParams()} />
-			</Suspense>
-		</main>
+							<Skeleton className='h-6 w-48' />
+						</div>
+					))}
+				</div>
+			}
+		>
+			<SectionTabs params={Route.useParams()} />
+		</Suspense>
 	);
 }

@@ -39,6 +39,7 @@ export const WorkerPane = ({
 	workerSid: string;
 	workerAttributes: Record<string, any>;
 }) => {
+	const { worker: currentWorker } = useTwilio();
 	const todayStart = useMemo(() => startOfDay(new Date()), []);
 	const [open, setOpen] = useState(false);
 	const [value, setValue] = useState(workerAttributes.activitySid);
@@ -199,15 +200,23 @@ export const WorkerPane = ({
 							<PopoverContent className='w-[200px] p-0'>
 								<ListSelector
 									items={activitiesData}
-									currentValue={activitiesData.find(
-										(a) => a.sid === worker.activitySid
-									)}
+									// currentValue={activitiesData.find(
+									// 	(a) => a.sid === worker.activitySid
+									// )}
+									comparisonFn={(a) =>
+										a.sid === worker.activitySid
+									}
 									itemView={(a) => (
 										<ActivityListItem
 											activityName={a.friendlyName}
 										/>
 									)}
-									onSelect={(a) => {}}
+									onSelect={(a) =>
+										currentWorker?.setWorkerActivity(
+											worker.sid,
+											a.sid
+										)
+									}
 									value={(a) => a.friendlyName}
 								/>
 							</PopoverContent>
@@ -456,6 +465,7 @@ import type { ActivityDuration } from '@/types/twilio';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ListSelector } from '@/components/list-selector';
+import { useTwilio } from '@/contexts/twilio-provider';
 
 export function InitalNote({ note }: { note?: ServiceTicketNote }) {
 	return (

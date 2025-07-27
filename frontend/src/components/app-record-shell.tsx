@@ -19,6 +19,7 @@ import { NavSection } from '@/types/nav';
 import { Outlet } from '@tanstack/react-router';
 import {
 	FilePlus,
+	GitCompare,
 	ImagePlus,
 	MailPlus,
 	Phone,
@@ -54,7 +55,7 @@ const AppRecordShell = ({ editable, details, tabs, children }: Props) => {
 							<EditablePreview
 								className={buttonVariants({
 									variant: 'ghost',
-									className: 'px-[4px] py-[6px]',
+									className: 'px-[4px] py-[6px] h-9',
 								})}
 							/>
 
@@ -133,7 +134,7 @@ const AppRecordShell = ({ editable, details, tabs, children }: Props) => {
 								variant='outline'
 								size='icon'
 							>
-								<Workflow />
+								<GitCompare />
 								<span className='sr-only'>Run to workflow</span>
 							</Button>
 						</TooltipTrigger>

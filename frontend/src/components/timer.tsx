@@ -2,8 +2,7 @@ import NumberFlow, { NumberFlowGroup } from '@number-flow/react';
 import { cn } from '@/lib/utils';
 import React from 'react';
 // import { useStopwatch, useTimer } from 'react-timer-hook';
-import pkg from 'react-timer-hook';
-const { useStopwatch, useTimer } = pkg;
+import { useStopwatch, useTimer } from 'react-timer-hook';
 import type { useStopwatchSettingsType } from 'react-timer-hook/dist/types/src/useStopwatch';
 import type { useTimerSettingsType } from 'react-timer-hook/dist/types/src/useTimer';
 

@@ -151,9 +151,12 @@ export const getEngagements = createServerFn()
 						(pagination?.pageSize ?? 25),
 				);
 			} else {
-				query.range(0, 25);
+				// query.range(0, 25);
 			}
+
 			const { data, error, count } = await query;
+
+			console.log(data, error, count);
 
 			if (error) {
 				throw new Error(
@@ -256,7 +259,7 @@ export const getPinnedItem = createServerFn()
 
 export const getProposalsWithCount = createServerFn()
 	.validator((options?: ProposalQueryOptions) => options)
-	.handler(async ({ data }) => {
+	.handler<{ data: Proposal[]; count: number }>(async ({ data }) => {
 		const supabase = createClient();
 
 		const proposalsQuery = supabase.from("proposals").select("*", {

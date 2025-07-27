@@ -44,17 +44,18 @@ const TaskNotification = ({ engagement }: Props) => {
 	useEffect(() => {
 		if (!engagement) return;
 
-		setOpen(
-			engagement?.reservation?.status === 'pending' &&
-				engagement.call !== undefined &&
-				[Call.State.Pending, Call.State.Ringing].includes(
-					engagement?.call?.status()
-				)
-		);
+		setOpen(engagement?.reservation?.status === 'pending');
+		// setOpen(
+		// 	engagement?.reservation?.status === 'pending' &&
+		// 		engagement.call !== undefined &&
+		// 		[Call.State.Pending, Call.State.Ringing].includes(
+		// 			engagement?.call?.status()
+		// 		)
+		// );
 	}, [engagement]);
 
 	const { data: attributes } = voiceAttributesSchema.safeParse(
-		engagement?.reservation?.task?.attributes
+		engagement?.reservation?.task?.attributes ?? {}
 	);
 
 	return (

@@ -96,8 +96,10 @@ export const Route = createFileRoute('/_authed/engagements/$id')({
 function RouteComponent() {
 	const { engagement, recording } = Route.useLoaderData();
 
-	// @ts-ignore
-	const sentences = z.array(sentenceSchema).parse(engagement.transcript);
+	const { data: sentences } = z
+		.array(sentenceSchema)
+		// @ts-ignore
+		.safeParse(engagement.transcript);
 
 	const { data: channel } = transcriptChannelSchema.safeParse(
 		engagement.transcript?.channel
