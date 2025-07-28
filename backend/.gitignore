@@ -1,7 +1,0 @@
-# Supabase
-/.supabase/branches/
-/.supabase/.temp/
-/.supabase/.env*
-
-# Environment variables
-.env
