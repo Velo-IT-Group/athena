@@ -16,7 +16,7 @@
 	"engines": {
 		"node": "22"
 	},
-	"name": "taskrouter",
+	"name": "@athena/taskrouter-service",
 	"private": true,
 	"scripts": {
 		"build": "tsc && npm run build:copy-assets",
