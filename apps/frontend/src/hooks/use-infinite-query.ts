@@ -111,12 +111,9 @@ function createStore<
 
 		setState({ isFetching: true });
 
-		let query = supabase
-			.schema("reporting")
-			.from(tableName)
-			.select(columns, {
-				count: "exact",
-			}) as unknown as SupabaseSelectBuilder<T>;
+		let query = supabase.schema("reporting").from(tableName).select(columns, {
+			count: "exact",
+		}) as unknown as SupabaseSelectBuilder<T>;
 
 		if (trailingQuery) {
 			query = trailingQuery(query);
