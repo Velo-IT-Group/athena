@@ -1,5 +1,5 @@
 {
-	"name": "@athena/conversations-service",
+	"name": "@athena/conversations",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {

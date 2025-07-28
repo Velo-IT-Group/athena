@@ -2,8 +2,6 @@
 	"include": ["**/*.ts", "**/*.tsx"],
 	"compilerOptions": {
 		"strict": true,
-		"incremental": false,
-
 		"esModuleInterop": true,
 		"jsx": "react-jsx",
 		"module": "ESNext",
@@ -13,13 +11,9 @@
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"target": "ES2022",
-		"allowJs": false,
+		"allowJs": true,
 		"forceConsistentCasingInFileNames": true,
 		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/*"]
-		},
-		"noEmit": true,
-		"noErrorTruncation": true
+		"noEmit": true
 	}
 }
