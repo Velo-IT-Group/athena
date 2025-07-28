@@ -26,7 +26,10 @@
 		"prestart": "npm run build",
 		"dev": "npm run build && npm start",
 		"start": "twilio-run --functions-folder dist/functions --assets-folder dist/assets",
-		"test": "tsc --noEmit"
+		"test": "tsc --noEmit",
+		"clean": "rm -rf .turbo node_modules",
+		"lint": "biome check .",
+		"format": "biome format --write ."
 	},
 	"version": "0.0.0"
 }

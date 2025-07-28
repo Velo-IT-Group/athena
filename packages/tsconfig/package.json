@@ -4,5 +4,10 @@
 	"version": "0.0.0",
 	"files": [
 		"base.json"
-	]
+	],
+	"scripts": {
+		"clean": "rm -rf .turbo node_modules",
+		"lint": "biome check .",
+		"format": "biome format --write ."
+	}
 }

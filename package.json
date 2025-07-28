@@ -10,7 +10,8 @@
 		"build": "turbo run build",
 		"dev": "turbo run dev",
 		"lint": "turbo run lint",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"clean:workspaces": "turbo clean"
 	},
 	"packageManager": "bun@1.2.19",
 	"devDependencies": {

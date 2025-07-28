@@ -1,15 +1,18 @@
 {
-  "name": "@athena/utils",
-  "main": "index.ts",
-  "private": true,
-  "scripts": {
-    "basic": "cd ../../backend && supabase gen types --schema public,reporting,user_experience,taskrouter,system --local > ../packages/utils/types/supabase/index.ts",
-    "enhanced": "bun supazod -i ./types/supabase/index.ts -o ./types/supabase/supabase-enhanced.ts -t ./types/supabase/supabase-enhanced.d.ts -s public,reporting,user_experience,taskrouter,system"
-  },
-  "dependencies": {
-    "zod": "^4.0.5"
-  },
-  "devDependencies": {
-    "supazod": "^2.0.0"
-  }
+	"name": "@athena/utils",
+	"main": "index.ts",
+	"private": true,
+	"scripts": {
+		"basic": "cd ../../backend && supabase gen types --schema public,reporting,user_experience,taskrouter,system --local > ../packages/utils/types/supabase/index.ts",
+		"enhanced": "bun supazod -i ./types/supabase/index.ts -o ./types/supabase/supabase-enhanced.ts -t ./types/supabase/supabase-enhanced.d.ts -s public,reporting,user_experience,taskrouter,system",
+		"clean": "rm -rf .turbo node_modules",
+		"lint": "biome check .",
+		"format": "biome format --write ."
+	},
+	"dependencies": {
+		"zod": "^4.0.5"
+	},
+	"devDependencies": {
+		"supazod": "^2.0.0"
+	}
 }

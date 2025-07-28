@@ -9,7 +9,10 @@
 		"build": "tsc && npm run build:copy-assets",
 		"build:copy-assets": "copyfiles src/assets/* src/assets/**/* --up 2 --exclude **/*.ts dist/assets/",
 		"prestart": "npm run build",
-		"predeploy": "npm run build"
+		"predeploy": "npm run build",
+		"clean": "rm -rf .turbo node_modules",
+		"lint": "biome check .",
+		"format": "biome format --write ."
 	},
 	"dependencies": {
 		"@twilio-labs/serverless-runtime-types": "^4.0.0",
