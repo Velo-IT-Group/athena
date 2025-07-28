@@ -9,5 +9,11 @@
 				"noUnusedVariables": "warn"
 			}
 		}
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"attributePosition": "auto",
+		"lineEnding": "lf"
 	}
 }

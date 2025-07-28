@@ -1,14 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { createServerFn } from "@tanstack/react-start";
 
-export const deletePinnedItem = createServerFn().validator((id: string) => id)
+export const deletePinnedItem = createServerFn()
+	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {
 		console.log("deletePinnedItem", id);
 		const supabase = createClient();
-		const { error } = await supabase.from("pinned_items").delete().eq(
-			"id",
-			id,
-		);
+		const { error } = await supabase.from("pinned_items").delete().eq("id", id);
 
 		if (error) {
 			throw new Error("Error deleting pinned item " + error.message, {
@@ -17,9 +15,8 @@ export const deletePinnedItem = createServerFn().validator((id: string) => id)
 		}
 	});
 
-export const deleteProposal = createServerFn().validator((
-	id: string | string[],
-) => id)
+export const deleteProposal = createServerFn()
+	.validator((id: string | string[]) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 		const query = supabase.from("proposals").delete();
@@ -39,14 +36,15 @@ export const deleteProposal = createServerFn().validator((
 		}
 	});
 
-export const deleteProduct = createServerFn().validator((id: string) => id)
+export const deleteProduct = createServerFn()
+	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 
-		const { error } = await supabase.from("products").delete().eq(
-			"unique_id",
-			id,
-		);
+		const { error } = await supabase
+			.from("products")
+			.delete()
+			.eq("unique_id", id);
 
 		if (error) {
 			console.error(error);
@@ -54,7 +52,8 @@ export const deleteProduct = createServerFn().validator((id: string) => id)
 		}
 	});
 
-export const deleteTicket = createServerFn().validator((id: string) => id)
+export const deleteTicket = createServerFn()
+	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 
@@ -66,7 +65,8 @@ export const deleteTicket = createServerFn().validator((id: string) => id)
 		}
 	});
 
-export const deletePhase = createServerFn().validator((id: string) => id)
+export const deletePhase = createServerFn()
+	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 
@@ -78,7 +78,8 @@ export const deletePhase = createServerFn().validator((id: string) => id)
 		}
 	});
 
-export const deleteSection = createServerFn().validator((id: string) => id)
+export const deleteSection = createServerFn()
+	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 
@@ -90,7 +91,8 @@ export const deleteSection = createServerFn().validator((id: string) => id)
 		}
 	});
 
-export const deleteTask = createServerFn().validator((id: string) => id)
+export const deleteTask = createServerFn()
+	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 

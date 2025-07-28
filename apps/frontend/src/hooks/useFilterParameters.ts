@@ -1,5 +1,5 @@
-import { type Conditions } from '@/utils/manage/params';
-import { useState } from 'react';
+import { type Conditions } from "@/utils/manage/params";
+import { useState } from "react";
 
 export function useFilterParameters<T>(params?: Conditions<T>) {
 	const [parameters, setParameters] = useState<Conditions<T>>(params ?? {});

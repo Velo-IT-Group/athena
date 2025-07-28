@@ -230,11 +230,12 @@ export const getContactsQuery = (params?: Conditions<Contact>) =>
 export const getTicketQuery = (
 	id: number,
 	conditions?: Conditions<ServiceTicket>,
-) => queryOptions({
-	queryKey: ["tickets", id, conditions],
-	queryFn: () => getTicket({ data: { id, conditions } }),
-	enabled: id > 0,
-});
+) =>
+	queryOptions({
+		queryKey: ["tickets", id, conditions],
+		queryFn: () => getTicket({ data: { id, conditions } }),
+		enabled: id > 0,
+	});
 
 export const ticketConfigurationsQuery = (id: number) =>
 	queryOptions({
@@ -277,37 +278,37 @@ export const getConfigurationsQuery = (params?: Conditions<Configuration>) =>
 
 export const getConfigurationsCountQuery = (
 	params?: Conditions<Configuration>,
-) => queryOptions({
-	queryKey: ["configurations", params, "count"],
-	queryFn: () =>
-		getConfigurationsCount({
-			data: {
-				conditions: { "status/id": 2 },
-				pageSize: 1000,
-				orderBy: { key: "name" },
-				fields: [
-					"id",
-					"name",
-					"site",
-					"company",
-					"type",
-					"contact",
-					"questions",
-					"lastLoginName",
-					"tagNumber",
-					"serialNumber",
-				],
-				...params,
-			},
-		}),
-	staleTime: DAY_IN_MS / 24,
-});
+) =>
+	queryOptions({
+		queryKey: ["configurations", params, "count"],
+		queryFn: () =>
+			getConfigurationsCount({
+				data: {
+					conditions: { "status/id": 2 },
+					pageSize: 1000,
+					orderBy: { key: "name" },
+					fields: [
+						"id",
+						"name",
+						"site",
+						"company",
+						"type",
+						"contact",
+						"questions",
+						"lastLoginName",
+						"tagNumber",
+						"serialNumber",
+					],
+					...params,
+				},
+			}),
+		staleTime: DAY_IN_MS / 24,
+	});
 
 export const getBoardsQuery = (params?: Conditions<Board>) =>
 	queryOptions({
 		queryKey: ["boards", params],
-		queryFn: () =>
-			getBoards({ data: { orderBy: { key: "name" }, ...params } }),
+		queryFn: () => getBoards({ data: { orderBy: { key: "name" }, ...params } }),
 		staleTime: Infinity,
 	});
 
@@ -350,47 +351,50 @@ export const getMembersQuery = (params?: Conditions<SystemMember>) =>
 export const getBoardTypesQuery = (
 	id: number,
 	params?: Conditions<BoardType>,
-) => queryOptions({
-	queryKey: ["types", id, params],
-	queryFn: () =>
-		getBoardTypes({
-			data: {
-				id,
-				conditions: { orderBy: { key: "name" }, ...params },
-			},
-		}),
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["types", id, params],
+		queryFn: () =>
+			getBoardTypes({
+				data: {
+					id,
+					conditions: { orderBy: { key: "name" }, ...params },
+				},
+			}),
+		staleTime: Infinity,
+	});
 
 export const getBoardSubTypesQuery = (
 	id: number,
 	params?: Conditions<BoardSubType>,
-) => queryOptions({
-	queryKey: ["subtypes", id, params],
-	queryFn: () =>
-		getBoardSubTypes({
-			data: {
-				id,
-				conditions: { orderBy: { key: "name" }, ...params },
-			},
-		}),
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["subtypes", id, params],
+		queryFn: () =>
+			getBoardSubTypes({
+				data: {
+					id,
+					conditions: { orderBy: { key: "name" }, ...params },
+				},
+			}),
+		staleTime: Infinity,
+	});
 
 export const getBoardItemsQuery = (
 	id: number,
 	params?: Conditions<BoardItem>,
-) => queryOptions({
-	queryKey: ["items", id, params],
-	queryFn: () =>
-		getBoardItems({
-			data: {
-				id,
-				conditions: { orderBy: { key: "name" }, ...params },
-			},
-		}),
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["items", id, params],
+		queryFn: () =>
+			getBoardItems({
+				data: {
+					id,
+					conditions: { orderBy: { key: "name" }, ...params },
+				},
+			}),
+		staleTime: Infinity,
+	});
 
 export const getCompanySitesQuery = (id: number, params?: Conditions<Site>) =>
 	queryOptions({
@@ -428,17 +432,18 @@ export const getTicketNotesQuery = (id: number) =>
 export const getCompanyNotesQuery = (
 	id: number,
 	conditions?: Conditions<CompanyNote>,
-) => queryOptions({
-	queryKey: ["companies", id, "notes", conditions],
-	queryFn: () =>
-		getCompanyNotes({
-			data: {
-				id,
-				conditions,
-			},
-		}),
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["companies", id, "notes", conditions],
+		queryFn: () =>
+			getCompanyNotes({
+				data: {
+					id,
+					conditions,
+				},
+			}),
+		staleTime: Infinity,
+	});
 
 export const getCompanyQuery = (id: number, conditions?: Conditions<Company>) =>
 	queryOptions({
@@ -468,13 +473,14 @@ export const getCompanyProjectsQuery = (
 		conditions: { "company/id": Number(id), "status/id": [1, 15, 19] },
 		orderBy: { key: "actualStart", order: "desc" },
 	},
-) => queryOptions({
-	queryKey: ["companies", id, "projects", conditions],
-	queryFn: () =>
-		getProjects({
-			data: conditions,
-		}),
-});
+) =>
+	queryOptions({
+		queryKey: ["companies", id, "projects", conditions],
+		queryFn: () =>
+			getProjects({
+				data: conditions,
+			}),
+	});
 
 export const getCompanyConfigurationsQuery = (
 	id: number,
@@ -484,28 +490,30 @@ export const getCompanyConfigurationsQuery = (
 		orderBy: { key: "name" },
 		fields: ["id", "name", "site", "type", "questions"],
 	},
-) => queryOptions({
-	queryKey: ["companies", id, "configurations", conditions],
-	queryFn: () =>
-		getConfigurations({
-			data: conditions,
-		}),
-});
+) =>
+	queryOptions({
+		queryKey: ["companies", id, "configurations", conditions],
+		queryFn: () =>
+			getConfigurations({
+				data: conditions,
+			}),
+	});
 
 export const getCompanyBestPracticesQuery = (
 	id: number,
 	conditions: Conditions<ServiceTicket> = {
 		fields: ["id", "summary"],
 	},
-) => queryOptions({
-	queryKey: ["companies", id, "best-practices"],
-	queryFn: () => {
-		console.log(conditions);
-		return getTickets({
-			data: conditions,
-		});
-	},
-});
+) =>
+	queryOptions({
+		queryKey: ["companies", id, "best-practices"],
+		queryFn: () => {
+			console.log(conditions);
+			return getTickets({
+				data: conditions,
+			});
+		},
+	});
 
 export const getCompanyContactsQuery = (
 	id: number,
@@ -519,82 +527,80 @@ export const getCompanyContactsQuery = (
 		pageSize: 1000,
 		fields: ["id", "firstName", "lastName"],
 	},
-) => queryOptions({
-	queryKey: ["companies", id, "contacts", conditions],
-	queryFn: () =>
-		getContacts({
-			data: conditions,
-		}),
-});
+) =>
+	queryOptions({
+		queryKey: ["companies", id, "contacts", conditions],
+		queryFn: () =>
+			getContacts({
+				data: conditions,
+			}),
+	});
 
 export const getContactQuery = (
 	id: number,
 	conditions: Conditions<Contact> = {
-		fields: [
-			"id",
-			"firstName",
-			"lastName",
-			"company",
-			"communicationItems",
-		],
+		fields: ["id", "firstName", "lastName", "company", "communicationItems"],
 	},
-) => queryOptions({
-	queryKey: ["contacts", id, conditions],
-	queryFn: () => getContact({ data: { id, conditions } }),
-});
+) =>
+	queryOptions({
+		queryKey: ["contacts", id, conditions],
+		queryFn: () => getContact({ data: { id, conditions } }),
+	});
 
 export const getCommunicationTypesQuery = (
 	conditions: Conditions<CommunicationType> = {
 		orderBy: { key: "description" },
 	},
-) => queryOptions({
-	queryKey: ["communication-types", conditions],
-	queryFn: () => getCommunicationTypes({ data: conditions }),
-	staleTime: Infinity,
-	gcTime: Infinity,
-	networkMode: "offlineFirst",
-});
+) =>
+	queryOptions({
+		queryKey: ["communication-types", conditions],
+		queryFn: () => getCommunicationTypes({ data: conditions }),
+		staleTime: Infinity,
+		gcTime: Infinity,
+		networkMode: "offlineFirst",
+	});
 
 export const getContactTicketsQuery = (
 	id: number,
 	conditions?: Conditions<ServiceTicket>,
-) => queryOptions({
-	queryKey: ["contacts", id, "tickets", conditions],
-	queryFn: () =>
-		getTickets({
-			data: {
-				conditions: {
-					closedFlag: false,
-					parentTicketId: null,
-					"contact/id": id,
+) =>
+	queryOptions({
+		queryKey: ["contacts", id, "tickets", conditions],
+		queryFn: () =>
+			getTickets({
+				data: {
+					conditions: {
+						closedFlag: false,
+						parentTicketId: null,
+						"contact/id": id,
+					},
+					fields: [
+						"id",
+						"summary",
+						"board",
+						"status",
+						"priority",
+						"owner",
+						"contact",
+						"company",
+						"slaStatus",
+						"subType",
+						"type",
+						"impact",
+						"source",
+						"_info",
+					],
+					orderBy: {
+						key: "id",
+						order: "desc",
+					},
+					...conditions,
 				},
-				fields: [
-					"id",
-					"summary",
-					"board",
-					"status",
-					"priority",
-					"owner",
-					"contact",
-					"company",
-					"slaStatus",
-					"subType",
-					"type",
-					"impact",
-					"source",
-					"_info",
-				],
-				orderBy: {
-					key: "id",
-					order: "desc",
-				},
-				...conditions,
-			},
-		}),
-	staleTime: Infinity,
-	gcTime: Infinity,
-	networkMode: "offlineFirst",
-});
+			}),
+		staleTime: Infinity,
+		gcTime: Infinity,
+		networkMode: "offlineFirst",
+	});
 
 export const getContactImageBlobQuery = (id: number) =>
 	queryOptions({

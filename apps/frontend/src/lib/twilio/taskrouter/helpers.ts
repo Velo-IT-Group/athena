@@ -13,35 +13,41 @@ import type {
 } from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
 
 const headers = new Headers();
-const credentials = env.VITE_TWILIO_ACCOUNT_SID + ":" +
-	env.VITE_TWILIO_AUTH_TOKEN;
+const credentials =
+	env.VITE_TWILIO_ACCOUNT_SID + ":" + env.VITE_TWILIO_AUTH_TOKEN;
 headers.set("Authorization", "Basic " + btoa(credentials));
 
-export const getWorkerStats = createServerFn().validator(
-	(
-		{ workerSid, params }: {
+export const getWorkerStats = createServerFn()
+	.validator(
+		({
+			workerSid,
+			params,
+		}: {
 			workerSid: string;
 			params: WorkerStatisticsContextFetchOptions;
-		},
-	) => ({
-		workerSid,
-		params,
-	}),
-).handler(async ({ data: { workerSid, params } }) => {
-	const client = await createClient();
-	const stats = await client.taskrouter.v1
-		.workspaces(env.VITE_TWILIO_WORKSPACE_SID)
-		.workers(workerSid)
-		.statistics()
-		.fetch(params);
+		}) => ({
+			workerSid,
+			params,
+		}),
+	)
+	.handler(async ({ data: { workerSid, params } }) => {
+		const client = await createClient();
+		const stats = await client.taskrouter.v1
+			.workspaces(env.VITE_TWILIO_WORKSPACE_SID)
+			.workers(workerSid)
+			.statistics()
+			.fetch(params);
 
-	return stats.toJSON();
-});
+		return stats.toJSON();
+	});
 
 export const getAllEventTasks = createServerFn()
-	.validator((
-		{ startDate, endDate }: { startDate?: Date; endDate?: Date },
-	) => ({ startDate, endDate }))
+	.validator(
+		({ startDate, endDate }: { startDate?: Date; endDate?: Date }) => ({
+			startDate,
+			endDate,
+		}),
+	)
 	.handler(async ({ data }) => {
 		const { startDate, endDate } = data;
 
@@ -63,14 +69,10 @@ export const getAllEventTasks = createServerFn()
 		const canceledTaskParams = new URLSearchParams(completedTaskParams);
 		canceledTaskParams.set("EventType", "task.canceled");
 
-		const reservationTimeoutParams = new URLSearchParams(
-			completedTaskParams,
-		);
+		const reservationTimeoutParams = new URLSearchParams(completedTaskParams);
 		reservationTimeoutParams.set("EventType", "reservation.timeout");
 
-		const reservationCompletedParams = new URLSearchParams(
-			completedTaskParams,
-		);
+		const reservationCompletedParams = new URLSearchParams(completedTaskParams);
 		reservationCompletedParams.set("EventType", "reservation.completed");
 
 		const [
@@ -122,15 +124,17 @@ export const getAllEventTasks = createServerFn()
 			...completedReservationEvents.events,
 		];
 
-		const allHistory = [...completedEvents.events, ...canceledEvents.events]
-			.map((e) => {
-				return {
-					...e,
-					reservation: allReservations.filter((r) =>
-						r.event_data.task_sid === e.event_data.task_sid
-					),
-				};
-			});
+		const allHistory = [
+			...completedEvents.events,
+			...canceledEvents.events,
+		].map((e) => {
+			return {
+				...e,
+				reservation: allReservations.filter(
+					(r) => r.event_data.task_sid === e.event_data.task_sid,
+				),
+			};
+		});
 
 		return {
 			data: allHistory,
@@ -142,9 +146,9 @@ export const getWorkers = createServerFn()
 	.validator((options: WorkerListInstanceOptions = {}) => options)
 	.handler(async ({ data }) => {
 		const client = await createClient();
-		const workers = await client.taskrouter.v1.workspaces(
-			env.VITE_TWILIO_WORKSPACE_SID,
-		).workers.list(data);
+		const workers = await client.taskrouter.v1
+			.workspaces(env.VITE_TWILIO_WORKSPACE_SID)
+			.workers.list(data);
 
 		return workers.map((w) => w.toJSON());
 	});

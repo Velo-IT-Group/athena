@@ -78,14 +78,12 @@ export const search = createServerFn()
 			] = await Promise.all([
 				getTickets({
 					data: {
-						conditions:
-							`summary contains '${value}' or company/name contains '${value}' or contact/name contains '${value}'`,
+						conditions: `summary contains '${value}' or company/name contains '${value}' or contact/name contains '${value}'`,
 					},
 				}),
 				getCompanies({
 					data: {
-						conditions:
-							`deletedFlag = false and (name contains '${value}' or status/name contains '${value}' or country/name contains '${value}' or territory/name contains '${value}' and market/name contains '${value}' and defaultContact/name contains '${value}')`,
+						conditions: `deletedFlag = false and (name contains '${value}' or status/name contains '${value}' or country/name contains '${value}' or territory/name contains '${value}' and market/name contains '${value}' and defaultContact/name contains '${value}')`,
 						childConditions: { "types/id": 1 },
 						orderBy: { key: "name", order: "asc" },
 						fields: ["id", "name"],
@@ -102,8 +100,7 @@ export const search = createServerFn()
 				}),
 				getConfigurations({
 					data: {
-						conditions:
-							`activeFlag = true and (name contains '${value}' or type/name contains '${value}' or company/name contains '${value}' or contact/name contains '${value}' and site/name contains '${value}' and location/name contains '${value}' and department/name contains '${value}')`,
+						conditions: `activeFlag = true and (name contains '${value}' or type/name contains '${value}' or company/name contains '${value}' or contact/name contains '${value}' and site/name contains '${value}' and location/name contains '${value}' and department/name contains '${value}')`,
 						page: pageParam,
 						orderBy: { key: "name" },
 					},
@@ -122,28 +119,24 @@ export const search = createServerFn()
 				},
 			}));
 
-			const companySearchItems: SearchItem[] = companies.map(
-				(company) => ({
-					id: company.id,
-					title: company.name,
-					to: `/companies/$id`,
-					params: { id: company.id.toString() },
-					type: "company",
-				}),
-			);
+			const companySearchItems: SearchItem[] = companies.map((company) => ({
+				id: company.id,
+				title: company.name,
+				to: `/companies/$id`,
+				params: { id: company.id.toString() },
+				type: "company",
+			}));
 
-			const contactSearchItems: SearchItem[] = contacts.map(
-				(contact) => ({
-					id: contact.id,
-					title: contact.firstName + " " + contact.lastName,
-					to: `/contacts/$id`,
-					params: { id: contact.id.toString() },
-					type: "contact",
-					additionalInfo: {
-						company: contact.company?.name,
-					},
-				}),
-			);
+			const contactSearchItems: SearchItem[] = contacts.map((contact) => ({
+				id: contact.id,
+				title: contact.firstName + " " + contact.lastName,
+				to: `/contacts/$id`,
+				params: { id: contact.id.toString() },
+				type: "contact",
+				additionalInfo: {
+					company: contact.company?.name,
+				},
+			}));
 
 			const configurationSearchItems: SearchItem[] = configurations.map(
 				(configuration) => ({
@@ -170,7 +163,7 @@ export const search = createServerFn()
 
 export const getTickets = createServerFn()
 	.validator((conditions?: Conditions<ServiceTicket>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler(async ({ data }) => {
 		const [ticketResponse, countResponse] = await Promise.all([
@@ -183,10 +176,7 @@ export const getTickets = createServerFn()
 		]);
 
 		if (!ticketResponse.ok || !countResponse.ok) {
-			console.error(
-				ticketResponse.statusText,
-				await ticketResponse.json(),
-			);
+			console.error(ticketResponse.statusText, await ticketResponse.json());
 			throw new Error(ticketResponse.statusText);
 		}
 
@@ -197,9 +187,7 @@ export const getTickets = createServerFn()
 	});
 
 export const getPriorities = createServerFn()
-	.validator((conditions?: Conditions<Priority>) =>
-		generateParams(conditions)
-	)
+	.validator((conditions?: Conditions<Priority>) => generateParams(conditions))
 	.handler(async ({ data }) => {
 		const response = await fetch(
 			`${env.VITE_CONNECT_WISE_URL}/service/priorities/${data}`,
@@ -219,13 +207,7 @@ export const getPriorities = createServerFn()
 
 export const getCompany = createServerFn()
 	.validator(
-		({
-			id,
-			conditions,
-		}: {
-			id: number;
-			conditions?: Conditions<Company>;
-		}) => ({
+		({ id, conditions }: { id: number; conditions?: Conditions<Company> }) => ({
 			id,
 			conditions: generateParams(conditions),
 		}),
@@ -248,13 +230,10 @@ export const getCompanies = createServerFn()
 				headers: baseHeaders,
 				method: "GET",
 			}),
-			fetch(
-				`${env.VITE_CONNECT_WISE_URL}/company/companies/count${data}`,
-				{
-					headers: baseHeaders,
-					method: "GET",
-				},
-			),
+			fetch(`${env.VITE_CONNECT_WISE_URL}/company/companies/count${data}`, {
+				headers: baseHeaders,
+				method: "GET",
+			}),
 		]);
 
 		if (!response.ok || !countResponse.ok) {
@@ -274,13 +253,7 @@ export const getCompanies = createServerFn()
 
 export const getCompanySites = createServerFn()
 	.validator(
-		({
-			id,
-			conditions,
-		}: {
-			id: number;
-			conditions?: Conditions<Site>;
-		}) => ({
+		({ id, conditions }: { id: number; conditions?: Conditions<Site> }) => ({
 			id,
 			conditions: generateParams(conditions),
 		}),
@@ -357,13 +330,7 @@ export const getCompanyNotesCount = createServerFn()
 
 export const getContact = createServerFn()
 	.validator(
-		({
-			id,
-			conditions,
-		}: {
-			id: number;
-			conditions?: Conditions<Contact>;
-		}) => ({
+		({ id, conditions }: { id: number; conditions?: Conditions<Contact> }) => ({
 			id,
 			conditions: generateParams(conditions),
 		}),
@@ -385,7 +352,7 @@ export const getContact = createServerFn()
 
 export const getCommunicationTypes = createServerFn()
 	.validator((conditions?: Conditions<CommunicationType>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler(async ({ data }) => {
 		try {
@@ -418,11 +385,9 @@ export const getContactCommunications = async (
 	if (!id) return [];
 	try {
 		const response = await fetch(
-			`${env.VITE_CONNECT_WISE_URL}/company/contacts/${id}/communications${
-				generateParams(
-					conditions,
-				)
-			}`,
+			`${env.VITE_CONNECT_WISE_URL}/company/contacts/${id}/communications${generateParams(
+				conditions,
+			)}`,
 			{ headers: baseHeaders },
 		);
 
@@ -440,12 +405,9 @@ export const getContacts = createServerFn()
 	.validator((conditions?: Conditions<Contact>) => generateParams(conditions))
 	.handler(async ({ data }): Promise<{ data: Contact[]; count: number }> => {
 		const [response, countResponse] = await Promise.all([
-			await fetch(
-				`${env.VITE_CONNECT_WISE_URL}/company/contacts/${data}`,
-				{
-					headers: baseHeaders,
-				},
-			),
+			await fetch(`${env.VITE_CONNECT_WISE_URL}/company/contacts/${data}`, {
+				headers: baseHeaders,
+			}),
 			await fetch(
 				`${env.VITE_CONNECT_WISE_URL}/company/contacts/count${data}`,
 				{
@@ -503,11 +465,9 @@ export const getConfiguration = async (
 	conditions?: Conditions<Configuration>,
 ): Promise<Configuration> => {
 	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/company/configurations/${id}/${
-			generateParams(
-				conditions,
-			)
-		}`,
+		`${env.VITE_CONNECT_WISE_URL}/company/configurations/${id}/${generateParams(
+			conditions,
+		)}`,
 		{
 			headers: baseHeaders,
 		},
@@ -524,11 +484,9 @@ export const getConfigurationTypes = async (
 	conditions?: Conditions<ConfigurationType>,
 ): Promise<ConfigurationType[]> => {
 	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/company/configurations/types${
-			generateParams(
-				conditions,
-			)
-		}`,
+		`${env.VITE_CONNECT_WISE_URL}/company/configurations/types${generateParams(
+			conditions,
+		)}`,
 		{
 			headers: baseHeaders,
 		},
@@ -541,7 +499,7 @@ export const getConfigurationTypes = async (
 
 export const getConfigurationsCount = createServerFn()
 	.validator((conditions?: Conditions<Configuration>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler<{ count: number }>(async ({ data: conditions }) => {
 		const countResponse = await fetch(
@@ -561,7 +519,7 @@ export const getConfigurationsCount = createServerFn()
 
 export const getConfigurations = createServerFn()
 	.validator((conditions?: Conditions<Configuration>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler(async ({ data: conditions }) => {
 		const [response, countResponse] = await Promise.all([
@@ -594,11 +552,9 @@ export const getTasks = async (
 	conditions?: Conditions<ServiceTicketTask>,
 ): Promise<ServiceTicketTask[]> => {
 	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}/tasks${
-			generateParams(
-				conditions,
-			)
-		}`,
+		`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}/tasks${generateParams(
+			conditions,
+		)}`,
 		{
 			headers: baseHeaders,
 		},
@@ -647,7 +603,7 @@ export const getTasks = async (
 
 export const getTicketCount = createServerFn()
 	.validator((conditions?: Conditions<ServiceTicket>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler<{ count: number }>(async ({ data }) => {
 		console.log(data);
@@ -806,7 +762,7 @@ export const getSystemMemberImage = createServerFn({
 
 export const getSystemMembers = createServerFn()
 	.validator((conditions?: Conditions<SystemMember>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler(async ({ data }) => {
 		console.log(data);
@@ -870,21 +826,17 @@ export const getConfigurationStatuses = async (
 ): Promise<{ data: ConfigurationStatus[]; count: number }> => {
 	const [response, countResponse] = await Promise.all([
 		fetch(
-			`${env.VITE_CONNECT_WISE_URL}/company/configurations/statuses/${
-				generateParams(
-					conditions,
-				)
-			}`,
+			`${env.VITE_CONNECT_WISE_URL}/company/configurations/statuses/${generateParams(
+				conditions,
+			)}`,
 			{
 				headers: baseHeaders,
 			},
 		),
 		fetch(
-			`${env.VITE_CONNECT_WISE_URL}/company/configurations/statuses/count${
-				generateParams(
-					conditions,
-				)
-			}`,
+			`${env.VITE_CONNECT_WISE_URL}/company/configurations/statuses/count${generateParams(
+				conditions,
+			)}`,
 			{
 				headers: baseHeaders,
 			},
@@ -962,8 +914,7 @@ export const getBoardSubTypes = createServerFn()
 		if (!response.ok) {
 			console.error(response.statusText);
 			throw new Error(
-				"Error fetching service board subtypes... " +
-					response.statusText,
+				"Error fetching service board subtypes... " + response.statusText,
 				{
 					cause: response,
 				},
@@ -997,8 +948,7 @@ export const getBoardItems = createServerFn()
 		if (!response.ok) {
 			console.error(response.statusText);
 			throw new Error(
-				"Error fetching service board subtypes... " +
-					response.statusText,
+				"Error fetching service board subtypes... " + response.statusText,
 				{
 					cause: response,
 				},
@@ -1034,12 +984,9 @@ export const getProjects = createServerFn()
 			fetch(`${env.VITE_CONNECT_WISE_URL}/project/projects${data}`, {
 				headers: baseHeaders,
 			}),
-			fetch(
-				`${env.VITE_CONNECT_WISE_URL}/project/projects/count${data}`,
-				{
-					headers: baseHeaders,
-				},
-			),
+			fetch(`${env.VITE_CONNECT_WISE_URL}/project/projects/count${data}`, {
+				headers: baseHeaders,
+			}),
 		]);
 
 		if (!response.ok || !countResponse.ok) {
@@ -1128,11 +1075,9 @@ export const getDocuments = createServerFn()
 	)
 	.handler(async ({ data: { recordType, id, conditions } }) => {
 		const response = await fetch(
-			`${env.VITE_CONNECT_WISE_URL}/system/documents?recordType=${recordType}&recordId=${id}${
-				generateParams(
-					conditions,
-				)?.replace("?", "&")
-			}`,
+			`${env.VITE_CONNECT_WISE_URL}/system/documents?recordType=${recordType}&recordId=${id}${generateParams(
+				conditions,
+			)?.replace("?", "&")}`,
 			{
 				headers: baseHeaders,
 			},
@@ -1143,57 +1088,63 @@ export const getDocuments = createServerFn()
 		return (await response.json()) as Document[];
 	});
 
-export const getSchedule = createServerFn().validator(z.object({
-	id: z.number().default(1),
-	// conditions: ,
-})).handler<Schedule>(async ({ data: { id } }) => {
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/schedule/calendars/${id}`,
-		{
-			headers: baseHeaders,
-		},
-	);
+export const getSchedule = createServerFn()
+	.validator(
+		z.object({
+			id: z.number().default(1),
+			// conditions: ,
+		}),
+	)
+	.handler<Schedule>(async ({ data: { id } }) => {
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/schedule/calendars/${id}`,
+			{
+				headers: baseHeaders,
+			},
+		);
 
-	if (!response.ok) throw Error("Error fetching schedule...");
+		if (!response.ok) throw Error("Error fetching schedule...");
 
-	return await response.json();
-});
+		return await response.json();
+	});
 
-export const getHoliday = createServerFn().validator(z.object({
-	id: z.number().default(13),
-	date: z.string().default(
-		Intl.DateTimeFormat("en-US", { dateStyle: "short" }).format(
-			new Date(),
-		),
-	),
-})).handler<Holiday[]>(async ({ data: { id, date } }): Promise<Holiday[]> => {
-	const params = generateParams(
-		{ conditions: `date = [${date}]` },
-	);
+export const getHoliday = createServerFn()
+	.validator(
+		z.object({
+			id: z.number().default(13),
+			date: z
+				.string()
+				.default(
+					Intl.DateTimeFormat("en-US", { dateStyle: "short" }).format(
+						new Date(),
+					),
+				),
+		}),
+	)
+	.handler<Holiday[]>(async ({ data: { id, date } }): Promise<Holiday[]> => {
+		const params = generateParams({ conditions: `date = [${date}]` });
 
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/schedule/holidayLists/${id}/holidays${
-			params ?? ""
-		}`,
-		{
-			headers: baseHeaders,
-		},
-	);
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/schedule/holidayLists/${id}/holidays${
+				params ?? ""
+			}`,
+			{
+				headers: baseHeaders,
+			},
+		);
 
-	if (!response.ok) throw Error("Error fetching holiday...");
+		if (!response.ok) throw Error("Error fetching holiday...");
 
-	return await response.json();
-});
+		return await response.json();
+	});
 
 export const getLocations = async (
 	conditions?: Conditions<Location>,
 ): Promise<Location[]> => {
 	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/system/locations${
-			generateParams(
-				conditions,
-			)
-		}`,
+		`${env.VITE_CONNECT_WISE_URL}/system/locations${generateParams(
+			conditions,
+		)}`,
 		{
 			headers: baseHeaders,
 		},
@@ -1208,11 +1159,9 @@ export const getLocation = async (
 	conditions?: Conditions<Location>,
 ): Promise<Location> => {
 	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/system/locations/${id}${
-			generateParams(
-				conditions,
-			)
-		}`,
+		`${env.VITE_CONNECT_WISE_URL}/system/locations/${id}${generateParams(
+			conditions,
+		)}`,
 		{
 			headers: baseHeaders,
 		},
@@ -1222,9 +1171,7 @@ export const getLocation = async (
 };
 
 export const getTimeEntries = createServerFn()
-	.validator((conditions?: Conditions<TimeEntry>) =>
-		generateParams(conditions)
-	)
+	.validator((conditions?: Conditions<TimeEntry>) => generateParams(conditions))
 	.handler<TimeEntry[]>(async ({ data }) => {
 		const response = await fetch(
 			`${env.VITE_CONNECT_WISE_URL}/time/entries${data}`,
@@ -1240,11 +1187,9 @@ export const getActivities = async (
 	conditions?: Conditions<Activity>,
 ): Promise<Activity[]> => {
 	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/sales/activities${
-			generateParams(
-				conditions,
-			)
-		}`,
+		`${env.VITE_CONNECT_WISE_URL}/sales/activities${generateParams(
+			conditions,
+		)}`,
 		{
 			headers: baseHeaders,
 		},
@@ -1263,8 +1208,7 @@ export const getTemplates = createServerFn()
 	)
 	.handler(async ({ data: conditions }): Promise<ProjectTemplate[]> => {
 		const projectTemplateResponse = await fetch(
-			`${env
-				.VITE_CONNECT_WISE_URL!}/project/projectTemplates?${conditions}`,
+			`${env.VITE_CONNECT_WISE_URL!}/project/projectTemplates?${conditions}`,
 			{
 				headers: baseHeaders,
 			},
@@ -1281,8 +1225,7 @@ export const getTemplates = createServerFn()
 			);
 		}
 
-		const templates: ProjectTemplate[] = await projectTemplateResponse
-			.json();
+		const templates: ProjectTemplate[] = await projectTemplateResponse.json();
 
 		const workplans: ProjectWorkPlan[] = await Promise.all(
 			templates.map(({ id }) => getWorkplan({ data: { id } })),
@@ -1319,8 +1262,7 @@ export const getTemplate = async (id: number) => {
 	const template: ProjectTemplate = await templateResponse.json();
 
 	const workplanResponse = await fetch(
-		`${env
-			.VITE_CONNECT_WISE_URL!}/project/projectTemplates/${template.id}/workplan`,
+		`${env.VITE_CONNECT_WISE_URL!}/project/projectTemplates/${template.id}/workplan`,
 		{
 			// next: {
 			// 	revalidate: 21600,
@@ -1343,7 +1285,7 @@ export const getTemplate = async (id: number) => {
 
 export const getProducts = createServerFn()
 	.validator((conditions?: Conditions<ProductsItem>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler(async ({ data: conditions }) => {
 		const response = await fetch(
@@ -1354,12 +1296,9 @@ export const getProducts = createServerFn()
 		);
 
 		if (!response.ok) {
-			throw Error(
-				"Error fetching products... " + (await response.json()),
-				{
-					cause: response.statusText,
-				},
-			);
+			throw Error("Error fetching products... " + (await response.json()), {
+				cause: response.statusText,
+			});
 		}
 
 		return (await response.json()) as ProductsItem[];
@@ -1554,12 +1493,9 @@ export const getWorkplan = createServerFn()
 		);
 
 		if (!response.ok) {
-			throw new Error(
-				"Error fetching workplan... " + (await response.json()),
-				{
-					cause: response.statusText,
-				},
-			);
+			throw new Error("Error fetching workplan... " + (await response.json()), {
+				cause: response.statusText,
+			});
 		}
 
 		return (await response.json()) as ProjectWorkPlan;
@@ -1567,7 +1503,7 @@ export const getWorkplan = createServerFn()
 
 export const getScheduleEntries = createServerFn()
 	.validator((conditions?: Conditions<ScheduleEntry>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler(async ({ data: conditions }) => {
 		const response = await fetch(
@@ -1681,17 +1617,14 @@ export const searchCatalogItems = createServerFn()
 
 export const getCatalogItems = createServerFn()
 	.validator((conditions?: Conditions<ExtendedCatalogItem>) =>
-		generateParams(conditions)
+		generateParams(conditions),
 	)
 	.handler(async ({ data: conditions }) => {
 		const [response, countResponse] = await Promise.all([
-			fetch(
-				`${env.VITE_CONNECT_WISE_URL}/procurement/catalog${conditions}`,
-				{
-					headers: baseHeaders,
-					method: "GET",
-				},
-			),
+			fetch(`${env.VITE_CONNECT_WISE_URL}/procurement/catalog${conditions}`, {
+				headers: baseHeaders,
+				method: "GET",
+			}),
 			fetch(
 				`${env.VITE_CONNECT_WISE_URL}/procurement/catalog/count${conditions}`,
 				{
@@ -1707,9 +1640,7 @@ export const getCatalogItems = createServerFn()
 			(item) => item.productClass === "Bundle",
 		);
 		const bItems = (
-			await Promise.all(
-				bundles.map((b) => getCatalogItemComponents(b.id)),
-			)
+			await Promise.all(bundles.map((b) => getCatalogItemComponents(b.id)))
 		)
 			.flat()
 			.filter((i) => i !== undefined);
@@ -1793,8 +1724,8 @@ export const getTicketFacetedFilters = async (): Promise<
 export const getConfigurationFacetedFilters = async (): Promise<
 	FacetedFilter<Configuration>[]
 > => {
-	const [{ data: configurationStatuses }, configurationTypes] = await Promise
-		.all([
+	const [{ data: configurationStatuses }, configurationTypes] =
+		await Promise.all([
 			getConfigurationStatuses({
 				fields: ["id", "description"],
 				orderBy: {
@@ -1823,36 +1754,38 @@ export const getConfigurationFacetedFilters = async (): Promise<
 	];
 };
 
-export const getWorkflows = createServerFn().validator(
-	(params: Conditions<BoardItem>) => generateParams(params),
-).handler<Workflow[]>(async ({ data }) => {
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/system/workflows?${data}`,
-		{
-			headers: baseHeaders,
-			method: "GET",
-		},
-	);
+export const getWorkflows = createServerFn()
+	.validator((params: Conditions<BoardItem>) => generateParams(params))
+	.handler<Workflow[]>(async ({ data }) => {
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/system/workflows?${data}`,
+			{
+				headers: baseHeaders,
+				method: "GET",
+			},
+		);
 
-	return await response.json();
-});
+		return await response.json();
+	});
 
-export const getWorkflowEvents = createServerFn().validator(
-	({ id, params }: { id: string; params: Conditions<BoardItem> }) => ({
-		id,
-		params: generateParams(params),
-	}),
-).handler<Workflow[]>(async ({ data: { id, params } }) => {
-	console.log(id, params);
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/system/workflows/${id}/events?${params}`,
-		{
-			headers: baseHeaders,
-			method: "GET",
-		},
-	);
+export const getWorkflowEvents = createServerFn()
+	.validator(
+		({ id, params }: { id: string; params: Conditions<BoardItem> }) => ({
+			id,
+			params: generateParams(params),
+		}),
+	)
+	.handler<Workflow[]>(async ({ data: { id, params } }) => {
+		console.log(id, params);
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/system/workflows/${id}/events?${params}`,
+			{
+				headers: baseHeaders,
+				method: "GET",
+			},
+		);
 
-	console.log(response.ok);
+		console.log(response.ok);
 
-	return await response.json();
-});
+		return await response.json();
+	});

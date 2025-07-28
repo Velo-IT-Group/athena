@@ -1,7 +1,7 @@
-import { env } from '@/lib/utils';
-import { createClient } from '@/utils/twilio';
-import { createServerFn } from '@tanstack/react-start';
-import { WorkflowListInstanceOptions } from 'twilio/lib/rest/taskrouter/v1/workspace/workflow';
+import { env } from "@/lib/utils";
+import { createClient } from "@/utils/twilio";
+import { createServerFn } from "@tanstack/react-start";
+import { WorkflowListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/workflow";
 
 export const getTask = createServerFn()
 	.validator(({ sid }: { sid: string }) => ({ sid }))
@@ -27,7 +27,7 @@ export const getWorkflows = createServerFn()
 export const getWorkflow = createServerFn()
 	.validator(
 		(options: { sid: string; options?: WorkflowListInstanceOptions }) =>
-			options
+			options,
 	)
 	.handler(async ({ data }) => {
 		const client = await createClient();

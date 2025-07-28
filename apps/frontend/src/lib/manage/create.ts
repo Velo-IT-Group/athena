@@ -28,13 +28,7 @@ headers.set("Content-Type", "application/json");
 
 headers.set(
 	"Authorization",
-	"Basic " +
-		btoa(
-			"velo+" +
-				"maaPiVTeEybbK3SX" +
-				":" +
-				"eCT1NboeMrXq9P3z",
-		),
+	"Basic " + btoa("velo+" + "maaPiVTeEybbK3SX" + ":" + "eCT1NboeMrXq9P3z"),
 );
 
 // Throttle UI updates to once every 200ms
@@ -70,70 +64,76 @@ const throttledCreateProjectTask = asyncThrottle(
 	},
 );
 
-export const createOpportunity = createServerFn().validator((
-	opportunity: z.infer<typeof createOpportunitySchema>,
-) => createOpportunitySchema.parse(opportunity)).handler(async (
-	{ data: opportunity },
-) => {
-	const config: AxiosRequestConfig = {
-		headers,
-	};
+export const createOpportunity = createServerFn()
+	.validator((opportunity: z.infer<typeof createOpportunitySchema>) =>
+		createOpportunitySchema.parse(opportunity),
+	)
+	.handler(async ({ data: opportunity }) => {
+		const config: AxiosRequestConfig = {
+			headers,
+		};
 
-	const data = JSON.stringify(opportunity);
+		const data = JSON.stringify(opportunity);
 
-	const response = await axios.post<Opportunity>(
-		`${env.VITE_CONNECT_WISE_URL}/sales/opportunities`,
-		data,
-		config,
-	);
-
-	if (response.status !== 201) {
-		throw new Error(
-			"Error creating opportunity: " + response.statusText + " \n\n" +
-				response.data,
+		const response = await axios.post<Opportunity>(
+			`${env.VITE_CONNECT_WISE_URL}/sales/opportunities`,
+			data,
+			config,
 		);
-	}
 
-	return response.data;
-});
+		if (response.status !== 201) {
+			throw new Error(
+				"Error creating opportunity: " +
+					response.statusText +
+					" \n\n" +
+					response.data,
+			);
+		}
 
-export const createManageProduct = createServerFn().validator((
-	product: z.infer<typeof createProductSchema>,
-) => createProductSchema.parse(product)).handler(async (
-	{ data: product },
-) => {
-	const data = JSON.stringify(product);
+		return response.data;
+	});
 
-	const config: AxiosRequestConfig = {
-		headers,
-	};
+export const createManageProduct = createServerFn()
+	.validator((product: z.infer<typeof createProductSchema>) =>
+		createProductSchema.parse(product),
+	)
+	.handler(async ({ data: product }) => {
+		const data = JSON.stringify(product);
 
-	const response: AxiosResponse<ProductsItem, Error> = await axios.post(
-		`${env.VITE_CONNECT_WISE_URL}/procurement/products`,
-		data,
-		config,
-	);
+		const config: AxiosRequestConfig = {
+			headers,
+		};
 
-	if (response.status !== 201) {
-		console.error(response.data);
-		throw new Error(
-			"Error creating product: " + response.statusText + " \n\n" +
-				response.data,
+		const response: AxiosResponse<ProductsItem, Error> = await axios.post(
+			`${env.VITE_CONNECT_WISE_URL}/procurement/products`,
+			data,
+			config,
 		);
-	}
 
-	return response.data;
-});
+		if (response.status !== 201) {
+			console.error(response.data);
+			throw new Error(
+				"Error creating product: " +
+					response.statusText +
+					" \n\n" +
+					response.data,
+			);
+		}
 
-export const convertOpportunityToProject = createServerFn().validator((
-	{ id, body }: {
-		id: number;
-		body: z.infer<typeof convertOpportunityToProjectSchema>;
-	},
-) => ({ id, body: convertOpportunityToProjectSchema.parse(body) })).handler(
-	async (
-		{ data: { id, body } },
-	) => {
+		return response.data;
+	});
+
+export const convertOpportunityToProject = createServerFn()
+	.validator(
+		({
+			id,
+			body,
+		}: {
+			id: number;
+			body: z.infer<typeof convertOpportunityToProjectSchema>;
+		}) => ({ id, body: convertOpportunityToProjectSchema.parse(body) }),
+	)
+	.handler(async ({ data: { id, body } }) => {
 		const data = JSON.stringify(body);
 
 		const config: AxiosRequestConfig = {
@@ -147,130 +147,140 @@ export const convertOpportunityToProject = createServerFn().validator((
 		);
 
 		return project.data;
-	},
-);
-
-export const createProjectPhase = createServerFn().validator((
-	{ projectId, phase }: { projectId: number; phase: NestedPhase },
-) => ({ projectId, phase })).handler(async (
-	{ data: { projectId, phase } },
-) => {
-	const config: RequestInit = {
-		method: "POST",
-		headers: baseHeaders,
-		body: JSON.stringify({
-			projectId,
-			description: phase.description,
-			wbsCode: String(phase.order),
-		} as ProjectPhase),
-	};
-
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/project/projects/${projectId}/phases`,
-		config,
-	);
-
-	if (!response.ok) {
-		throw new Error(
-			`Error creating phase: ${response.statusText} \n\n` +
-				await response.json(),
-		);
-	}
-
-	const data = await response.json();
-
-	if (phase.tickets) {
-		for (const ticket of phase.tickets.sort((a, b) => a.order - b.order)) {
-			console.log(ticket);
-			await throttledCreateProjectTicket({
-				phaseId: data.id,
-				ticket,
-			});
-		}
-	}
-
-	return data;
-});
-
-export const createProjectTicket = createServerFn().validator((
-	{ phaseId, ticket }: { phaseId: number; ticket: NestedTicket },
-) => ({ phaseId, ticket })).handler(async (
-	{ data: { phaseId, ticket } },
-) => {
-	const { summary, budget_hours: budgetHours } = ticket;
-
-	const config: RequestInit = {
-		method: "POST",
-		headers: baseHeaders,
-		body: JSON.stringify({
-			summary,
-			budgetHours,
-			phase: {
-				id: phaseId,
-			},
-		}),
-	};
-
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/project/tickets`,
-		config,
-	);
-
-	if (!response.ok) {
-		throw new Error(
-			`Error creating project ticket: ${response.statusText} \n\n` +
-				await response.json(),
-		);
-	}
-
-	const data = await response.json();
-
-	if (ticket.tasks && ticket.tasks.length) {
-		const { tasks } = ticket;
-		for (const task of tasks.sort((a, b) => a.priority - b.priority)) {
-			await throttledCreateProjectTask({ ticketId: data.id, task });
-		}
-	}
-});
-
-export const createProjectTask = createServerFn().validator((
-	{ ticketId, task }: { ticketId: number; task: Task },
-) => ({ ticketId, task })).handler(async (
-	{ data: { ticketId, task } },
-) => {
-	const { notes, priority } = task;
-	const body = JSON.stringify({
-		notes,
-		priority,
 	});
 
-	const config: RequestInit = {
-		method: "POST",
-		headers: baseHeaders,
-		body,
-	};
+export const createProjectPhase = createServerFn()
+	.validator(
+		({ projectId, phase }: { projectId: number; phase: NestedPhase }) => ({
+			projectId,
+			phase,
+		}),
+	)
+	.handler(async ({ data: { projectId, phase } }) => {
+		const config: RequestInit = {
+			method: "POST",
+			headers: baseHeaders,
+			body: JSON.stringify({
+				projectId,
+				description: phase.description,
+				wbsCode: String(phase.order),
+			} as ProjectPhase),
+		};
 
-	const response = await fetch(
-		`${env.VITE_CONNECT_WISE_URL}/project/tickets/${ticketId}/tasks`,
-		config,
-	);
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/project/projects/${projectId}/phases`,
+			config,
+		);
 
-	if (!response.ok) {
-		throw new Error(`Error creating task: ${response.statusText}`);
-	}
+		if (!response.ok) {
+			throw new Error(
+				`Error creating phase: ${response.statusText} \n\n` +
+					(await response.json()),
+			);
+		}
 
-	const data = await response.json();
+		const data = await response.json();
 
-	return data;
-});
+		if (phase.tickets) {
+			for (const ticket of phase.tickets.sort((a, b) => a.order - b.order)) {
+				console.log(ticket);
+				await throttledCreateProjectTicket({
+					phaseId: data.id,
+					ticket,
+				});
+			}
+		}
 
-export const createCompanyNote = createServerFn().validator((
-	{ companyId, note }: {
-		companyId: number;
-		note: z.infer<typeof createNoteSchema>;
-	},
-) => ({ companyId, note })).handler(
-	async ({ data: { companyId, note } }) => {
+		return data;
+	});
+
+export const createProjectTicket = createServerFn()
+	.validator(
+		({ phaseId, ticket }: { phaseId: number; ticket: NestedTicket }) => ({
+			phaseId,
+			ticket,
+		}),
+	)
+	.handler(async ({ data: { phaseId, ticket } }) => {
+		const { summary, budget_hours: budgetHours } = ticket;
+
+		const config: RequestInit = {
+			method: "POST",
+			headers: baseHeaders,
+			body: JSON.stringify({
+				summary,
+				budgetHours,
+				phase: {
+					id: phaseId,
+				},
+			}),
+		};
+
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/project/tickets`,
+			config,
+		);
+
+		if (!response.ok) {
+			throw new Error(
+				`Error creating project ticket: ${response.statusText} \n\n` +
+					(await response.json()),
+			);
+		}
+
+		const data = await response.json();
+
+		if (ticket.tasks && ticket.tasks.length) {
+			const { tasks } = ticket;
+			for (const task of tasks.sort((a, b) => a.priority - b.priority)) {
+				await throttledCreateProjectTask({ ticketId: data.id, task });
+			}
+		}
+	});
+
+export const createProjectTask = createServerFn()
+	.validator(({ ticketId, task }: { ticketId: number; task: Task }) => ({
+		ticketId,
+		task,
+	}))
+	.handler(async ({ data: { ticketId, task } }) => {
+		const { notes, priority } = task;
+		const body = JSON.stringify({
+			notes,
+			priority,
+		});
+
+		const config: RequestInit = {
+			method: "POST",
+			headers: baseHeaders,
+			body,
+		};
+
+		const response = await fetch(
+			`${env.VITE_CONNECT_WISE_URL}/project/tickets/${ticketId}/tasks`,
+			config,
+		);
+
+		if (!response.ok) {
+			throw new Error(`Error creating task: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+
+		return data;
+	});
+
+export const createCompanyNote = createServerFn()
+	.validator(
+		({
+			companyId,
+			note,
+		}: {
+			companyId: number;
+			note: z.infer<typeof createNoteSchema>;
+		}) => ({ companyId, note }),
+	)
+	.handler(async ({ data: { companyId, note } }) => {
 		const config: AxiosRequestConfig = {
 			headers: baseHeaders,
 		};
@@ -283,10 +293,8 @@ export const createCompanyNote = createServerFn().validator((
 
 		if (data.status !== 201) {
 			throw new Error(
-				`Error creating company note: ${data.statusText} \n\n` +
-					data.data,
+				`Error creating company note: ${data.statusText} \n\n` + data.data,
 			);
 		}
 		return data.data;
-	},
-);
+	});

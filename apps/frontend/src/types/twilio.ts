@@ -485,35 +485,41 @@ export const voiceAttributesSchema = z.discriminatedUnion("direction", [
 		caller: z.string(),
 		caller_city: z.string(),
 		to: z.string(),
-		conference: z.object({
-			sid: z.string(),
-			participants: z.object({
-				worker: z.string(),
-				customer: z.string(),
-			}),
-		}).optional(),
+		conference: z
+			.object({
+				sid: z.string(),
+				participants: z.object({
+					worker: z.string(),
+					customer: z.string(),
+				}),
+			})
+			.optional(),
 	}),
 	z.object({
 		...attributeIdentifier.shape,
 		direction: z.literal("outbound"),
 		from: z.string(),
 		outbound_to: z.string(),
-		conference: z.object({
-			sid: z.string(),
-			participants: z.object({
-				worker: z.string(),
-				customer: z.string(),
-				transfer: z.string().optional(),
-			}),
-		}).optional(),
+		conference: z
+			.object({
+				sid: z.string(),
+				participants: z.object({
+					worker: z.string(),
+					customer: z.string(),
+					transfer: z.string().optional(),
+				}),
+			})
+			.optional(),
 	}),
 ]);
 
 export type VoiceAttributes = z.infer<typeof voiceAttributesSchema>;
 
-export const createEngagementSchema = z.object({
-	to: z.string(),
-	from: z.string(),
-	channel: z.enum(["sms", "voice"]),
-	direction: z.enum(["inbound", "outbound"]),
-}).extend(attributeIdentifier.shape);
+export const createEngagementSchema = z
+	.object({
+		to: z.string(),
+		from: z.string(),
+		channel: z.enum(["sms", "voice"]),
+		direction: z.enum(["inbound", "outbound"]),
+	})
+	.extend(attributeIdentifier.shape);

@@ -62,14 +62,14 @@ export async function getSafeSession() {
 	};
 }
 
-export const fetchSessionUser = createServerFn().handler(
-	async () => {
-		const supabase = createClient();
-		const { data: { session } } = await supabase.auth.getSession();
+export const fetchSessionUser = createServerFn().handler(async () => {
+	const supabase = createClient();
+	const {
+		data: { session },
+	} = await supabase.auth.getSession();
 
-		return { session: session as Session };
-	},
-);
+	return { session: session as Session };
+});
 
 export const getUserCookie = createServerFn().handler(async () => {
 	const cookie = getCookie("connect_wise:auth");

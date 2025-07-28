@@ -61,13 +61,14 @@ export const getSectionProductsQuery = ({
 
 export const getEngagementSummaryByPeriodQuery = (
 	options?: EngagementQueryOptions,
-) => queryOptions({
-	queryKey: ["engagements", "call_summary_by_period", options],
-	queryFn: () =>
-		getEngagementSummaryByPeriod({
-			data: options,
-		}),
-});
+) =>
+	queryOptions({
+		queryKey: ["engagements", "call_summary_by_period", options],
+		queryFn: () =>
+			getEngagementSummaryByPeriod({
+				data: options,
+			}),
+	});
 
 export const getProposalQuery = (id: string, version: string) =>
 	queryOptions({
@@ -76,9 +77,8 @@ export const getProposalQuery = (id: string, version: string) =>
 		staleTime: Infinity,
 		gcTime: DAY_IN_MS,
 		refetchIntervalInBackground: true,
-		refetchInterval: (
-			query,
-		) => (query.state.data?.is_getting_converted ? 2000 : false),
+		refetchInterval: (query) =>
+			query.state.data?.is_getting_converted ? 2000 : false,
 	});
 
 export const getProposalFollowersQuery = (id: string, version: string) =>
@@ -93,9 +93,10 @@ export const getProposalsWithCountQuery = (options?: ProposalQueryOptions) =>
 	queryOptions({
 		queryKey: ["proposals", options],
 		queryFn: () =>
-			getProposalsWithCount({ data: options }) as Promise<
-				{ data: NestedProposal[]; count: number }
-			>,
+			getProposalsWithCount({ data: options }) as Promise<{
+				data: NestedProposal[];
+				count: number;
+			}>,
 		staleTime: Infinity,
 	});
 
@@ -128,14 +129,16 @@ export const getEngagementsQuery = (
 	options?: EngagementQueryOptions,
 	sort?: z.infer<typeof sortSchema>,
 	pagination?: z.infer<typeof paginationSchema>,
-) => queryOptions({
-	queryKey: ["engagements", options, sort, pagination],
-	queryFn: () =>
-		getEngagements({ data: { options, sort, pagination } }) as Promise<
-			{ data: NestedEngagement[]; count: number }
-		>,
-	// staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["engagements", options, sort, pagination],
+		queryFn: () =>
+			getEngagements({ data: { options, sort, pagination } }) as Promise<{
+				data: NestedEngagement[];
+				count: number;
+			}>,
+		// staleTime: Infinity,
+	});
 
 export const getStorageFilesQuery = (options: UseSupabaseUploadOptions) =>
 	queryOptions({
@@ -195,13 +198,10 @@ export const getEngagementReservationsQuery = (id: string) =>
 	queryOptions({
 		queryKey: ["engagements", "reservations", id],
 		queryFn: () =>
-			getEngagementReservations({ data: id }) as Promise<
-				{
-					data:
-						(EngagementReservation & { engagement: Engagement })[];
-					count: number;
-				}
-			>,
+			getEngagementReservations({ data: id }) as Promise<{
+				data: (EngagementReservation & { engagement: Engagement })[];
+				count: number;
+			}>,
 		staleTime: Infinity,
 	});
 
@@ -221,38 +221,38 @@ export const getProductsQuery = (id: string) =>
 export const getSectionQuery = (sectionId: string) =>
 	queryOptions({
 		queryKey: ["sections", sectionId],
-		queryFn: () =>
-			getSection({ data: sectionId }) as Promise<NestedSection>,
+		queryFn: () => getSection({ data: sectionId }) as Promise<NestedSection>,
 	});
 
 export const getSectionsQuery = (proposalId: string, versionId: string) =>
 	queryOptions({
 		queryKey: ["proposals", proposalId, versionId, "sections"],
 		queryFn: () =>
-			getSections({ data: { versionId, proposalId } }) as Promise<
-				Section[]
-			>,
+			getSections({ data: { versionId, proposalId } }) as Promise<Section[]>,
 	});
 
 export const getPhasesQuery = (proposalId: string, versionId: string) =>
 	queryOptions({
 		queryKey: ["proposals", proposalId, versionId, "phases"],
 		queryFn: () =>
-			getPhases({ data: { versionId, proposalId } }) as Promise<
-				NestedPhase[]
-			>,
+			getPhases({ data: { versionId, proposalId } }) as Promise<NestedPhase[]>,
 		staleTime: Infinity,
 	});
 
-export const getProfilesQuery = (
-	{ search, userIds }: { search?: string; userIds?: string[] },
-) => queryOptions({
-	queryKey: ["profiles", search, userIds],
-	queryFn: () => getProfiles({ data: { search, userIds } }),
-	staleTime: Infinity,
-	gcTime: DAY_IN_MS,
-	networkMode: "offlineFirst",
-});
+export const getProfilesQuery = ({
+	search,
+	userIds,
+}: {
+	search?: string;
+	userIds?: string[];
+}) =>
+	queryOptions({
+		queryKey: ["profiles", search, userIds],
+		queryFn: () => getProfiles({ data: { search, userIds } }),
+		staleTime: Infinity,
+		gcTime: DAY_IN_MS,
+		networkMode: "offlineFirst",
+	});
 
 export const getConversationsQuery = ({
 	contactId,
@@ -269,8 +269,7 @@ export const getConversationsQuery = ({
 			contactId ?? companyId,
 			"conversations",
 		],
-		queryFn: () =>
-			getConversations({ data: { contactId, companyId, limit } }),
+		queryFn: () => getConversations({ data: { contactId, companyId, limit } }),
 	});
 
 export const getTasksQuery = (id: string) =>

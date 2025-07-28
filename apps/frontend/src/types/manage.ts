@@ -612,8 +612,10 @@ export const contactSchema = z.object({
 export const serviceTicketSchema = z.object({
 	id: z.number(),
 	summary: z.string().max(100),
-	recordType: z.enum(["ProjectIssue", "ProjectTicket", "ServiceTicket"])
-		.optional().default("ServiceTicket"),
+	recordType: z
+		.enum(["ProjectIssue", "ProjectTicket", "ServiceTicket"])
+		.optional()
+		.default("ServiceTicket"),
 	board: referenceTypeSchema.optional(),
 	status: referenceTypeSchema.optional(),
 	workRole: referenceTypeSchema.optional(),
@@ -674,20 +676,14 @@ export const serviceTicketSchema = z.object({
 	estimatedProductRevenue: z.number().optional(),
 	estimatedTimeCost: z.number().optional(),
 	estimatedTimeRevenue: z.number().optional(),
-	billingMethod: z.enum([
-		"ActualRates",
-		"FixedFee",
-		"NotToExceed",
-		"OverrideRate",
-	]).optional(),
+	billingMethod: z
+		.enum(["ActualRates", "FixedFee", "NotToExceed", "OverrideRate"])
+		.optional(),
 	billingAmount: z.number().optional(),
 	hourlyRate: z.number().optional(),
-	subBillingMethod: z.enum([
-		"ActualRates",
-		"FixedFee",
-		"NotToExceed",
-		"OverrideRate",
-	]).optional(),
+	subBillingMethod: z
+		.enum(["ActualRates", "FixedFee", "NotToExceed", "OverrideRate"])
+		.optional(),
 	subBillingAmount: z.number().optional(),
 	subDateAccepted: z.string().optional(),
 	dateResolved: z.string().optional(),
@@ -703,11 +699,14 @@ export const serviceTicketSchema = z.object({
 	hasChildTicket: z.boolean().optional(),
 	hasMergedChildTicketFlag: z.boolean().optional(),
 	knowledgeBaseLinkType: z.string().optional(),
-	billTime: z.enum(["Billable", "DoNotBill", "NoCharge", "NoDefault"])
+	billTime: z
+		.enum(["Billable", "DoNotBill", "NoCharge", "NoDefault"])
 		.optional(),
-	billExpenses: z.enum(["Billable", "DoNotBill", "NoCharge", "NoDefault"])
+	billExpenses: z
+		.enum(["Billable", "DoNotBill", "NoCharge", "NoDefault"])
 		.optional(),
-	billProducts: z.enum(["Billable", "DoNotBill", "NoCharge", "NoDefault"])
+	billProducts: z
+		.enum(["Billable", "DoNotBill", "NoCharge", "NoDefault"])
 		.optional(),
 	predecessorType: z.enum(["Ticket", "Phase"]).optional(),
 	predecessorId: z.number().optional(),
@@ -825,11 +824,9 @@ export const systemMemberSchema = z.object({
 	office365: referenceTypeSchema.optional(),
 	mapiName: z.string().optional(),
 	calendarSyncIntegrationFlag: z.boolean().optional(),
-	authenticationServiceType: z.enum([
-		"AuthAnvil",
-		"GoogleAuthenticator",
-		"Email",
-	]).optional(),
+	authenticationServiceType: z
+		.enum(["AuthAnvil", "GoogleAuthenticator", "Email"])
+		.optional(),
 	timebasedOneTimePasswordActivated: z.boolean().optional(),
 	enableLdapAuthenticationFlag: z.boolean().optional(),
 	ldapConfiguration: referenceTypeSchema.optional(),
@@ -837,7 +834,8 @@ export const systemMemberSchema = z.object({
 	directionalSync: referenceTypeSchema.optional(),
 	ssoSettings: referenceTypeSchema.optional(),
 	signature: z.string().optional(),
-	phoneIntegrationType: z.enum(["TAPI", "SKYPE", "TEL", "CALLTO", "NONE"])
+	phoneIntegrationType: z
+		.enum(["TAPI", "SKYPE", "TEL", "CALLTO", "NONE"])
 		.optional(),
 	useBrowserLanguageFlag: z.boolean().optional(),
 	title: z.string().optional(),
@@ -905,25 +903,23 @@ export const systemMemberSchema = z.object({
 	restrictDefaultWarehouseBinFlag: z.boolean().optional(),
 	companyActivityTabFormat: z.enum(["SummaryList", "DetailList"]).optional(),
 	invoiceTimeTabFormat: z.enum(["SummaryList", "DetailList"]).optional(),
-	invoiceScreenDefaultTabFormat: z.enum([
-		"ShowInvoicingTab",
-		"ShowAgreementInvoicingTab",
-	]).optional(),
-	invoicingDisplayOptions: z.enum([
-		"RemainOnInvoicingScreen",
-		"ShowRecentInvoices",
-	]).optional().nullable(),
-	agreementInvoicingDisplayOptions: z.enum([
-		"RemainOnInvoicingScreen",
-		"ShowRecentInvoices",
-	]).optional().nullable(),
+	invoiceScreenDefaultTabFormat: z
+		.enum(["ShowInvoicingTab", "ShowAgreementInvoicingTab"])
+		.optional(),
+	invoicingDisplayOptions: z
+		.enum(["RemainOnInvoicingScreen", "ShowRecentInvoices"])
+		.optional()
+		.nullable(),
+	agreementInvoicingDisplayOptions: z
+		.enum(["RemainOnInvoicingScreen", "ShowRecentInvoices"])
+		.optional()
+		.nullable(),
 	autoStartStopwatch: z.boolean().optional(),
 	autoPopupQuickNotesWithStopwatch: z.boolean().optional(),
-	globalSearchDefaultTicketFilter: z.enum([
-		"OpenRecords",
-		"ClosedRecords",
-		"AllRecords",
-	]).optional().nullable(),
+	globalSearchDefaultTicketFilter: z
+		.enum(["OpenRecords", "ClosedRecords", "AllRecords"])
+		.optional()
+		.nullable(),
 	globalSearchDefaultSort: z
 		.enum([
 			"None",

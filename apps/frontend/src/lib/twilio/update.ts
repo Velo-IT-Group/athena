@@ -10,25 +10,31 @@ import { env } from "../utils";
 import { createServerFn } from "@tanstack/react-start";
 import type { ParticipantContextUpdateOptions } from "twilio/lib/rest/api/v2010/account/conference/participant";
 
-export const updateWorker = createServerFn().validator((
-	params: { workerSid: string; options: WorkerContextUpdateOptions },
-) => params).handler<WorkerInstance>(
-	async ({ data: { workerSid, options } }) => {
+export const updateWorker = createServerFn()
+	.validator(
+		(params: { workerSid: string; options: WorkerContextUpdateOptions }) =>
+			params,
+	)
+	.handler<WorkerInstance>(async ({ data: { workerSid, options } }) => {
 		const client = await createClient();
-		return (await client.taskrouter.v1
-			.workspaces(env.VITE_TWILIO_WORKSPACE_SID!)
-			.workers(workerSid)
-			.update(options)).toJSON();
-	},
-);
+		return (
+			await client.taskrouter.v1
+				.workspaces(env.VITE_TWILIO_WORKSPACE_SID!)
+				.workers(workerSid)
+				.update(options)
+		).toJSON();
+	});
 
 export const updateTask = createServerFn()
-	.validator((
-		{ taskSid, options }: {
+	.validator(
+		({
+			taskSid,
+			options,
+		}: {
 			taskSid: string;
 			options: TaskContextUpdateOptions;
-		},
-	) => ({ taskSid, options }))
+		}) => ({ taskSid, options }),
+	)
 	.handler(async ({ data: { taskSid, options } }) => {
 		const client = await createClient();
 		const task = await client.taskrouter.v1
@@ -40,13 +46,17 @@ export const updateTask = createServerFn()
 	});
 
 export const updateTaskReservation = createServerFn()
-	.validator((
-		{ taskSid, reservationSid, options }: {
+	.validator(
+		({
+			taskSid,
+			reservationSid,
+			options,
+		}: {
 			taskSid: string;
 			reservationSid: string;
 			options: ReservationContextUpdateOptions;
-		},
-	) => ({ taskSid, reservationSid, options }))
+		}) => ({ taskSid, reservationSid, options }),
+	)
 	.handler(async ({ data: { taskSid, reservationSid, options } }) => {
 		const client = await createClient();
 		const reservation = await client.taskrouter.v1
@@ -104,15 +114,21 @@ export const updateTaskReservation = createServerFn()
 // };
 
 export const updateParticipant = createServerFn()
-	.validator((
-		{ sid, participantSid, options }: {
+	.validator(
+		({
+			sid,
+			participantSid,
+			options,
+		}: {
 			sid: string;
 			participantSid: string;
 			options: ParticipantContextUpdateOptions;
-		},
-	) => ({ sid, participantSid, options }))
+		}) => ({ sid, participantSid, options }),
+	)
 	.handler(async ({ data: { sid, participantSid, options } }) => {
 		const client = await createClient();
-		return await client.conferences(sid).participants(participantSid)
+		return await client
+			.conferences(sid)
+			.participants(participantSid)
 			.update(options);
 	});

@@ -1,10 +1,10 @@
-import type { ProjectPhase, ProjectWorkPlan } from '@/types/manage';
-import { productStub } from '@/types/optimistic-types';
+import type { ProjectPhase, ProjectWorkPlan } from "@/types/manage";
+import { productStub } from "@/types/optimistic-types";
 
 export const createNestedPhaseFromTemplate = (
 	workplan: ProjectWorkPlan,
 	version: string,
-	destinationIndex: number
+	destinationIndex: number,
 ): NestedPhase[] => {
 	return (
 		workplan?.phases.map((phase: ProjectPhase, index) => {
@@ -60,19 +60,17 @@ type SnakeCaseObject<T> = {
 };
 
 export function flattenObject<T extends CamelCaseObject>(
-	obj: T
+	obj: T,
 ): SnakeCaseObject<T> {
-	type FlattenResult<T> = T extends { name: infer U }
-		? U
-		: SnakeCaseObject<T>;
+	type FlattenResult<T> = T extends { name: infer U } ? U : SnakeCaseObject<T>;
 
 	const flatObject: Partial<FlattenResult<T>> = {};
 
 	for (const [key, value] of Object.entries(obj)) {
-		if (typeof value === 'object' && value && value.id) {
+		if (typeof value === "object" && value && value.id) {
 			// @ts-ignore
 			flatObject[key as keyof T] = value.id as FlattenResult<T>;
-		} else if (typeof value === 'object' && value && value.name) {
+		} else if (typeof value === "object" && value && value.name) {
 			// @ts-ignore
 			flatObject[key as keyof T] = value.name as FlattenResult<T>;
 		} else {
@@ -90,15 +88,15 @@ export function flattenObject<T extends CamelCaseObject>(
 // ): SnakeCaseObject<T>
 // export function convertToSnakeCase(input: string): string
 export function convertToSnakeCase(input: any, flatten = true): any {
-	if (typeof input === 'string') {
-		return input.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+	if (typeof input === "string") {
+		return input.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase();
 	}
 
 	const snakeObject: Partial<SnakeCaseObject<typeof input>> = {};
 
 	for (const [key, value] of Object.entries(input)) {
 		const snakeKey = key
-			.replace(/([A-Z])/g, '_$1')
+			.replace(/([A-Z])/g, "_$1")
 			.toLowerCase() as keyof SnakeCaseObject<typeof input>;
 		snakeObject[snakeKey] = value;
 	}
@@ -110,15 +108,12 @@ export function convertToSnakeCase(input: any, flatten = true): any {
 	return snakeObject as SnakeCaseObject<typeof input>;
 }
 
-export const convertToCamelCase = (
-	item: string | object,
-	flatten = true
-) => {
-	if (typeof item === 'string') {
+export const convertToCamelCase = (item: string | object, flatten = true) => {
+	if (typeof item === "string") {
 		return item
 			.toLowerCase()
 			.replace(/([-_][a-z])/g, (group) =>
-				group.toUpperCase().replace('-', '').replace('_', '')
+				group.toUpperCase().replace("-", "").replace("_", ""),
 			);
 	}
 
@@ -128,7 +123,7 @@ export const convertToCamelCase = (
 		const snakeKey = key
 			.toLowerCase()
 			.replace(/([-_][a-z])/g, (group) =>
-				group.toUpperCase().replace('-', '').replace('_', '')
+				group.toUpperCase().replace("-", "").replace("_", ""),
 			);
 		snakeObject[snakeKey] = value;
 	}
@@ -173,13 +168,11 @@ interface ReturnType {
 export const calculateTotals = (
 	products: Product[],
 	phases: NestedPhase[],
-	labor_rate: number
+	labor_rate: number,
 ): ReturnType => {
 	const ticketHours =
 		phases && phases.length
-			? phases
-					.map((p) => p.tickets?.map((t) => t.budget_hours).flat())
-					.flat()
+			? phases.map((p) => p.tickets?.map((t) => t.budget_hours).flat()).flat()
 			: [];
 
 	const ticketSum = ticketHours?.reduce((accumulator, currentValue) => {
@@ -193,13 +186,11 @@ export const calculateTotals = (
 	const productTotal: number = products
 		.filter(
 			(p) =>
-				!p.recurring_flag ||
-				p.recurring_bill_cycle !== 2 ||
-				p.parent !== null
+				!p.recurring_flag || p.recurring_bill_cycle !== 2 || p.parent !== null,
 		)
 		.reduce((accumulator, currentValue) => {
 			const price: number | null =
-				currentValue.product_class === 'Bundle'
+				currentValue.product_class === "Bundle"
 					? currentValue.calculated_price
 					: currentValue.price;
 
@@ -214,14 +205,14 @@ export const calculateTotals = (
 			(accumulator, currentValue) =>
 				accumulator +
 				(currentValue?.price ?? 0) * (currentValue?.quantity ?? 0),
-			0
+			0,
 		);
 
 	const productCost: number = products
 		.filter((p) => !p.recurring_flag || p.recurring_bill_cycle !== 2)
 		.reduce((accumulator, currentValue) => {
 			const cost: number | null =
-				currentValue.product_class === 'Bundle'
+				currentValue.product_class === "Bundle"
 					? currentValue.calculated_cost
 					: currentValue.cost;
 
@@ -234,9 +225,8 @@ export const calculateTotals = (
 		?.filter((product) => product.recurring_flag)
 		.reduce(
 			(accumulator, currentValue) =>
-				accumulator +
-				(currentValue?.cost ?? 0) * (currentValue?.quantity ?? 0),
-			0
+				accumulator + (currentValue?.cost ?? 0) * (currentValue?.quantity ?? 0),
+			0,
 		);
 
 	const totalPrice = productTotal + recurringTotal + laborTotal;
@@ -263,7 +253,7 @@ export const retryWithDelay = async (
 	fn: (...args: any | any[]) => Promise<any>,
 	retries = 3,
 	interval = 50,
-	finalErr = 'Retry failed'
+	finalErr = "Retry failed",
 ): Promise<any> => {
 	try {
 		// try

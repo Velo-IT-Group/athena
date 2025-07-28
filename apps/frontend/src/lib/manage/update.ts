@@ -13,33 +13,33 @@ headers.set("Content-Type", "application/json");
 
 headers.set(
 	"Authorization",
-	"Basic " +
-		btoa(
-			"velo+" +
-				"maaPiVTeEybbK3SX" +
-				":" +
-				"eCT1NboeMrXq9P3z",
-		),
+	"Basic " + btoa("velo+" + "maaPiVTeEybbK3SX" + ":" + "eCT1NboeMrXq9P3z"),
 );
 
-export const updateTicket = createServerFn().middleware([authMiddleware])
-	.validator((
-		{ id, operation }: { id: number; operation: PatchOperation<Ticket>[] },
-	) => ({ id, operation })).handler(
-		async ({ data: { id, operation }, context }) => {
-			const config: AxiosRequestConfig = {
-				headers,
-			};
+export const updateTicket = createServerFn()
+	.middleware([authMiddleware])
+	.validator(
+		({
+			id,
+			operation,
+		}: {
+			id: number;
+			operation: PatchOperation<Ticket>[];
+		}) => ({ id, operation }),
+	)
+	.handler(async ({ data: { id, operation }, context }) => {
+		const config: AxiosRequestConfig = {
+			headers,
+		};
 
-			const { data } = await axios.patch(
-				`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}`,
-				operation,
-				config,
-			);
+		const { data } = await axios.patch(
+			`${env.VITE_CONNECT_WISE_URL}/service/tickets/${id}`,
+			operation,
+			config,
+		);
 
-			return data;
-		},
-	);
+		return data;
+	});
 
 // export const updateCompanyNote = async (
 // 	companyId: number,
@@ -111,34 +111,37 @@ export const updateTicket = createServerFn().middleware([authMiddleware])
 // 	return data.data;
 // };
 
-export const updateManageProject = createServerFn().validator((
-	{ id, operation }: { id: number; operation: PatchOperation<Project>[] },
-) => ({ id, operation })).handler(async (
-	{ data: { id, operation } },
-) => {
-	console.log(operation);
-	const config: AxiosRequestConfig = {
-		headers,
-		data: JSON.stringify(operation),
-	};
+export const updateManageProject = createServerFn()
+	.validator(
+		({
+			id,
+			operation,
+		}: {
+			id: number;
+			operation: PatchOperation<Project>[];
+		}) => ({ id, operation }),
+	)
+	.handler(async ({ data: { id, operation } }) => {
+		console.log(operation);
+		const config: AxiosRequestConfig = {
+			headers,
+			data: JSON.stringify(operation),
+		};
 
-	console.log(config);
+		console.log(config);
 
-	const response = await axios.patch(
-		`${env.VITE_CONNECT_WISE_URL}/project/projects/${id}`,
-		operation,
-		config,
-	);
-
-	if (response.status !== 200) {
-		throw new Error(
-			"Error updating manage project " +
-				response.data,
+		const response = await axios.patch(
+			`${env.VITE_CONNECT_WISE_URL}/project/projects/${id}`,
+			operation,
+			config,
 		);
-	}
 
-	return response.data;
-});
+		if (response.status !== 200) {
+			throw new Error("Error updating manage project " + response.data);
+		}
+
+		return response.data;
+	});
 
 // export const updateManageProject = async (
 // 	id: number,

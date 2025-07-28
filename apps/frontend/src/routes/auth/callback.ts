@@ -4,153 +4,153 @@ import { getSystemMember, getSystemMembers } from "@/lib/manage/read";
 import { UserMetadata } from "@supabase/supabase-js";
 
 export const ServerRoute = createServerFileRoute("/auth/callback").methods({
-    GET: async ({
-        request,
-        params,
-    }: {
-        request: Request;
-        params: Record<string, string | undefined>;
-    }) => {
-        const url = new URL(request.url);
-        const { searchParams, origin } = url;
+	GET: async ({
+		request,
+		params,
+	}: {
+		request: Request;
+		params: Record<string, string | undefined>;
+	}) => {
+		const url = new URL(request.url);
+		const { searchParams, origin } = url;
 
-        const code = searchParams.get("code");
-        const next = searchParams.get("next");
+		const code = searchParams.get("code");
+		const next = searchParams.get("next");
 
-        if (!code) {
-            return Response.redirect(
-                `${origin}/auth/auth-code-error?error=No code found`,
-            );
-        }
+		if (!code) {
+			return Response.redirect(
+				`${origin}/auth/auth-code-error?error=No code found`,
+			);
+		}
 
-        const supabase = createClient();
+		const supabase = createClient();
 
-        const {
-            error,
-            data: { session, user },
-        } = await supabase.auth.exchangeCodeForSession(code);
+		const {
+			error,
+			data: { session, user },
+		} = await supabase.auth.exchangeCodeForSession(code);
 
-        if (!user) {
-            return Response.redirect(
-                `${origin}/auth/auth-code-error?error=${
-                    error ? error.message : "No user found"
-                }`,
-            );
-        }
+		if (!user) {
+			return Response.redirect(
+				`${origin}/auth/auth-code-error?error=${
+					error ? error.message : "No user found"
+				}`,
+			);
+		}
 
-        const { data, error: profile_key_error } = await supabase
-            .from("profile_keys")
-            .select()
-            .eq("user_id", user?.id)
-            .single();
+		const { data, error: profile_key_error } = await supabase
+			.from("profile_keys")
+			.select()
+			.eq("user_id", user?.id)
+			.single();
 
-        if (profile_key_error) {
-            if (error) {
-                return Response.redirect(
-                    `${origin}/auth/auth-code-error?error=${error.message}`,
-                );
-            }
-        }
+		if (profile_key_error) {
+			if (error) {
+				return Response.redirect(
+					`${origin}/auth/auth-code-error?error=${error.message}`,
+				);
+			}
+		}
 
-        const members = await getSystemMembers({
-            data: {
-                conditions: { officeEmail: user?.email },
-                fields: ["id", "salesDefaultLocation", "identifier"],
-            },
-        });
+		const members = await getSystemMembers({
+			data: {
+				conditions: { officeEmail: user?.email },
+				fields: ["id", "salesDefaultLocation", "identifier"],
+			},
+		});
 
-        if (!members?.length) {
-            return Response.redirect(
-                `${origin}/auth/auth-code-error?error=No members found`,
-            );
-        }
+		if (!members?.length) {
+			return Response.redirect(
+				`${origin}/auth/auth-code-error?error=No members found`,
+			);
+		}
 
-        const member = members[0];
+		const member = members[0];
 
-        const user_metadata: UserMetadata = {
-            ...user?.user_metadata,
-            contact_uri: `client:${member.identifier}`,
-            // contact_id: contacts?.[0]?.id,
-            member_id: member?.id,
-            team_id: member?.salesDefaultLocation?.id,
-            team_name: member?.salesDefaultLocation?.name,
-            identifier: member?.identifier,
-        };
+		const user_metadata: UserMetadata = {
+			...user?.user_metadata,
+			contact_uri: `client:${member.identifier}`,
+			// contact_id: contacts?.[0]?.id,
+			member_id: member?.id,
+			team_id: member?.salesDefaultLocation?.id,
+			team_name: member?.salesDefaultLocation?.name,
+			identifier: member?.identifier,
+		};
 
-        const { error: updateError } = await supabase.auth.updateUser({
-            data: user_metadata,
-        });
+		const { error: updateError } = await supabase.auth.updateUser({
+			data: user_metadata,
+		});
 
-        if (updateError) {
-            return Response.redirect(
-                `${origin}/auth/auth-code-error?error=${updateError.message}`,
-            );
-        }
+		if (updateError) {
+			return Response.redirect(
+				`${origin}/auth/auth-code-error?error=${updateError.message}`,
+			);
+		}
 
-        return Response.redirect(`${origin}/`);
+		return Response.redirect(`${origin}/`);
 
-        // if (code) {
-        // const supabase = createClient();
+		// if (code) {
+		// const supabase = createClient();
 
-        // const {
-        // 	data: { user },
-        // 	error,
-        // } = await supabase.auth.exchangeCodeForSession(code);
+		// const {
+		// 	data: { user },
+		// 	error,
+		// } = await supabase.auth.exchangeCodeForSession(code);
 
-        // const { data, error: profile_key_error } = await supabase.from(
-        // 	"profile_keys",
-        // ).select().single();
+		// const { data, error: profile_key_error } = await supabase.from(
+		// 	"profile_keys",
+		// ).select().single();
 
-        // 	if (profile_key_error) {
-        // 		return Response.redirect(
-        // 			`${origin}/token-setup?user_id=${user?.id}`,
-        // 		);
-        // 	}
+		// 	if (profile_key_error) {
+		// 		return Response.redirect(
+		// 			`${origin}/token-setup?user_id=${user?.id}`,
+		// 		);
+		// 	}
 
-        // 	setCookie("connect_wise:auth", JSON.stringify(data?.key));
-        // 	setCookie("twilio:worker_sid", user?.user_metadata?.worker_sid);
+		// 	setCookie("connect_wise:auth", JSON.stringify(data?.key));
+		// 	setCookie("twilio:worker_sid", user?.user_metadata?.worker_sid);
 
-        // 	if (error) {
-        // 		const urlParams = new URLSearchParams();
-        // 		urlParams.append("error", error.message);
+		// 	if (error) {
+		// 		const urlParams = new URLSearchParams();
+		// 		urlParams.append("error", error.message);
 
-        // 		// return the user to an error page with instructions
-        // 		return Response.redirect(
-        // 			`${origin}/auth/auth-code-error?${urlParams.toString()}`,
-        // 		);
-        // 	}
+		// 		// return the user to an error page with instructions
+		// 		return Response.redirect(
+		// 			`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+		// 		);
+		// 	}
 
-        // 	if (!user) {
-        // 		const urlParams = new URLSearchParams();
-        // 		urlParams.append("error", "No user found");
-        // 		return Response.redirect(
-        // 			`${origin}/auth/auth-code-error?${urlParams.toString()}`,
-        // 		);
-        // 	}
+		// 	if (!user) {
+		// 		const urlParams = new URLSearchParams();
+		// 		urlParams.append("error", "No user found");
+		// 		return Response.redirect(
+		// 			`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+		// 		);
+		// 	}
 
-        // 	// try {
-        // 	// 	const newMetaData = await handleAuthenticatedUser(user);
-        // 	// 	await supabase.auth.updateUser({ data: newMetaData });
-        // 	// } catch (error) {
-        // 	// 	console.error("Error updating user metadata", error);
-        // 	// 	const urlParams = new URLSearchParams();
-        // 	// 	urlParams.append(
-        // 	// 		"error",
-        // 	// 		"Error updating user metadata " + (error as Error).message,
-        // 	// 	);
-        // 	// 	return Response.redirect(
-        // 	// 		`${origin}/auth/auth-code-error?${urlParams.toString()}`,
-        // 	// 	);
-        // 	// }
+		// 	// try {
+		// 	// 	const newMetaData = await handleAuthenticatedUser(user);
+		// 	// 	await supabase.auth.updateUser({ data: newMetaData });
+		// 	// } catch (error) {
+		// 	// 	console.error("Error updating user metadata", error);
+		// 	// 	const urlParams = new URLSearchParams();
+		// 	// 	urlParams.append(
+		// 	// 		"error",
+		// 	// 		"Error updating user metadata " + (error as Error).message,
+		// 	// 	);
+		// 	// 	return Response.redirect(
+		// 	// 		`${origin}/auth/auth-code-error?${urlParams.toString()}`,
+		// 	// 	);
+		// 	// }
 
-        // 	return Response.redirect(`${origin}${next ?? "/proposals"}`);
-        // }
+		// 	return Response.redirect(`${origin}${next ?? "/proposals"}`);
+		// }
 
-        // // return the user to an error page with instructions
-        // return Response.json({
-        // 	error: "Not authenticated",
-        // })
-    },
+		// // return the user to an error page with instructions
+		// return Response.json({
+		// 	error: "Not authenticated",
+		// })
+	},
 });
 
 // const handleAuthenticatedUser = async (user: User) => {

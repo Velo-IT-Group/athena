@@ -4,49 +4,51 @@ import { getTemplate } from "@/lib/manage/read";
 import { updateProposal } from "./update";
 import { createServerFn } from "@tanstack/react-start";
 
-export const createPinnedItem = createServerFn().validator((
-	item: PinnedItemInsert,
-) => item).handler(async ({ data: item }) => {
-	const supabase = createClient();
-	const { error, data } = await supabase.from("pinned_items").insert(item)
-		.single();
+export const createPinnedItem = createServerFn()
+	.validator((item: PinnedItemInsert) => item)
+	.handler(async ({ data: item }) => {
+		const supabase = createClient();
+		const { error, data } = await supabase
+			.from("pinned_items")
+			.insert(item)
+			.single();
 
-	if (error) {
-		throw new Error("Error creating pinned item " + error.message, {
-			cause: error,
-		});
-	}
+		if (error) {
+			throw new Error("Error creating pinned item " + error.message, {
+				cause: error,
+			});
+		}
 
-	return data;
-});
+		return data;
+	});
 
-export const createProposalFollower = createServerFn().validator((
-	follower: ProposalFollowerInsert,
-) => follower).handler(async ({ data: follower }) => {
-	const supabase = createClient();
-	const { error } = await supabase.from("proposal_followers").insert(
-		follower,
-	);
+export const createProposalFollower = createServerFn()
+	.validator((follower: ProposalFollowerInsert) => follower)
+	.handler(async ({ data: follower }) => {
+		const supabase = createClient();
+		const { error } = await supabase
+			.from("proposal_followers")
+			.insert(follower);
 
-	if (error) {
-		throw new Error("Error creating proposal follower " + error.message, {
-			cause: error,
-		});
-	}
-});
+		if (error) {
+			throw new Error("Error creating proposal follower " + error.message, {
+				cause: error,
+			});
+		}
+	});
 
-export const createSection = createServerFn().validator((
-	section: SectionInsert,
-) => section).handler(async ({ data: section }) => {
-	const supabase = createClient();
-	const { error } = await supabase.from("sections").insert(section);
+export const createSection = createServerFn()
+	.validator((section: SectionInsert) => section)
+	.handler(async ({ data: section }) => {
+		const supabase = createClient();
+		const { error } = await supabase.from("sections").insert(section);
 
-	if (error) {
-		throw new Error("Error creating section " + error.message, {
-			cause: error,
-		});
-	}
-});
+		if (error) {
+			throw new Error("Error creating section " + error.message, {
+				cause: error,
+			});
+		}
+	});
 
 // type WebToken = {
 // 	user_id: string;
@@ -95,16 +97,19 @@ export const createSection = createServerFn().validator((
  * @param {ProjectTemplate} template - The CW Manage object that will be used to create the phases, tickets and tasks.
  * @param {number} order - The index of the item the first template phase will be added after.
  */
-export const newTemplate = createServerFn().validator(({
-	template,
-	order,
-	version,
-}: {
-	template: ProjectTemplate;
-	order: number;
-	version: string;
-}) => ({ template, order, version })).handler(
-	async ({ data: { template, order, version } }) => {
+export const newTemplate = createServerFn()
+	.validator(
+		({
+			template,
+			order,
+			version,
+		}: {
+			template: ProjectTemplate;
+			order: number;
+			version: string;
+		}) => ({ template, order, version }),
+	)
+	.handler(async ({ data: { template, order, version } }) => {
 		if (!template || !template.workplan || !template.workplan.phases) {
 			throw new Error("Invalid template structure.");
 		}
@@ -112,20 +117,20 @@ export const newTemplate = createServerFn().validator(({
 		// Await all phase creation promises
 		await Promise.all(
 			template.workplan.phases.map((phase, phaseIndex) =>
-				createPhase(
-					{
-						data: {
-							phase: {
-								order: order + phaseIndex + 1,
-								description: phase.description,
-								version,
-							},
-							tickets: phase.tickets.map((ticket, i) => ({
-								phase: "",
-								summary: ticket.summary,
-								budget_hours: ticket.budgetHours,
-								order: i,
-								tasks: ticket.tasks?.map((task, index) => {
+				createPhase({
+					data: {
+						phase: {
+							order: order + phaseIndex + 1,
+							description: phase.description,
+							version,
+						},
+						tickets: phase.tickets.map((ticket, i) => ({
+							phase: "",
+							summary: ticket.summary,
+							budget_hours: ticket.budgetHours,
+							order: i,
+							tasks:
+								ticket.tasks?.map((task, index) => {
 									const taskInsert: TaskInsert = {
 										notes: task.notes ?? "",
 										summary: task.summary ?? "",
@@ -135,30 +140,27 @@ export const newTemplate = createServerFn().validator(({
 									};
 									return taskInsert;
 								}) ?? [],
-							})),
-						},
+						})),
 					},
-				)
+				}),
 			),
 		);
-	},
-);
+	});
 
 /**
  * Creates Ticket in Supabase.
  * @param {TaskInsert} task - The object that will be used to create the task.
  */
-export const createTask = createServerFn().validator((
-	task: TaskInsert | TaskInsert[],
-) => task)
+export const createTask = createServerFn()
+	.validator((task: TaskInsert | TaskInsert[]) => task)
 	.handler(async ({ data: task }) => {
 		const supabase = createClient();
 		const { error } = await supabase.from("tasks").insert(
 			Array.isArray(task)
 				? task.map((t) => {
-					delete t.id;
-					return t;
-				})
+						delete t.id;
+						return t;
+					})
 				: [task],
 		);
 
@@ -172,9 +174,8 @@ export const createTask = createServerFn().validator((
  * Creates Tasks in Supabase.
  * @param {TaskInsert[]} tasks - The object that will be used to create the task.
  */
-export const createTasks = createServerFn().validator((tasks: TaskInsert[]) =>
-	tasks
-)
+export const createTasks = createServerFn()
+	.validator((tasks: TaskInsert[]) => tasks)
 	.handler(async ({ data: tasks }) => {
 		const supabase = createClient();
 		const { error } = await supabase.from("tasks").insert(tasks);
@@ -190,9 +191,8 @@ export const createTasks = createServerFn().validator((tasks: TaskInsert[]) =>
  * Creates Proposal in Supabase.
  * @param {ProposalInsert} proposal - The object that will be used to create the task.
  */
-export const createProposal = createServerFn().validator((
-	proposal: ProposalInsert,
-) => proposal)
+export const createProposal = createServerFn()
+	.validator((proposal: ProposalInsert) => proposal)
 	.handler(async ({ data: proposal }) => {
 		const supabase = createClient();
 
@@ -232,7 +232,7 @@ export const createProposal = createServerFn().validator((
 								order: 0,
 								version,
 							},
-						})
+						}),
 					),
 				);
 			}
@@ -241,9 +241,8 @@ export const createProposal = createServerFn().validator((
 		return { id: data.id, version };
 	});
 
-export const duplicateProposal = createServerFn().validator((
-	proposal: ProposalInsert,
-) => proposal)
+export const duplicateProposal = createServerFn()
+	.validator((proposal: ProposalInsert) => proposal)
 	.handler(async ({ data: proposal }) => {
 		const supabase = createClient();
 		delete proposal["updated_at"];
@@ -276,140 +275,158 @@ export const duplicateProposal = createServerFn().validator((
 		return version;
 	});
 
-export const createPhase = createServerFn().validator((
-	{ phase }: {
-		phase: PhaseInsert | PhaseInsert[];
-		// tickets: Array<TicketInsert & { tasks?: Array<TaskInsert> }>;
-	},
-) => ({ phase })).handler(async ({ data: { phase } }) => {
-	const supabase = createClient();
-	// @ts-ignore
-	delete phase.tickets;
-	console.log(phase);
-	const { data, error } = await supabase.from("phases").insert(
-		Array.isArray(phase)
-			? phase.map((p) => {
-				delete p.id;
-				return p;
-			})
-			: [phase],
+export const createPhase = createServerFn()
+	.validator(
+		({
+			phase,
+		}: {
+			phase: PhaseInsert | PhaseInsert[];
+			// tickets: Array<TicketInsert & { tasks?: Array<TaskInsert> }>;
+		}) => ({ phase }),
 	)
-		.select();
-	// .single();
-
-	if (error) {
-		console.error(error);
-		throw new Error("Error creating phase... " + error.message, {
-			cause: error,
-		});
-	}
-
-	// if (tickets.length) {
-	// 	const seteteled = await Promise.allSettled(
-	// 		tickets.map((ticket) => {
-	// 			const ticketTasks = ticket.tasks;
-	// 			delete ticket.tasks;
-	// 			console.log(ticket, ticketTasks);
-	// 			return createTicket({
-	// 				data: {
-	// 					ticket: {
-	// 						...ticket,
-	// 						phase: data.id,
-	// 					},
-	// 					tasks: ticketTasks ?? [],
-	// 				},
-	// 			});
-	// 		}),
-	// 	);
-
-	// 	seteteled.map((result) => {
-	// 		if (result.status === "rejected") {
-	// 			throw new Error("Error creating ticket... " + result.reason);
-	// 		}
-	// 	});
-	// }
-
-	return data;
-});
-
-export const createProposalSettings = createServerFn().validator((
-	data: ProposalSettingsInsert,
-) => data).handler(async ({ data }) => {
-	try {
+	.handler(async ({ data: { phase } }) => {
 		const supabase = createClient();
-		const { error } = await supabase.from("proposal_settings").insert(data);
+		// @ts-ignore
+		delete phase.tickets;
+		console.log(phase);
+		const { data, error } = await supabase
+			.from("phases")
+			.insert(
+				Array.isArray(phase)
+					? phase.map((p) => {
+							delete p.id;
+							return p;
+						})
+					: [phase],
+			)
+			.select();
+		// .single();
 
 		if (error) {
 			console.error(error);
-			throw new Error("Error creating phase.", { cause: error });
+			throw new Error("Error creating phase... " + error.message, {
+				cause: error,
+			});
 		}
-	} catch (error) {
-		console.error("createPhase Error:", error);
-		throw error; // Rethrow the error after logging it
-	}
-});
 
-export const createTicket = createServerFn().validator(({
-	ticket,
-	// tasks,
-}: {
-	ticket: TicketInsert | TicketInsert[];
-	// tasks: Array<TaskInsert>;
-}) => ({ ticket })).handler(async ({ data: { ticket } }) => {
-	const supabase = createClient();
-	console.log(ticket);
+		// if (tickets.length) {
+		// 	const seteteled = await Promise.allSettled(
+		// 		tickets.map((ticket) => {
+		// 			const ticketTasks = ticket.tasks;
+		// 			delete ticket.tasks;
+		// 			console.log(ticket, ticketTasks);
+		// 			return createTicket({
+		// 				data: {
+		// 					ticket: {
+		// 						...ticket,
+		// 						phase: data.id,
+		// 					},
+		// 					tasks: ticketTasks ?? [],
+		// 				},
+		// 			});
+		// 		}),
+		// 	);
 
-	const { data, error } = await supabase.from("tickets").insert(
-		Array.isArray(ticket)
-			? ticket.map((t) => {
-				delete t.id;
-				return t;
-			})
-			: [ticket],
+		// 	seteteled.map((result) => {
+		// 		if (result.status === "rejected") {
+		// 			throw new Error("Error creating ticket... " + result.reason);
+		// 		}
+		// 	});
+		// }
+
+		return data;
+	});
+
+export const createProposalSettings = createServerFn()
+	.validator((data: ProposalSettingsInsert) => data)
+	.handler(async ({ data }) => {
+		try {
+			const supabase = createClient();
+			const { error } = await supabase.from("proposal_settings").insert(data);
+
+			if (error) {
+				console.error(error);
+				throw new Error("Error creating phase.", { cause: error });
+			}
+		} catch (error) {
+			console.error("createPhase Error:", error);
+			throw error; // Rethrow the error after logging it
+		}
+	});
+
+export const createTicket = createServerFn()
+	.validator(
+		({
+			ticket,
+			// tasks,
+		}: {
+			ticket: TicketInsert | TicketInsert[];
+			// tasks: Array<TaskInsert>;
+		}) => ({ ticket }),
 	)
-		.select();
+	.handler(async ({ data: { ticket } }) => {
+		const supabase = createClient();
+		console.log(ticket);
 
-	if (error) {
-		console.error(error);
-		throw new Error("Error creating ticket... " + error.message, {
-			cause: error,
-		});
-	}
+		const { data, error } = await supabase
+			.from("tickets")
+			.insert(
+				Array.isArray(ticket)
+					? ticket.map((t) => {
+							delete t.id;
+							return t;
+						})
+					: [ticket],
+			)
+			.select();
 
-	// if (tasks?.length) {
-	// 	const seteteled = await Promise.allSettled(
-	// 		tasks.map((task) =>
-	// 			createTask({
-	// 				data: {
-	// 					...task,
-	// 					ticket: data.id,
-	// 				},
-	// 			})
-	// 		),
-	// 	);
+		if (error) {
+			console.error(error);
+			throw new Error("Error creating ticket... " + error.message, {
+				cause: error,
+			});
+		}
 
-	// 	seteteled.map((result) => {
-	// 		if (result.status === "rejected") {
-	// 			throw new Error("Error creating task... " + result.reason);
-	// 		}
-	// 	});
-	// }
+		// if (tasks?.length) {
+		// 	const seteteled = await Promise.allSettled(
+		// 		tasks.map((task) =>
+		// 			createTask({
+		// 				data: {
+		// 					...task,
+		// 					ticket: data.id,
+		// 				},
+		// 			})
+		// 		),
+		// 	);
 
-	return data;
-});
+		// 	seteteled.map((result) => {
+		// 		if (result.status === "rejected") {
+		// 			throw new Error("Error creating task... " + result.reason);
+		// 		}
+		// 	});
+		// }
 
-export const createProduct = createServerFn().validator(({
-	product,
-	bundledItems,
-}: {
-	product: ProductInsert;
-	bundledItems?: ProductInsert[];
-}) => ({ product, bundledItems })).handler(
-	async ({ data: { product, bundledItems } }) => {
+		return data;
+	});
+
+export const createProduct = createServerFn()
+	.validator(
+		({
+			product,
+			bundledItems,
+		}: {
+			product: ProductInsert;
+			bundledItems?: ProductInsert[];
+		}) => ({ product, bundledItems }),
+	)
+	.handler(async ({ data: { product, bundledItems } }) => {
 		const supabase = createClient();
 
-		const { data, error } = await supabase.from("products").insert(product)
-			.select("unique_id").single();
+		const { data, error } = await supabase
+			.from("products")
+			.insert(product)
+			.select("unique_id")
+			.single();
 
 		if (error || !data) {
 			throw new Error("Error creating product" + error.message, {
@@ -418,23 +435,19 @@ export const createProduct = createServerFn().validator(({
 		}
 
 		if (bundledItems && bundledItems.length) {
-			await createProducts(
-				{
-					data: bundledItems.map((item) => ({
-						...item,
-						parent: data.unique_id,
-					})),
-				},
-			);
+			await createProducts({
+				data: bundledItems.map((item) => ({
+					...item,
+					parent: data.unique_id,
+				})),
+			});
 		}
 
 		return data;
-	},
-);
+	});
 
-export const createProducts = createServerFn().validator((
-	products: ProductInsert[],
-) => products)
+export const createProducts = createServerFn()
+	.validator((products: ProductInsert[]) => products)
 	.handler(async ({ data: products }) => {
 		const supabase = createClient();
 
@@ -447,12 +460,12 @@ export const createProducts = createServerFn().validator((
 		}
 	});
 
-export const createOrganizationIntegration = createServerFn().validator((
-	organization: OrganizationIntegrationInsert,
-) => organization)
+export const createOrganizationIntegration = createServerFn()
+	.validator((organization: OrganizationIntegrationInsert) => organization)
 	.handler(async ({ data: organization }) => {
 		const supabase = await createClient();
-		const { error } = await supabase.from("organization_integrations")
+		const { error } = await supabase
+			.from("organization_integrations")
 			.insert(organization);
 
 		if (error) {
@@ -471,55 +484,59 @@ interface MetaData {
 	manage_reference_id: number;
 }
 
-export const signUp = createServerFn().validator((
-	formData: FormData,
-	data?: MetaData,
-) => ({ formData, data })).handler(async ({ data: { formData, data } }) => {
-	// const origin = (await headers()).get('origin');
-	const email = formData.get("email") as string;
-	const password = formData.get("password") as string;
+export const signUp = createServerFn()
+	.validator((formData: FormData, data?: MetaData) => ({ formData, data }))
+	.handler(async ({ data: { formData, data } }) => {
+		// const origin = (await headers()).get('origin');
+		const email = formData.get("email") as string;
+		const password = formData.get("password") as string;
 
-	const supabase = await createClient();
+		const supabase = await createClient();
 
-	const { error } = await supabase.auth.signUp({
-		email,
-		password,
-		options: {
-			emailRedirectTo: `${origin}/auth/callback`,
-			data,
-		},
+		const { error } = await supabase.auth.signUp({
+			email,
+			password,
+			options: {
+				emailRedirectTo: `${origin}/auth/callback`,
+				data,
+			},
+		});
+
+		if (error) {
+			throw Error(error.message, { cause: error.cause });
+		}
+
+		// return redirect('/login?message=Check email to continue sign in process');
 	});
 
-	if (error) {
-		throw Error(error.message, { cause: error.cause });
-	}
+export const createVersion = createServerFn()
+	.validator((proposal: string) => proposal)
+	.handler(async ({ data: proposal }) => {
+		const supabase = createClient();
 
-	// return redirect('/login?message=Check email to continue sign in process');
-});
+		const { data, error } = await supabase
+			.from("versions")
+			.insert({
+				proposal,
+			})
+			.select("id")
+			.single();
 
-export const createVersion = createServerFn().validator((proposal: string) =>
-	proposal
-).handler(async ({ data: proposal }) => {
-	const supabase = createClient();
+		if (error || !data) {
+			throw new Error("Can't create version");
+		}
 
-	const { data, error } = await supabase.from("versions").insert({
-		proposal,
-	}).select("id").single();
+		await updateProposal({
+			data: { id: proposal, proposal: { working_version: data.id } },
+		});
 
-	if (error || !data) {
-		throw new Error("Can't create version");
-	}
-
-	await updateProposal({
-		data: { id: proposal, proposal: { working_version: data.id } },
+		// revalidatePath('/proposals');
+		return data.id;
 	});
-
-	// revalidatePath('/proposals');
-	return data.id;
-});
 
 // Call the function for each phase
-export const duplicateTicket = createServerFn().validator((id: string) => id)
+export const duplicateTicket = createServerFn()
+	.validator((id: string) => id)
 	.handler(async ({ data: id }) => {
 		const supabase = createClient();
 		const [{ data: ticket }, { data: tasks }] = await Promise.all([
@@ -536,12 +553,13 @@ export const duplicateTicket = createServerFn().validator((id: string) => id)
 		delete ticketInsert["id"];
 		delete ticketInsert["created_at"];
 
-		const remappedTasks = tasks?.map((task) => {
-			const taskInsert: TaskInsert = task;
-			delete taskInsert["id"];
-			delete taskInsert["created_at"];
-			return taskInsert;
-		}) || [];
+		const remappedTasks =
+			tasks?.map((task) => {
+				const taskInsert: TaskInsert = task;
+				delete taskInsert["id"];
+				delete taskInsert["created_at"];
+				return taskInsert;
+			}) || [];
 
 		// await createTicket({ ...ticketInsert, phase: ticket.phase }, remappedTasks);
 		await createTicket({

@@ -10,100 +10,98 @@ import { SyncMapItem } from "twilio-sync";
  * @returns The sync map items.
  */
 const useSyncMap = ({ token, mapKey }: { token: string; mapKey: string }) => {
-  const [items, setItems] = useState<SyncMapItem[]>([]);
+	const [items, setItems] = useState<SyncMapItem[]>([]);
 
-  const { data, isLoading } = useQuery(getSyncMapQuery({ mapKey, token }));
+	const { data, isLoading } = useQuery(getSyncMapQuery({ mapKey, token }));
 
-  const handleItemAdded = useCallback(
-    ({ item, isLocal }: { item: SyncMapItem; isLocal: boolean }) => {
-      console.log("item updated", item);
-      console.log("current items", items);
-      const newItems = [
-        ...items.filter((i) => i.key !== item.key),
-        item,
-      ];
-      setItems(newItems);
-    },
-    [items],
-  );
+	const handleItemAdded = useCallback(
+		({ item, isLocal }: { item: SyncMapItem; isLocal: boolean }) => {
+			console.log("item updated", item);
+			console.log("current items", items);
+			const newItems = [...items.filter((i) => i.key !== item.key), item];
+			setItems(newItems);
+		},
+		[items],
+	);
 
-  const handleItemUpdated = useCallback(
-    (
-      { item, isLocal, previousItemData }: {
-        item: SyncMapItem;
-        isLocal: boolean;
-        previousItemData: object;
-      },
-    ) => {
-      console.log("item updated", item);
-      console.log("current items", items);
-      const newItems = [
-        ...items.filter((i) => i.key !== item.key),
-        item,
-      ];
-      setItems(newItems);
-    },
-    [items],
-  );
+	const handleItemUpdated = useCallback(
+		({
+			item,
+			isLocal,
+			previousItemData,
+		}: {
+			item: SyncMapItem;
+			isLocal: boolean;
+			previousItemData: object;
+		}) => {
+			console.log("item updated", item);
+			console.log("current items", items);
+			const newItems = [...items.filter((i) => i.key !== item.key), item];
+			setItems(newItems);
+		},
+		[items],
+	);
 
-  const handleItemRemoved = useCallback(
-    (
-      { previousItemData, key, isLocal }: {
-        previousItemData: SyncMapItem;
-        key: string;
-        isLocal: boolean;
-      },
-    ) => {
-      console.log("item deleted", key);
-      console.log("current items", items);
-      const newItems = [...items.filter((i) => i.key !== key)];
-      setItems(newItems);
-    },
-    [items],
-  );
+	const handleItemRemoved = useCallback(
+		({
+			previousItemData,
+			key,
+			isLocal,
+		}: {
+			previousItemData: SyncMapItem;
+			key: string;
+			isLocal: boolean;
+		}) => {
+			console.log("item deleted", key);
+			console.log("current items", items);
+			const newItems = [...items.filter((i) => i.key !== key)];
+			setItems(newItems);
+		},
+		[items],
+	);
 
-  useEffect(() => {
-    if (isLoading || !data) return;
-    const { map, items, client } = data;
-    setItems(items);
-    client.on("connectionStateChanged", (state) => {
-      console.log("connection state changed", state);
-    });
-    client.on("connectionError", (error) => {
-      console.log("connection error", error);
-    });
-    client.on("tokenAboutToExpire", () => {
-      console.log("token about to expire");
-    });
-    client.on("tokenExpired", () => {
-      console.log("token expired");
-    });
+	useEffect(() => {
+		if (isLoading || !data) return;
+		const { map, items, client } = data;
+		setItems(items);
+		client.on("connectionStateChanged", (state) => {
+			console.log("connection state changed", state);
+		});
+		client.on("connectionError", (error) => {
+			console.log("connection error", error);
+		});
+		client.on("tokenAboutToExpire", () => {
+			console.log("token about to expire");
+		});
+		client.on("tokenExpired", () => {
+			console.log("token expired");
+		});
 
-    map.on("_subscriptionStateChanged", (state) => {
-      console.log("subscription state changed", state);
-    });
+		map.on("_subscriptionStateChanged", (state) => {
+			console.log("subscription state changed", state);
+		});
 
-    map.on("itemUpdated", handleItemUpdated);
+		map.on("itemUpdated", handleItemUpdated);
 
-    map.on("itemAdded", handleItemAdded);
+		map.on("itemAdded", handleItemAdded);
 
-    map.on("itemRemoved", handleItemRemoved);
+		map.on("itemRemoved", handleItemRemoved);
 
-    return () => {
-      map.off("itemUpdated", handleItemUpdated);
+		return () => {
+			map.off("itemUpdated", handleItemUpdated);
 
-      map.on("itemAdded", handleItemAdded);
+			map.on("itemAdded", handleItemAdded);
 
-      map.off("itemRemoved", handleItemRemoved);
+			map.off("itemRemoved", handleItemRemoved);
 
-      map.close();
-    };
-  }, [data]);
+			map.close();
+		};
+	}, [data]);
 
-  return {
-    items,
-    isLoading,
-  };
+	return {
+		items,
+		isLoading,
+	};
 };
 
 export default useSyncMap;

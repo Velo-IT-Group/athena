@@ -207,8 +207,8 @@ export const moveTicketsBetweenPhases = (
 		return { fromPhase: from, toPhase: to };
 	}
 
-	const newFromPhaseTickets = fromPhaseTickets?.filter((ticket) =>
-		ticket.id !== to.id
+	const newFromPhaseTickets = fromPhaseTickets?.filter(
+		(ticket) => ticket.id !== to.id,
 	);
 	const newToPhaseTickets = [...toPhaseTickets, ...fromPhaseTickets];
 

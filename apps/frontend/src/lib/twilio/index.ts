@@ -4,10 +4,12 @@ import { createServerFn } from "@tanstack/react-start";
 import z from "zod";
 
 export const createAccessToken = createServerFn()
-	.validator(z.object({
-		identity: z.string(),
-		workerSid: z.string(),
-	}))
+	.validator(
+		z.object({
+			identity: z.string(),
+			workerSid: z.string(),
+		}),
+	)
 	.handler(async ({ data: { workerSid, identity } }) => {
 		const AccessToken = Twilio.jwt.AccessToken;
 		const VoiceGrant = AccessToken.VoiceGrant;

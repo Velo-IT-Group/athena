@@ -17,8 +17,8 @@ export const getConversations = createServerFn()
 	.handler(async ({ data }) => {
 		const client = await createClient();
 
-		const conversations = await client.conversations.v1
-			.participantConversations.list(data);
+		const conversations =
+			await client.conversations.v1.participantConversations.list(data);
 
 		return conversations.map((c) => c.toJSON());
 	});
@@ -45,7 +45,7 @@ export const getPhoneNumbers = createServerFn()
 	.handler(async ({ data }) => {
 		const client = await createClient();
 		return (await client.incomingPhoneNumbers.list(data)).map((w) =>
-			w.toJSON()
+			w.toJSON(),
 		);
 	});
 
@@ -130,8 +130,7 @@ export const getTranscript = createServerFn()
 	.handler(async ({ data: sid }) => {
 		const client = await createClient();
 
-		const t = await client.intelligence.v2
-			.transcripts(sid).fetch();
+		const t = await client.intelligence.v2.transcripts(sid).fetch();
 
 		return t.toJSON();
 	});
@@ -165,9 +164,7 @@ export const getRecording = createServerFn()
 	.handler(async ({ data: sid }) => {
 		const client = await createClient();
 
-		const recording = await client
-			.recordings(sid)
-			.fetch();
+		const recording = await client.recordings(sid).fetch();
 
 		return recording.toJSON();
 	});
@@ -269,7 +266,7 @@ export const getConferenceParticipants = createServerFn()
 	.handler(async ({ data }) => {
 		const client = await createClient();
 		return (await client.conferences(data).participants.list()).map((p) =>
-			p.toJSON()
+			p.toJSON(),
 		);
 	});
 

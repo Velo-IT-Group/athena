@@ -89,48 +89,52 @@ export const getTranscriptSentencesQuery = (transcriptSid: string) =>
 export const getTaskReservationQuery = (
 	taskSid: string,
 	reservationSid: string,
-) => queryOptions({
-	queryKey: ["reservations", reservationSid],
-	queryFn: () =>
-		getTaskReservation({
-			data: { taskSid, reservationSid },
-		}),
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["reservations", reservationSid],
+		queryFn: () =>
+			getTaskReservation({
+				data: { taskSid, reservationSid },
+			}),
+		staleTime: Infinity,
+	});
 
 export const getTaskReservationsQuery = (
 	taskSid: string,
 	options?: ReservationListInstanceOptions,
-) => queryOptions({
-	queryKey: ["reservations", taskSid, options],
-	queryFn: () =>
-		getTaskReservations({
-			data: { taskSid, options },
-		}),
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["reservations", taskSid, options],
+		queryFn: () =>
+			getTaskReservations({
+				data: { taskSid, options },
+			}),
+		staleTime: Infinity,
+	});
 
 export const getWorkerReservationQuery = (
 	workerSid: string,
 	reservationSid: string,
-) => queryOptions({
-	queryKey: ["reservations", workerSid, reservationSid],
-	queryFn: async () => {
-		return (await getWorkerReservation({
-			data: { workerSid, reservationSid },
-		})) as ReservationInstance;
-	},
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["reservations", workerSid, reservationSid],
+		queryFn: async () => {
+			return (await getWorkerReservation({
+				data: { workerSid, reservationSid },
+			})) as ReservationInstance;
+		},
+		staleTime: Infinity,
+	});
 
 export const getWorkerReservationsQuery = (
 	workerSid: string,
 	options?: ReservationListInstanceOptions,
-) => queryOptions({
-	queryKey: ["reservations", workerSid, options],
-	queryFn: () => getWorkerReservations({ data: { workerSid, options } }),
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["reservations", workerSid, options],
+		queryFn: () => getWorkerReservations({ data: { workerSid, options } }),
+		staleTime: Infinity,
+	});
 
 export const getEventsQuery = (startDate?: Date, endDate?: Date) =>
 	queryOptions({
@@ -208,8 +212,7 @@ export const getWorkerQuery = (sid: string) =>
 export const getMessagesQuery = (options?: MessageListInstanceOptions) =>
 	queryOptions({
 		queryKey: ["messages", options],
-		queryFn: () =>
-			getMessages({ data: options }) as Promise<MessageInstance[]>,
+		queryFn: () => getMessages({ data: options }) as Promise<MessageInstance[]>,
 		// staleTime: Infinity,
 	});
 
@@ -244,14 +247,15 @@ export const getTaskQueuesQuery = (options?: TaskQueueListInstanceOptions) =>
 export const getWorkerStatsQuery = (
 	workerSid: string,
 	params: WorkerStatisticsContextFetchOptions = {},
-) => queryOptions({
-	queryKey: ["workers", workerSid, "stats"],
-	queryFn: () =>
-		getWorkerStats({
-			data: { workerSid, params },
-		}) as Promise<WorkerStatisticsInstance>,
-	staleTime: Infinity,
-});
+) =>
+	queryOptions({
+		queryKey: ["workers", workerSid, "stats"],
+		queryFn: () =>
+			getWorkerStats({
+				data: { workerSid, params },
+			}) as Promise<WorkerStatisticsInstance>,
+		staleTime: Infinity,
+	});
 
 export const getSyncMapQuery = ({
 	mapKey,
