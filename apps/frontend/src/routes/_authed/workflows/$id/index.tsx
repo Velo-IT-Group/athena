@@ -1,7 +1,6 @@
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import React, { useCallback } from 'react';
-
-import { useQuery } from '@tanstack/react-query';
 import { getWorkflowEvents } from '@/lib/manage/read';
 
 export const Route = createFileRoute('/_authed/workflows/$id/')({

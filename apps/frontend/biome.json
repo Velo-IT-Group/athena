@@ -6,13 +6,18 @@
 			"recommended": true,
 			"correctness": {
 				"noInvalidUseBeforeDeclaration": "error",
-				"noUnusedVariables": "warn"
+				"noUnusedVariables": "error",
+				"noUnusedImports": "error",
+				"useJsxKeyInIterable": "error",
+				"useExhaustiveDependencies": "error"
+			},
+			"style": {
+				"useConsistentArrayType": "error"
 			}
 		}
 	},
 	"formatter": {
 		"enabled": true,
-		"formatWithErrors": false,
 		"attributePosition": "auto",
 		"lineEnding": "lf"
 	}
