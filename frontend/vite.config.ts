@@ -12,7 +12,7 @@ export default defineConfig({
 		}),
 		tanstackStart({
 			customViteReactPlugin: true,
-			target: "vercel",
+			target: "cloudflare",
 		}),
 		tailwindcss(),
 		react(),
