@@ -7,14 +7,14 @@
 		"packages/*"
 	],
 	"scripts": {
-		"dev": "bun --filter '*' dev"
+		"build": "turbo run build",
+		"dev": "turbo run dev",
+		"lint": "turbo run lint",
+		"format": "biome format --write ."
 	},
-	"trustedDependencies": [
-		"@parcel/watcher",
-		"@tailwindcss/oxide",
-		"core-js"
-	],
+	"packageManager": "bun@1.2.19",
 	"devDependencies": {
-		"@biomejs/biome": "^2.1.2"
+		"@biomejs/biome": "^2.1.2",
+		"turbo": "^2.5.5"
 	}
 }

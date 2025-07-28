@@ -3,6 +3,10 @@
 	"version": "1.1.2",
 	"private": true,
 	"scripts": {
-		"dev": "supabase start && supabase functions serve --no-verify-jwt --env-file ./.env"
+		"dev": "supabase start && supabase functions serve --no-verify-jwt --env-file ./.env",
+		"clean": "rm -rf .turbo node_modules",
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"typecheck": "tsc --noEmit"
 	}
 }
