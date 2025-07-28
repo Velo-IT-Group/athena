@@ -1,14 +1,19 @@
 {
-	"name": "athena",
-	"version": "1.1.2",
-	"private": true,
-	"workspaces": [
-		"backend",
-		"frontend",
-		"packages/*",
-		"taskrouter"
-	],
-	"scripts": {
-		"dev": "bun --filter '*' dev"
-	}
+  "name": "athena",
+  "version": "1.1.2",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "packages/*",
+    "taskrouter"
+  ],
+  "scripts": {
+    "dev": "bun --filter '*' dev"
+  },
+  "trustedDependencies": [
+    "@parcel/watcher",
+    "@tailwindcss/oxide",
+    "core-js"
+  ]
 }

@@ -1,10 +1,10 @@
 import z from "zod";
 
 export const attributeIdentifier = z.object({
-    userId: z.number().optional(),
-    companyId: z.number().optional(),
+    userId: z.number().or(z.string()).optional(),
+    companyId: z.number().or(z.string()).optional(),
     name: z.string(),
-    territoryName: z.string(),
+    territoryName: z.string().default("Alpha"),
 });
 
 export const voiceAttributesSchema = z.discriminatedUnion("direction", [
@@ -15,7 +15,7 @@ export const voiceAttributesSchema = z.discriminatedUnion("direction", [
         called: z.string(),
         to_country: z.string(),
         to_city: z.string(),
-        taskType: z.enum(["voicemail"]),
+        taskType: z.enum(["voicemail"]).optional(),
         conversations: z.object({
             hang_up_by: z.string(),
             in_business_hours: z.string(),
@@ -60,7 +60,7 @@ export const voiceAttributesSchema = z.discriminatedUnion("direction", [
         ...attributeIdentifier.shape,
         direction: z.literal("outbound"),
         from: z.string(),
-        outbound_to: z.string(),
+        to: z.string(),
         conference: z.object({
             sid: z.string(),
             participants: z.object({
@@ -73,6 +73,16 @@ export const voiceAttributesSchema = z.discriminatedUnion("direction", [
 ]);
 
 export type VoiceAttributes = z.infer<typeof voiceAttributesSchema>;
+
+export const createEngagementSchema = z.object({
+    to: z.string(),
+    from: z.string(),
+    channel: z.enum(["sms", "voice"]),
+    direction: z.enum(["inbound", "outbound"]),
+    workerSid: z.string().optional(),
+}).extend(attributeIdentifier.shape);
+
+export type CreateEngagement = z.infer<typeof createEngagementSchema>;
 
 export const taskEventStreamSchema = z.object({
     specversion: z.string(),
