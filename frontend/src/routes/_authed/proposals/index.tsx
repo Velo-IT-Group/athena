@@ -19,6 +19,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge, ColoredBadge } from '@/components/ui/badge';
 import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
 import { format } from 'date-fns';
+import { debounce } from '@tanstack/pacer';
+import { useState } from 'react';
 
 export const Route = createFileRoute('/_authed/proposals/')({
 	component: Proposals,
@@ -26,13 +28,22 @@ export const Route = createFileRoute('/_authed/proposals/')({
 });
 
 function Proposals() {
-	const { filter } = Route.useSearch();
+	// const { filter } = Route.useSearch();
+	const [searchText, setSearchText] = useState<string | undefined>(undefined);
 
-	const { data, isLoading } = useQuery(
-		getProposalsQuery({ searchText: filter?.[0]?.value?.values?.[0] || '' })
-	);
+	const { data, isLoading } = useQuery({
+		...getProposalsQuery({ searchText }),
+		placeholderData: (prev) => prev,
+	});
 
 	const proposals = data?.data ?? [];
+	const debounced = debounce(
+		(value: string) => {
+			// saveChanges();
+			setSearchText(value);
+		},
+		{ wait: 250 }
+	);
 
 	const groupedProposals = Object.groupBy(
 		proposals,
@@ -71,7 +82,10 @@ function Proposals() {
 				</Popover>
 
 				<div className='ml-auto flex items-center gap-2'>
-					<Expandable placeholder='Search proposals...' />
+					<Expandable
+						placeholder='Search proposals...'
+						onChange={(value) => debounced(value)}
+					/>
 
 					<Button
 						variant='outline'

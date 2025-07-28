@@ -7,7 +7,7 @@ import { Task } from 'twilio-taskrouter';
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTwilio } from '@/contexts/twilio-provider';
-import { VoiceAttributes } from '@/types/twilio';
+import { VoiceAttributes } from '@athena/utils';
 
 export type Participant =
 	| 'worker'

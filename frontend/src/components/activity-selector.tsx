@@ -27,27 +27,11 @@ type Props = {};
 
 const ActivitySelector = () => {
 	const [open, setOpen] = useState(false);
-	const [hasDetectedAudio, setHasDetectedAudio] = useState(false);
-	const { worker, device } = useTwilio();
+	const { worker, device, hasDetectedAudio } = useTwilio();
 	const { data, isLoading } = useQuery(getActivitiesQuery());
 	const [attemptedActivity, setAttemptedActivity] = useState<string | null>(
 		null
 	);
-
-	const handleInputVolume = useCallback((volume: number) => {
-		if (volume < 0.2) return;
-		setHasDetectedAudio(true);
-	}, []);
-
-	useEffect(() => {
-		if (!device || hasDetectedAudio) return;
-
-		device.audio?.on('inputVolume', handleInputVolume);
-
-		return () => {
-			device.audio?.off('inputVolume', handleInputVolume);
-		};
-	}, [device, hasDetectedAudio]);
 
 	if (isLoading || !worker?.activity)
 		return (
@@ -68,7 +52,10 @@ const ActivitySelector = () => {
 			onOpenChange={setOpen}
 		>
 			<Popover>
-				<PopoverTrigger asChild>
+				<PopoverTrigger
+					disabled={!device?.audio}
+					asChild
+				>
 					<Button
 						variant='outline'
 						size='sm'

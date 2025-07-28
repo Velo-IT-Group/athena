@@ -4,7 +4,7 @@ import ActiveCallHeader from './header';
 import ActiveCallFooter from './footer';
 import ActiveCallParticipants from './participants';
 import { Engagement } from '@/contexts/twilio-provider';
-import { VoiceAttributes } from '@/types/twilio';
+import { VoiceAttributes } from '@athena/utils';
 
 type Props = {
 	engagement: Engagement;

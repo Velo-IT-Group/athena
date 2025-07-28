@@ -29,6 +29,12 @@
 	--font-inter: 'Inter', sans-serif;
 }
 
+@property --border-angle {
+	inherits: false;
+	initial-value: 0deg;
+	syntax: '<angle>';
+}
+
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -68,6 +74,8 @@
 	--animate-accordion-down: accordion-down 0.2s ease-out;
 	--animate-accordion-up: accordion-up 0.2s ease-out;
 
+	--animate-border: border 4s linear infinite;
+
 	@keyframes accordion-down {
 		from {
 			height: 0;
@@ -101,6 +109,12 @@
 		}
 		to {
 			height: 0;
+		}
+	}
+
+	@keyframes border {
+		to {
+			--border-angle: 360deg;
 		}
 	}
 }

@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn, env } from '@/lib/utils';
 import { Form, FormField, FormItem } from '@/components/ui/form';
-import { createEngagementSchema, Direction } from '@/types/twilio';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -24,6 +23,7 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import DevicePicker from '@/components/device-picker';
+import { createEngagementSchema } from '@athena/utils';
 
 export const numbers: Record<string, string> = {
 	'214': '+12142148356',
@@ -33,26 +33,11 @@ export const numbers: Record<string, string> = {
 
 const OutboundDialer = () => {
 	const [open, setOpen] = useState(false);
-	const [hasDetectedAudio, setHasDetectedAudio] = useState(false);
-	const { worker, device, createEngagement } = useTwilio();
+	// const [hasDetectedAudio, setHasDetectedAudio] = useState(false);
+	const { worker, device, createEngagement, hasDetectedAudio } = useTwilio();
 	const [attemptedEngagement, setAttemptedEngagement] = useState<z.infer<
 		typeof createEngagementSchema
 	> | null>(null);
-
-	const handleInputVolume = useCallback((volume: number) => {
-		if (volume < 0.2) return;
-		setHasDetectedAudio(true);
-	}, []);
-
-	useEffect(() => {
-		if (!device || hasDetectedAudio) return;
-
-		device.audio?.on('inputVolume', handleInputVolume);
-
-		return () => {
-			device.audio?.off('inputVolume', handleInputVolume);
-		};
-	}, [device, hasDetectedAudio]);
 
 	// 1. Define your form.
 	const form = useForm<z.infer<typeof createEngagementSchema>>({
@@ -61,13 +46,11 @@ const OutboundDialer = () => {
 			to: '',
 			from: env.VITE_TWILIO_PHONE_NUMBER,
 			channel: 'voice',
-			attributes: {
-				direction: 'outbound',
-				name: '',
-				territoryName: '',
-				companyId: -1,
-				userId: -1,
-			},
+			direction: 'outbound',
+			name: '',
+			territoryName: '',
+			companyId: -1,
+			userId: -1,
 		},
 	});
 
@@ -152,10 +135,10 @@ const OutboundDialer = () => {
 								size='icon'
 								className='size-12 mx-auto my-3'
 								type='submit'
-								disabled={
-									!form.formState.isValid ||
-									createEngagement.isPending
-								}
+								// disabled={
+								// 	!form.formState.isValid ||
+								// 	createEngagement.isPending
+								// }
 							>
 								{createEngagement.isPending ? (
 									<Loader className='animate-spin' />

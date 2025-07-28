@@ -27,6 +27,7 @@ export const useDevice = ({
 	const [isRegistered, setIsRegistered] = useState(false);
 	const [isTokenExpiring, setIsTokenExpiring] = useState(false);
 	const [calls, setCalls] = useState<Call[]>([]);
+	const [hasDetectedAudio, setHasDetectedAudio] = useState(false);
 
 	const interacted = useOnInteraction();
 
@@ -36,6 +37,15 @@ export const useDevice = ({
 			onIncomingCall?.(call);
 		},
 		[onIncomingCall]
+	);
+
+	const handleVolumeChange = useCallback(
+		(v: number) => {
+			if (v < 0.01) return;
+			console.log(v);
+			setHasDetectedAudio(true);
+		},
+		[hasDetectedAudio]
 	);
 
 	const handleRegistration = useCallback(async () => {
@@ -189,6 +199,15 @@ export const useDevice = ({
 		handleIncomingCall,
 	]);
 
+	useEffect(() => {
+		if (!deviceRef.current?.audio || hasDetectedAudio) return;
+		deviceRef.current.audio.on('inputVolume', handleVolumeChange);
+
+		return () => {
+			deviceRef.current?.audio?.off('inputVolume', handleVolumeChange);
+		};
+	}, [deviceRef.current?.audio, handleVolumeChange]);
+
 	const runPreflightTest = useCallback(() => {
 		if (!deviceRef.current) return;
 		const preflightTest = Device.runPreflight(token, {
@@ -201,7 +220,7 @@ export const useDevice = ({
 		preflightTest.on('failed', (error) => {
 			console.log(error);
 		});
-	}, [deviceRef.current, token]);
+	}, [deviceRef.current, token, hasDetectedAudio]);
 
 	return {
 		token,
@@ -211,5 +230,6 @@ export const useDevice = ({
 		isTokenExpiring,
 		calls,
 		runPreflightTest,
+		hasDetectedAudio,
 	};
 };

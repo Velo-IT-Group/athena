@@ -8,7 +8,7 @@ import { CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConference } from '@/hooks/use-conference';
 import { cn } from '@/lib/utils';
-import { VoiceAttributes } from '@/types/twilio';
+import { VoiceAttributes } from '@athena/utils';
 import { Grip, Mic, Pause, User } from 'lucide-react';
 
 const ActiveCallParticipants = ({
@@ -66,7 +66,7 @@ const ActiveCallParticipants = ({
 
 							<p>
 								{attributes?.direction === 'outbound'
-									? attributes?.outbound_to
+									? attributes?.to
 									: attributes?.from}
 							</p>
 

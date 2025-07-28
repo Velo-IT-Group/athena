@@ -30,9 +30,9 @@ import { ListSelector } from '@/components/list-selector';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { getWorkersQuery } from '@/lib/twilio/api';
 import { useConference } from '@/hooks/use-conference';
-import { VoiceAttributes, workerAttributesSchema } from '@/types/twilio';
 import { getMembersQuery } from '@/lib/manage/api';
 import z, { number } from 'zod';
+import { VoiceAttributes, workerAttributesSchema } from '@athena/utils';
 
 const transferParticipantSchema = z.discriminatedUnion('type', [
 	z.object({

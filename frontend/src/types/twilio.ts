@@ -515,7 +515,5 @@ export const createEngagementSchema = z.object({
 	to: z.string(),
 	from: z.string(),
 	channel: z.enum(["sms", "voice"]),
-	attributes: attributeIdentifier.and(z.object({
-		direction: z.enum(["inbound", "outbound"]),
-	})),
-});
+	direction: z.enum(["inbound", "outbound"]),
+}).extend(attributeIdentifier.shape);

@@ -36,7 +36,9 @@ const OutboundDialerContent = ({ onSubmit }: Props) => {
 				<Button
 					type='submit'
 					className='w-full'
-					disabled={form.formState.disabled || form.formState.isSubmitting}
+					disabled={
+						form.formState.disabled || form.formState.isSubmitting
+					}
 				>
 					Dial
 				</Button>

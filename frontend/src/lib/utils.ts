@@ -62,6 +62,9 @@ const envSchema = z.object({
 	VITE_TWILIO_WORKSPACE_SID: z.string(),
 	VITE_STRIPE_PUBLISHABLE_KEY: z.string(),
 	VITE_STRIPE_SECRET_KEY: z.string(),
+	VITE_AZURE_CLIENT_ID: z.string(),
+	VITE_AZURE_CLIENT_SECRET: z.string(),
+	VITE_AZURE_TENANT_ID: z.string(),
 	VITE_N8N_API_KEY: z.string(),
 });
 

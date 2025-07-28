@@ -1,27 +1,18 @@
 import {
 	Activity,
 	AudioLines,
-	Building,
 	Cable,
 	ChartBarDecreasing,
-	ClipboardList,
 	File,
 	FileText,
-	Folders,
 	Home,
 	LayoutDashboard,
 	ListChecks,
 	LogOut,
-	Phone,
-	RadioTower,
-	Settings,
 	ShoppingBag,
 	Ticket,
 	User,
-	UserPlus,
 	Users,
-	Users2,
-	Workflow,
 } from "lucide-react";
 import type { NavItem, NavSection } from "@/types/nav";
 
@@ -56,7 +47,7 @@ export const linksConfig: LinksConfig = {
 					title: "Engagements",
 					icon: ChartBarDecreasing,
 					to: "/engagements",
-					badge: "2",
+					// badge: "2",
 				},
 				{
 					title: "Teams",

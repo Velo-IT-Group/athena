@@ -13,7 +13,7 @@ import { PopoverClose } from '@radix-ui/react-popover';
 import { Reservation, Task } from 'twilio-taskrouter';
 import { useTwilio } from '@/contexts/twilio-provider';
 import { useCall } from '@/hooks/use-call';
-import { VoiceAttributes } from '@/types/twilio';
+import { VoiceAttributes } from '@athena/utils';
 
 interface Props {
 	reservation: Reservation;
@@ -58,9 +58,7 @@ const OutboundTask = ({ reservation, attributes }: Props) => {
 				</Avatar>
 
 				<div className='text-center'>
-					<p className='font-medium text-sm'>
-						{attributes?.outbound_to}
-					</p>
+					<p className='font-medium text-sm'>{attributes?.to}</p>
 					<p className='text-gray-400 text-xs'>
 						{reservation.task?.queueName}
 					</p>

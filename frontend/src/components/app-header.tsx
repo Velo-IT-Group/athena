@@ -1,6 +1,7 @@
 import ActivitySelector from '@/components/activity-selector';
 import DevicePicker from '@/components/device-picker';
 import { ListSelector } from '@/components/list-selector';
+import QueueStatus from '@/components/queue-status';
 import TaskNotification from '@/components/task-notification';
 import {
 	AlertDialog,
@@ -13,7 +14,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
@@ -28,11 +29,13 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { PROVIDER_KEY, PROVIDER_REFRESH_KEY } from '@/config';
 import { linksConfig } from '@/config/links';
 import { useTwilio } from '@/contexts/twilio-provider';
 import { getEngagementReservationsQuery } from '@/lib/supabase/api';
+import { env } from '@/lib/utils';
 import { attributeIdentifier, voiceAttributesSchema } from '@/types/twilio';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueries } from '@tanstack/react-query';
 import {
 	useLocation,
 	useRouteContext,
@@ -48,6 +51,36 @@ import {
 	PhoneMissed,
 	PhoneOutgoing,
 } from 'lucide-react';
+import { createServerFn } from '@tanstack/react-start';
+import z from 'zod';
+
+const refreshTokenResponseSchema = z.object({
+	access_token: z.string(),
+	refresh_token: z.string(),
+});
+
+const refreshAccessToken = createServerFn()
+	.validator(z.string())
+	.handler<z.infer<typeof refreshTokenResponseSchema>>(
+		async ({ data: refresh_token }) => {
+			const params = new URLSearchParams({
+				client_id: env.VITE_AZURE_CLIENT_ID,
+				scope: 'offline_access openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite',
+				refresh_token,
+				grant_type: 'refresh_token',
+				client_secret: env.VITE_AZURE_CLIENT_SECRET,
+			});
+
+			const res = await fetch(
+				`https://login.microsoftonline.com/${env.VITE_AZURE_TENANT_ID}/oauth2/v2.0/token`,
+				{ method: 'POST', body: params }
+			);
+
+			const json = await res.json();
+
+			return refreshTokenResponseSchema.parse(json);
+		}
+	);
 
 export function SiteHeader({
 	title,
@@ -56,7 +89,9 @@ export function SiteHeader({
 	title?: string;
 	hideVoice?: boolean;
 }) {
-	const { identity, workerSid } = useRouteContext({ from: '/_authed' });
+	const { identity, workerSid, accessToken } = useRouteContext({
+		from: '/_authed',
+	});
 	const { activeEngagement } = useTwilio();
 	const pathname = useLocation({ select: (l) => l.pathname });
 	const router = useRouter();
@@ -70,7 +105,74 @@ export function SiteHeader({
 			: pathname.startsWith(resolvedLink.pathname);
 	});
 
-	const { data } = useQuery(getEngagementReservationsQuery(workerSid));
+	const [{ data }, { data: photoData }] = useQueries({
+		queries: [
+			getEngagementReservationsQuery(workerSid),
+			{
+				queryKey: [
+					'me/photos/48x48/$value',
+					localStorage.getItem(PROVIDER_KEY),
+				],
+				queryFn: async () => {
+					const headers = new Headers();
+					headers.append('Content-Type', 'image/jpeg');
+					headers.append(
+						'Authorization',
+						'Bearer ' + localStorage.getItem(PROVIDER_KEY)
+					);
+
+					const response = await fetch(
+						`https://graph.microsoft.com/v1.0/me/photos/48x48/$value`,
+						{
+							headers,
+						}
+					);
+
+					if (!response.ok) {
+						const data = await refreshAccessToken({
+							data: localStorage.getItem(PROVIDER_REFRESH_KEY)!,
+						});
+
+						// const params = new URLSearchParams({
+						// 	client_id: 'client_credentials',
+						// 	scope: 'offline_access openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite',
+						// 	refresh_token:
+						// 		localStorage.getItem(PROVIDER_REFRESH_KEY) ??
+						// 		'',
+						// 	grant_type: 'refresh_token',
+						// 	client_secret: env.VITE_AZURE_CLIENT_SECRET,
+						// });
+						// const res = await fetch(
+						// 	'https://login.microsoftonline.com/e4cdcb49-c0c2-4fab-850e-513a86a73ea5/oauth2/v2.0/token?' +
+						// 		params.toString(),
+						// 	{ method: 'POST' }
+						// );
+						// const data = await res.json();
+
+						localStorage.setItem(PROVIDER_KEY, data.access_token);
+						localStorage.setItem(
+							PROVIDER_REFRESH_KEY,
+							data.refresh_token
+						);
+						// console.log(data);
+					}
+
+					const blob = await response.blob();
+					const img = new Image();
+					const imageUrl = URL.createObjectURL(blob);
+					img.src = imageUrl;
+
+					// newer promise based version of img.onload
+					await img.decode();
+
+					return imageUrl;
+				},
+				enabled:
+					localStorage.getItem(PROVIDER_KEY) !== null ||
+					localStorage.getItem('accessToken') !== '',
+			},
+		],
+	});
 
 	return (
 		<header className='flex h-(--header-height) shrink-0 items-center border-b transition-[width,height] ease-linear group-has-data-[collapsible=offcanvas]/sidebar-wrapper:h-(--header-height) px-3 flex-[0_0_var(--header-height)] justify-between gap-2'>
@@ -103,6 +205,13 @@ export function SiteHeader({
 
 			<div className='overflow-visible shrink-0 flex items-center'>
 				<div className='flex items-center justify-center gap-2'>
+					<QueueStatus token={accessToken} />
+
+					<Separator
+						orientation='vertical'
+						className='data-[orientation=vertical]:h-3.5'
+					/>
+
 					{!hideVoice && (
 						<div className='flex items-center justify-start'>
 							<Popover>
@@ -166,6 +275,7 @@ export function SiteHeader({
 
 					<div>
 						<Avatar className='size-5 bg-[#f97514] text-white rounded-full'>
+							<AvatarImage src={photoData} />
 							<AvatarFallback className='text-xs font-normal'>
 								{identity?.charAt(0).toUpperCase() ?? 'U'}
 							</AvatarFallback>
@@ -186,9 +296,16 @@ const HistoryListItem = ({
 }) => {
 	const { createEngagement } = useTwilio();
 
-	const { data: attributes } = voiceAttributesSchema.safeParse(
+	const { data: attributes, error } = voiceAttributesSchema.safeParse(
 		reservation?.engagement?.attributes
 	);
+
+	if (error) {
+		// Handle validation error
+		console.error('Validation error: ', error);
+	}
+
+	attributes;
 
 	const blockedNumberMutation = useMutation({
 		mutationKey: ['block-number'],
@@ -296,25 +413,13 @@ const HistoryListItem = ({
 							variant='ghost'
 							className='flex-shrink-0 justify-start'
 							disabled={createEngagement.isPending}
-							onClick={() =>
-								createEngagement.mutate({
-									channel: 'voice',
-									from:
-										attributes?.direction === 'outbound'
-											? attributes?.from
-											: attributes?.to ?? '',
-									to:
-										attributes?.direction === 'outbound'
-											? attributes?.outbound_to
-											: attributes?.from ?? '',
-									attributes: {
-										...attributeIdentifier.parse(
-											attributes
-										),
-										direction: 'outbound',
-									},
-								})
-							}
+							// onClick={() =>
+							// 	createEngagement.mutate({
+							// 		channel: 'voice',
+							// 		direction: 'outbound',
+							// 		from: Engagement
+							// 	})
+							// }
 						>
 							<Phone />
 							<span>Call</span>

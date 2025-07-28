@@ -27,6 +27,7 @@ export const createAccessToken = createServerFn()
 
 		const voiceGrant = new VoiceGrant({
 			incomingAllow: true,
+			outgoingApplicationSid: "APaa15f84ec7888db4475dfc490016cd94",
 		});
 
 		const syncGrant = new SyncGrant({
@@ -43,8 +44,8 @@ export const createAccessToken = createServerFn()
 			signingKeySecret,
 			{
 				identity,
-				// ttl: 3600, // 1 hour in seconds
-				ttl: 30, // 30 seconds
+				ttl: 7200, // 2 hours in seconds
+				// ttl: 30, // 30 seconds
 			},
 		);
 

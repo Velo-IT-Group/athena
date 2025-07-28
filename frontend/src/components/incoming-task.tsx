@@ -12,7 +12,7 @@ import {
 import { PopoverClose } from '@radix-ui/react-popover';
 import { useTwilio } from '@/contexts/twilio-provider';
 import { useCall } from '@/hooks/use-call';
-import { VoiceAttributes } from '@/types/twilio';
+import { VoiceAttributes } from '@athena/utils';
 
 const IncomingTask = ({
 	attributes,

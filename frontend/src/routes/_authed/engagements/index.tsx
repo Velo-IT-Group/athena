@@ -72,13 +72,9 @@ function RouteComponent() {
 	const inSla = filter?.find((f) => f.id === 'within_sla_hours')?.value
 		?.values?.[0];
 
-	console.log(inSla);
 	const call_date =
 		startDate && endDate
-			? [
-					startOfDay(new Date(startDate)).toISOString(),
-					endOfDay(new Date(endDate)).toISOString(),
-				]
+			? [startOfDay(new Date(startDate)), endOfDay(new Date(endDate))]
 			: undefined;
 
 	const queryFilter: EngagementQueryOptions = {

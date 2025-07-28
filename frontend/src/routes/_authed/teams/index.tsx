@@ -145,7 +145,7 @@ function RouteComponent() {
 								)
 								.map((w) => (
 									<ListItem
-										key={w.id}
+										key={w.sid}
 										className='gap-8 grid grid-cols-[3fr_2fr_2fr_1fr_1.2fr_1.2fr_1fr] items-center inset-shadow-[0px_-1px_0px_0px_var(--border)]'
 									>
 										<Link

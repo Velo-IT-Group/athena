@@ -16,15 +16,11 @@ import {
 	useQueryClient,
 } from '@tanstack/react-query';
 import z from 'zod';
-import {
-	attributeIdentifier,
-	createEngagementSchema,
-	Direction,
-} from '@/types/twilio';
-import { env } from '@/lib/utils';
+import { attributeIdentifier, Direction } from '@/types/twilio';
 import { lookupPhoneNumber } from '@/lib/twilio/phoneNumbers';
 import { getAccessTokenQuery } from '@/lib/twilio/api';
 import { toast } from 'sonner';
+import { createEngagementSchema } from '@athena/utils';
 
 interface TwilioVoiceContextType {
 	device: Device | null;
@@ -38,13 +34,14 @@ interface TwilioVoiceContextType {
 	>;
 	worker: Supervisor | null;
 	createEngagement: UseMutationResult<
-		string | undefined,
+		Call | undefined,
 		Error,
 		z.infer<typeof createEngagementSchema>,
 		void
 	>;
 	runPreflightTest: () => void;
 	isVoiceEnabled: boolean;
+	hasDetectedAudio: boolean;
 }
 
 const TwilioVoiceContext = createContext<TwilioVoiceContextType | undefined>(
@@ -188,11 +185,20 @@ export const TwilioProvider = ({
 			setActiveEngagement((prev) => ({ ...prev, reservation: res })),
 		onReservationCompleted: () => setActiveEngagement(undefined),
 		onReservationCreated: (reservation) => {
+			console.log(reservation.task.attributes);
+			if (reservation.task.attributes.direction === Direction.Outbound) {
+				reservation.accept();
+				setActiveEngagement((prev) => ({
+					...prev,
+					reservation,
+				}));
+				return;
+			}
 			if (
 				reservation.task.taskChannelUniqueName !== 'voice' ||
 				reservation.task.attributes.taskType === 'voicemail'
 			) {
-				setActiveEngagement({ reservation });
+				setActiveEngagement((prev) => ({ ...prev, reservation }));
 				return;
 			}
 			handleReservationConference(reservation);
@@ -209,29 +215,35 @@ export const TwilioProvider = ({
 
 			const attributes = attributeIdentifier.parse(result);
 
-			return await worker?.createTask(
-				values.to,
-				values.from,
-				env.VITE_TWILIO_WORKFLOW_SID,
-				env.VITE_TWILIO_TASK_QUEUE_SID,
-				{
-					attributes: {
-						...attributes,
-						direction: 'outbound',
-					},
-					taskChannelUniqueName: 'voice',
-				}
-			);
+			return await device.device?.connect({
+				params: {
+					direction: 'outbound',
+					workerSid: worker?.sid ?? '',
+					channel: 'voice',
+					from: values.from,
+					name: attributes.name,
+					to: values.to,
+					To: values.to,
+					territoryName: attributes.territoryName,
+					companyId: String(attributes.companyId),
+					userId: String(attributes.userId),
+				},
+			});
 		},
 		onMutate: () => console.log('Creating engagement...'),
-		onSuccess: (v) => {
-			console.log('Engagement created: ', v);
-			if (!v) return;
-			if (worker?.reservations.get(v)) {
-				setActiveEngagement({
-					reservation: worker.reservations.get(v) as Reservation,
-				});
-			}
+		onSuccess: (call) => {
+			console.log('Engagement created: ', call);
+			if (!call) return;
+			setActiveEngagement({
+				call,
+				// @ts-ignore
+				reservation: {},
+			});
+			// if (worker?.reservations.get(v)) {
+			// 	setActiveEngagement({
+			// 		reservation: worker.reservations.get(v) as Reservation,
+			// 	});
+			// }
 		},
 	});
 
@@ -244,6 +256,7 @@ export const TwilioProvider = ({
 				worker,
 				createEngagement,
 				isVoiceEnabled: device.isRegistered && !!worker?.available,
+				hasDetectedAudio: device.hasDetectedAudio,
 			}}
 		>
 			{children}

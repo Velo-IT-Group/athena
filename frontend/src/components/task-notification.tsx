@@ -5,22 +5,26 @@ import IncomingTask from '@/components/incoming-task';
 import { ActiveCall } from '@/components/active-call';
 import TaskWrapup from '@/components/task/wrapup';
 import OutboundTask from '@/components/outbound-task';
-import { Phone, Voicemail } from 'lucide-react';
+import { CheckCircle, Loader2, Phone, Voicemail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import VoicemailTask from '@/components/voicemail-task';
-import { Engagement, useTwilio } from '@/contexts/twilio-provider';
+import { Engagement } from '@/contexts/twilio-provider';
 import { Button } from '@/components/ui/button';
 import OutboundDialer from '@/components/outbound-dialer';
-import { Call } from '@twilio/voice-sdk';
-import { voiceAttributesSchema } from '@/types/twilio';
+import { voiceAttributesSchema } from '@athena/utils';
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import { useMutation } from '@tanstack/react-query';
 
 type Props = {
 	engagement?: Engagement;
 };
 
 const TaskNotification = ({ engagement }: Props) => {
-	const { worker, isRegistered } = useTwilio();
-
 	const [open, setOpen] = useState(false);
 
 	const isAccepted = useMemo(
@@ -54,86 +58,144 @@ const TaskNotification = ({ engagement }: Props) => {
 		// );
 	}, [engagement]);
 
-	const { data: attributes } = voiceAttributesSchema.safeParse(
+	const { data: attributes, error } = voiceAttributesSchema.safeParse(
 		engagement?.reservation?.task?.attributes ?? {}
 	);
 
-	return (
-		<Popover
-			open={open}
-			onOpenChange={setOpen}
-		>
-			<PopoverTrigger asChild>
-				<Button
-					size={engagement ? 'sm' : 'icon'}
-					variant='ghost'
-					className={cn(
-						engagement
-							? 'animate-pulse bg-muted'
-							: 'fill-current stroke-none'
-					)}
-					disabled={
-						!engagement
-							? !worker?.available || !isRegistered
-							: false
-					}
-				>
-					{isVoicemail ? <Voicemail /> : <Phone />}
+	const handleReservationCompletion = useMutation({
+		mutationKey: ['complete-reservation'],
+		mutationFn: async () => {
+			await engagement?.reservation.complete();
+		},
+	});
 
-					<span
+	if (!engagement)
+		return (
+			<Popover
+				open={open}
+				onOpenChange={setOpen}
+			>
+				<PopoverTrigger asChild>
+					<Button
+						size={engagement ? 'sm' : 'icon'}
+						variant='ghost'
 						className={cn(
-							'text-muted-foreground flex items-center gap-1.5 font-medium',
-							!engagement && 'sr-only'
+							engagement
+								? 'animate-pulse bg-muted'
+								: 'fill-current stroke-none'
 						)}
 					>
-						{attributes?.name}
-					</span>
-				</Button>
-			</PopoverTrigger>
+						<Phone />
+					</Button>
+				</PopoverTrigger>
 
-			<PopoverContent
-				className='p-0 w-80'
-				align='center'
-			>
-				{engagement?.reservation && attributes ? (
-					<>
-						{isAccepted && (
-							<>
-								{isVoicemail ? (
-									<VoicemailTask
-										task={engagement?.reservation?.task}
-									/>
-								) : (
-									<ActiveCall
-										engagement={engagement}
-										attributes={attributes}
-									/>
-								)}
-							</>
-						)}
-
-						{isWrapping && (
-							<TaskWrapup reservation={engagement?.reservation} />
-						)}
-
-						{isPending && (
-							<>
-								{attributes.direction === 'outbound' ? (
-									<OutboundTask
-										reservation={engagement?.reservation}
-										attributes={attributes}
-									/>
-								) : (
-									<IncomingTask attributes={attributes} />
-								)}
-							</>
-						)}
-					</>
-				) : (
+				<PopoverContent
+					className='p-0 w-80'
+					align='center'
+				>
 					<OutboundDialer />
-				)}
-			</PopoverContent>
-		</Popover>
+				</PopoverContent>
+			</Popover>
+		);
+
+	return (
+		<ContextMenu>
+			<Popover
+				open={open}
+				onOpenChange={setOpen}
+			>
+				<PopoverTrigger asChild>
+					<ContextMenuTrigger asChild>
+						<Button
+							size={engagement ? 'sm' : 'icon'}
+							variant='ghost'
+							className={cn(
+								engagement
+									? 'animate-pulse bg-muted'
+									: 'fill-current stroke-none'
+							)}
+							// disabled={
+							// 	!engagement
+							// 		? !worker?.available || !isRegistered
+							// 		: false
+							// }
+						>
+							{isVoicemail ? <Voicemail /> : <Phone />}
+
+							<span
+								className={cn(
+									'text-muted-foreground flex items-center gap-1.5 font-medium',
+									!engagement && 'sr-only'
+								)}
+							>
+								{attributes?.name}
+							</span>
+						</Button>
+					</ContextMenuTrigger>
+				</PopoverTrigger>
+
+				<PopoverContent
+					className='p-0 w-80'
+					align='center'
+				>
+					{engagement?.reservation && attributes ? (
+						<>
+							{isAccepted && (
+								<>
+									{isVoicemail ? (
+										<VoicemailTask
+											task={engagement?.reservation?.task}
+										/>
+									) : (
+										<ActiveCall
+											engagement={engagement}
+											attributes={attributes}
+										/>
+									)}
+								</>
+							)}
+
+							{isWrapping && (
+								<TaskWrapup
+									reservation={engagement?.reservation}
+								/>
+							)}
+
+							{isPending && (
+								<>
+									{attributes.direction === 'outbound' ? (
+										<OutboundTask
+											reservation={
+												engagement?.reservation
+											}
+											attributes={attributes}
+										/>
+									) : (
+										<IncomingTask attributes={attributes} />
+									)}
+								</>
+							)}
+						</>
+					) : (
+						<OutboundDialer />
+					)}
+				</PopoverContent>
+			</Popover>
+
+			<ContextMenuContent>
+				<ContextMenuItem
+					onClick={() => handleReservationCompletion.mutate()}
+					disabled={handleReservationCompletion.isPending}
+				>
+					{handleReservationCompletion.isPaused ? (
+						<Loader2 className='animate-spin' />
+					) : (
+						<CheckCircle />
+					)}{' '}
+					<span>Complete</span>
+				</ContextMenuItem>
+			</ContextMenuContent>
+		</ContextMenu>
 	);
 };
 

@@ -1,4 +1,7 @@
-import { createFileRoute, type UseNavigateResult } from '@tanstack/react-router';
+import {
+	createFileRoute,
+	type UseNavigateResult,
+} from '@tanstack/react-router';
 import { Calendar, Phone, Voicemail } from 'lucide-react';
 import { PhoneIncoming, PhoneOutgoing } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,13 +9,20 @@ import { columns } from '@/components/table-columns/engagement';
 import { zodValidator } from '@tanstack/zod-adapter';
 import { z } from 'zod';
 import { Suspense } from 'react';
-import { getEngagementsQuery, getEngagementSummaryByPeriodQuery } from '@/lib/supabase/api';
+import {
+	getEngagementsQuery,
+	getEngagementSummaryByPeriodQuery,
+} from '@/lib/supabase/api';
 import TableSkeleton from '@/components/ui/data-table/skeleton';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { filterSchema, paginationSchema, sortSchema } from '@/lib/utils';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 
@@ -31,26 +41,34 @@ function RouteComponent() {
 	const { filter, sort, pagination } = Route.useSearch();
 	const navigate = Route.useNavigate();
 
-	const startDate = filter?.find((f) => f.id === 'created_at' && f.value.operator === 'greater_than_or_equal_to')
-		?.value?.values;
-	const endDate = filter?.find((f) => f.id === 'created_at' && f.value.operator === 'less_than_or_equal_to')?.value
+	const startDate = filter?.find(
+		(f) =>
+			f.id === 'created_at' &&
+			f.value.operator === 'greater_than_or_equal_to'
+	)?.value?.values;
+	const endDate = filter?.find(
+		(f) =>
+			f.id === 'created_at' &&
+			f.value.operator === 'less_than_or_equal_to'
+	)?.value?.values;
+	const inSla = filter?.find((f) => f.id === 'within_sla_hours')?.value
 		?.values;
-	const inSla = filter?.find((f) => f.id === 'within_sla_hours')?.value?.values;
 
 	const call_date =
 		startDate && endDate
 			? [
-					new Date(new Date(startDate).setHours(inSla ? 8 : 0)).toISOString(),
-					(inSla
+					new Date(new Date(startDate).setHours(inSla ? 8 : 0)),
+					inSla
 						? new Date(new Date(startDate).setHours(inSla ? 17 : 0))
-						: endOfDay(new Date(endDate))
-					).toISOString(),
+						: endOfDay(new Date(endDate)),
 				]
 			: undefined;
 
 	const queryFilter: EngagementQueryOptions = { call_date };
 
-	const { data: engagements } = useSuspenseQuery(getEngagementSummaryByPeriodQuery(queryFilter));
+	const { data: engagements } = useSuspenseQuery(
+		getEngagementSummaryByPeriodQuery(queryFilter)
+	);
 
 	const totalCalls = engagements.reduce((acc, engagement) => {
 		return acc + (engagement.total_engagements ?? 0);
@@ -68,14 +86,18 @@ function RouteComponent() {
 		return acc + (engagement.voicemails ?? 0);
 	}, 0);
 
-	const dateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' });
+	const dateFormatter = new Intl.DateTimeFormat('en-US', {
+		dateStyle: 'medium',
+	});
 
 	return (
 		<div className='space-y-3'>
 			<section className='grid grid-cols-4 gap-3 mt-6'>
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-						<CardTitle className='text-sm font-medium'>Total Calls</CardTitle>
+						<CardTitle className='text-sm font-medium'>
+							Total Calls
+						</CardTitle>
 
 						<Phone className='text-muted-foreground' />
 					</CardHeader>
@@ -87,37 +109,49 @@ function RouteComponent() {
 
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-						<CardTitle className='text-sm font-medium'>Inbound Calls</CardTitle>
+						<CardTitle className='text-sm font-medium'>
+							Inbound Calls
+						</CardTitle>
 
 						<PhoneIncoming className='text-muted-foreground' />
 					</CardHeader>
 
 					<CardContent className='px-3 pb-3 '>
-						<div className='text-2xl font-bold'>{totalInboundCalls}</div>
+						<div className='text-2xl font-bold'>
+							{totalInboundCalls}
+						</div>
 					</CardContent>
 				</Card>
 
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-						<CardTitle className='text-sm font-medium'>Outbound Calls</CardTitle>
+						<CardTitle className='text-sm font-medium'>
+							Outbound Calls
+						</CardTitle>
 
 						<PhoneOutgoing className='text-muted-foreground' />
 					</CardHeader>
 
 					<CardContent className='px-3 pb-3'>
-						<div className='text-2xl font-bold'>{totalOutboundCalls}</div>
+						<div className='text-2xl font-bold'>
+							{totalOutboundCalls}
+						</div>
 					</CardContent>
 				</Card>
 
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
-						<CardTitle className='text-sm font-medium'>Voicemails Left</CardTitle>
+						<CardTitle className='text-sm font-medium'>
+							Voicemails Left
+						</CardTitle>
 
 						<Voicemail className='text-muted-foreground' />
 					</CardHeader>
 
 					<CardContent className='px-3 pb-3'>
-						<div className='text-2xl font-bold'>{totalVoicemails}</div>
+						<div className='text-2xl font-bold'>
+							{totalVoicemails}
+						</div>
 					</CardContent>
 				</Card>
 			</section>
@@ -127,11 +161,15 @@ function RouteComponent() {
 					<PopoverTrigger asChild>
 						<Button variant='outline'>
 							<Calendar />
-							{startDate && !endDate && `After ${dateFormatter.format(new Date(startDate))}`}
+							{startDate &&
+								!endDate &&
+								`After ${dateFormatter.format(new Date(startDate))}`}
 							{startDate &&
 								endDate &&
 								`${dateFormatter.formatRange(new Date(startDate), new Date(endDate))}`}
-							{!startDate && endDate && `Before ${dateFormatter.format(new Date(endDate))}`}
+							{!startDate &&
+								endDate &&
+								`Before ${dateFormatter.format(new Date(endDate))}`}
 							{!startDate && !endDate && 'Date'}
 							{/* {startDate ? `After ${formatDate(new Date(startDate), 'MMM d, yyyy')}` : 'Date'} */}
 						</Button>
@@ -161,8 +199,23 @@ function RouteComponent() {
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { endOfDay, endOfMonth, endOfWeek, startOfMonth, startOfWeek, startOfYesterday, subWeeks } from 'date-fns';
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '@/components/ui/form';
+import {
+	endOfDay,
+	endOfMonth,
+	endOfWeek,
+	startOfMonth,
+	startOfWeek,
+	startOfYesterday,
+	subWeeks,
+} from 'date-fns';
 import { start } from 'repl';
 import type { EngagementQueryOptions } from '@/lib/supabase/read';
 
@@ -212,11 +265,18 @@ export default function DateRangeDisplay({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			start_date: defaultValues?.find(
-				(f) => f.id === 'created_at' && f.value.operator === 'greater_than_or_equal_to'
+				(f) =>
+					f.id === 'created_at' &&
+					f.value.operator === 'greater_than_or_equal_to'
 			)?.value.values,
-			end_date: defaultValues?.find((f) => f.id === 'created_at' && f.value.operator === 'less_than_or_equal_to')
-				?.value.values,
-			within_sla_hours: defaultValues?.find((f) => f.id === 'within_sla_hours')?.value.values ?? true,
+			end_date: defaultValues?.find(
+				(f) =>
+					f.id === 'created_at' &&
+					f.value.operator === 'less_than_or_equal_to'
+			)?.value.values,
+			within_sla_hours:
+				defaultValues?.find((f) => f.id === 'within_sla_hours')?.value
+					.values ?? true,
 		},
 	});
 
@@ -257,7 +317,9 @@ export default function DateRangeDisplay({
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<div className='grid grid-cols-[140px_1fr]'>
 					<div className='border-r'>
-						<h2 className='border-b p-3 text-sm font-semibold'>Date Range</h2>
+						<h2 className='border-b p-3 text-sm font-semibold'>
+							Date Range
+						</h2>
 
 						{quickFilters.map((filter) => {
 							return (
@@ -267,9 +329,18 @@ export default function DateRangeDisplay({
 									className='w-full justify-start font-normal'
 									type='button'
 									onClick={() => {
-										form.setValue('start_date', filter.start_date?.toISOString());
-										form.setValue('end_date', filter.end_date?.toISOString());
-										form.setValue('within_sla_hours', form.getValues('within_sla_hours'));
+										form.setValue(
+											'start_date',
+											filter.start_date?.toISOString()
+										);
+										form.setValue(
+											'end_date',
+											filter.end_date?.toISOString()
+										);
+										form.setValue(
+											'within_sla_hours',
+											form.getValues('within_sla_hours')
+										);
 									}}
 								>
 									{filter.label}
@@ -290,7 +361,12 @@ export default function DateRangeDisplay({
 										<Button
 											variant='link'
 											className='h-auto py-0'
-											onClick={() => form.setValue('start_date', undefined)}
+											onClick={() =>
+												form.setValue(
+													'start_date',
+													undefined
+												)
+											}
 											type='button'
 										>
 											Clear
@@ -303,7 +379,13 @@ export default function DateRangeDisplay({
 											type='date'
 											placeholder='MM/DD/YYYY'
 											{...field}
-											value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+											value={
+												field.value
+													? new Date(field.value)
+															.toISOString()
+															.split('T')[0]
+													: ''
+											}
 										/>
 									</FormControl>
 									<FormMessage />
@@ -322,7 +404,12 @@ export default function DateRangeDisplay({
 											variant='link'
 											className='h-auto py-0'
 											type='button'
-											onClick={() => form.setValue('end_date', undefined)}
+											onClick={() =>
+												form.setValue(
+													'end_date',
+													undefined
+												)
+											}
 										>
 											Clear
 										</Button>
@@ -334,7 +421,13 @@ export default function DateRangeDisplay({
 											type='date'
 											placeholder='MM/DD/YYYY'
 											{...field}
-											value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+											value={
+												field.value
+													? new Date(field.value)
+															.toISOString()
+															.split('T')[0]
+													: ''
+											}
 										/>
 									</FormControl>
 									<FormMessage />

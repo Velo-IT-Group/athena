@@ -11,10 +11,9 @@ import {
 	SidebarProvider,
 	SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { ChevronDown, Settings } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import NavigationalSidebar from '@/components/navigational-sidebar';
 import { linksConfig } from '@/config/links';
-import NavigationItem from '@/components/navigational-sidebar/navigation-item';
 import { useQueries } from '@tanstack/react-query';
 import { getProfile } from '@/lib/supabase/read';
 import { getAccessTokenQuery } from '@/lib/twilio/api';
@@ -34,6 +33,8 @@ import z from 'zod';
 import VeloLogo from '@/components/logo';
 import { SiteHeader } from '@/components/app-header';
 import { workerAttributesSchema } from '@/types/twilio';
+import { useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 const schema = z.object({
 	modal: z.enum(['note']).optional(),
@@ -84,9 +85,42 @@ function AuthComponent() {
 		user,
 		accessToken: initialAccessToken,
 		workerSid,
+		session,
 		identity,
 		defaultOpen,
 	} = Route.useRouteContext();
+
+	useEffect(() => {
+		const supabase = createClient();
+
+		const authListener = supabase.auth.onAuthStateChange(
+			(event, session) => {
+				if (session && session.provider_token) {
+					window.localStorage.setItem(
+						'oauth_provider_token',
+						session.provider_token
+					);
+				}
+				if (session && session.provider_refresh_token) {
+					window.localStorage.setItem(
+						'oauth_provider_refresh_token',
+						session.provider_refresh_token
+					);
+				}
+				if (event === 'SIGNED_OUT') {
+					window.localStorage.removeItem('oauth_provider_token');
+					window.localStorage.removeItem(
+						'oauth_provider_refresh_token'
+					);
+				}
+			}
+		);
+
+		return () => {
+			authListener.data.subscription.unsubscribe();
+		};
+	}, []);
+
 	const { modal, id } = Route.useSearch();
 	const { sidebarNav } = linksConfig;
 

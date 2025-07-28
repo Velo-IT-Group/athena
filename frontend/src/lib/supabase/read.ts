@@ -1,25 +1,24 @@
 import { DAY_IN_MS } from "@/components/template-catalog";
 import type { UseSupabaseUploadOptions } from "@/hooks/use-supabase-upload";
 import { createClient } from "@/lib/supabase/server";
-import {
-	env,
-	filterSchema,
-	type paginationSchema,
-	type sortSchema,
-} from "@/lib/utils";
+import { env, filterSchema, paginationSchema, sortSchema } from "@/lib/utils";
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
+import { z, ZodArray } from "zod";
 import type { Database as DB } from "@/types/supabase.d.ts";
 import { startOfDay } from "date-fns";
 
 type Workflow = Database["system"]["Tables"]["workflow_entity"]["Row"];
 
-export interface EngagementQueryOptions {
-	call_date?: string | string[];
-	contactId?: number;
-	companyId?: number;
-	in_business_hours?: boolean;
-}
+const engagmentQueryOptionsSchema = z.object({
+	call_date: z.date().or(z.array(z.date())).optional(),
+	contactId: z.number().optional(),
+	companyId: z.number().optional(),
+	in_business_hours: z.boolean().optional(),
+});
+
+export type EngagementQueryOptions = z.infer<
+	typeof engagmentQueryOptionsSchema
+>;
 
 export interface EngagementSortOptions {
 	sortBy?: string;
@@ -36,12 +35,12 @@ export const getEngagementSummaryByPeriod = createServerFn()
 			.from("call_summary_by_period")
 			.select();
 
-		if (options?.call_date) {
+		if (options?.call_date instanceof ZodArray) {
 			if (Array.isArray(options.call_date)) {
 				query.gte("call_date", options.call_date[0]);
 				query.lt("call_date", options.call_date[1]);
 			} else if (options.call_date) {
-				query.eq("call_date", options.call_date);
+				query.eq("call_date", options.call_date.toISOString());
 			}
 		}
 
@@ -49,18 +48,7 @@ export const getEngagementSummaryByPeriod = createServerFn()
 
 		query.range(0, 1);
 
-		console.log(query);
-
-		const { data, error } = await query;
-
-		if (error) {
-			throw new Error(
-				"Error in getting call summary by period " + error.message,
-				{
-					cause: error,
-				},
-			);
-		}
+		const { data } = await query.throwOnError();
 
 		return data;
 	});
@@ -92,84 +80,85 @@ export const getEngagementReservations = createServerFn()
 		);
 	});
 
+// @ts-ignore
 export const getEngagements = createServerFn()
 	.validator(
-		(params: {
-			options?: EngagementQueryOptions;
-			sort?: z.infer<typeof sortSchema>;
-			pagination?: z.infer<typeof paginationSchema>;
-		}) => params,
+		z.object({
+			options: engagmentQueryOptionsSchema.optional(),
+			sort: sortSchema.optional(),
+			pagination: paginationSchema.optional(),
+		}).optional(),
 	)
 	.handler<{ data: Engagement[]; count: number }>(
-		async ({ data: { options, pagination, sort } }) => {
+		async ({ data: filters }) => {
 			const supabase = createClient();
 
 			const query = supabase
 				.schema("reporting")
 				.from("engagements")
-				.select("*, reservations:engagement_reservations(*)", {
-					count: "exact",
-				});
-			// .select("*, reservations:engagement_reservations(*)");
-			// .select("*, reservations:engagement_reservations(*)", {
-			// 	count: "exact",
-			// });
+				.select();
 
-			if (options?.call_date) {
-				if (Array.isArray(options.call_date)) {
-					query.gte("created_at", options.call_date[0]);
-					query.lt("created_at", options.call_date[1]);
-				} else if (options.call_date) {
-					query.eq("created_at", options.call_date);
-				}
-			} else {
-				query.gte("created_at", startOfDay(new Date()).toISOString());
+			console.log(filters?.options?.call_date);
+
+			if (
+				filters?.options?.call_date &&
+				Array.isArray(filters?.options.call_date)
+			) {
+				query.gte(
+					"created_at",
+					filters.options.call_date?.[0].toISOString(),
+				);
+				query.lte(
+					"created_at",
+					filters.options.call_date?.[1].toISOString(),
+				);
+			} else if (
+				filters?.options?.call_date &&
+				!Array.isArray(filters?.options.call_date)
+			) {
+				console.log(filters?.options?.call_date);
+				query.gte(
+					"created_at",
+					(filters?.options.call_date ?? new Date()).toISOString(),
+				);
 			}
 
-			if (options?.contactId) {
-				query.eq("contact->id", options.contactId);
+			if (filters?.options?.contactId) {
+				query.eq("contact->id", filters.options.contactId);
 			}
 
-			if (options?.companyId) {
-				query.eq("company->id", options.companyId);
+			if (filters?.options?.companyId) {
+				query.eq("company->id", filters.options.companyId);
 			}
 
-			query.order(sort?.field ?? "created_at", {
-				ascending: sort ? sort?.direction === "asc" : false,
+			query.order(filters?.sort?.field ?? "created_at", {
+				ascending: filters?.sort?.direction === "asc",
 			});
 
-			query.eq("workspace_sid", env.VITE_TWILIO_WORKSPACE_SID);
+			// query.eq("workspace_sid", env.VITE_TWILIO_WORKSPACE_SID);
 
-			if (options?.in_business_hours) {
-				query.eq("in_business_hours", options?.in_business_hours);
+			if (filters?.options?.in_business_hours) {
+				query.eq(
+					"in_business_hours",
+					filters?.options?.in_business_hours,
+				);
 			}
 
-			if (pagination) {
+			if (filters?.pagination) {
 				query.range(
-					(pagination?.pageSize ?? 25) * (pagination?.page ?? 1),
-					(pagination?.pageSize ?? 25) * (pagination?.page ?? 1) +
-						(pagination?.pageSize ?? 25),
+					(filters.pagination?.pageSize ?? 25) *
+						(filters.pagination?.page ?? 1),
+					(filters.pagination?.pageSize ?? 25) *
+							(filters.pagination?.page ?? 1) +
+						(filters.pagination?.pageSize ?? 25),
 				);
 			} else {
-				// query.range(0, 25);
+				query.range(0, 25);
 			}
 
-			const { data, error, count } = await query;
+			const { data, count } = await query.throwOnError();
 
-			console.log(data, error, count);
-
-			if (error) {
-				throw new Error(
-					"Error in getting engagements " + error.message,
-					{
-						cause: error,
-					},
-				);
-			}
-
-			return JSON.parse(
-				JSON.stringify({ data: data ?? [], count: count ?? 0 }),
-			);
+			return { data: data ?? [], count: count ?? 0 };
 		},
 	);
 
@@ -257,6 +246,7 @@ export const getPinnedItem = createServerFn()
 		return JSON.parse(JSON.stringify(pinnedItem));
 	});
 
+// @ts-ignore
 export const getProposalsWithCount = createServerFn()
 	.validator((options?: ProposalQueryOptions) => options)
 	.handler<{ data: Proposal[]; count: number }>(async ({ data }) => {
@@ -272,7 +262,7 @@ export const getProposalsWithCount = createServerFn()
 
 		if (data?.searchText) {
 			proposalsQuery.textSearch("name", data.searchText, {
-				type: "plain",
+				type: "websearch",
 				config: "english",
 			});
 		}
@@ -291,9 +281,7 @@ export const getProposalsWithCount = createServerFn()
 			);
 		}
 
-		const { data: proposals, error, count } = await supabase.from(
-			"proposals",
-		).select().order("created_at", { ascending: false });
+		const { data: proposals, error, count } = await proposalsQuery;
 
 		if (error) {
 			throw new Error("Error in getting proposals", { cause: error });
