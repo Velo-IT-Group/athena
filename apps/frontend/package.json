@@ -91,6 +91,8 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
+    "@tanstack/eslint-plugin-query": "^5.81.2",
+    "@tanstack/eslint-plugin-router": "^1.129.7",
     "@tanstack/react-query-devtools": "^5.83.0",
     "@tanstack/react-router-devtools": "^1.130.2",
     "@types/jsonwebtoken": "^9.0.10",
@@ -105,6 +107,7 @@
     "tailwindcss": "^4.1.11",
     "tailwindcss-bg-patterns": "^0.3.0",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "name": "@athena/frontend",
