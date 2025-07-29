@@ -101,7 +101,7 @@ export const handler: ServerlessFunctionSignature = async function (
                 if (
                     taskAttributes?.direction !== "inbound" &&
                     taskAttributes?.taskType !== "voicemail"
-                ) return;
+                ) break;
 
                 if (taskAttributes?.taskType === "voicemail") {
                     const voicemails_in_queue =
@@ -126,7 +126,7 @@ export const handler: ServerlessFunctionSignature = async function (
                 if (
                     taskAttributes?.direction !== "inbound" &&
                     taskAttributes?.taskType !== "voicemail"
-                ) return;
+                ) break;
 
                 if (taskAttributes?.taskType === "voicemail") {
                     const voicemails_in_queue = queueStatus
