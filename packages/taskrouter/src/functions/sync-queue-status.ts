@@ -91,7 +91,7 @@ export const handler: ServerlessFunctionSignature = async function (
 
     queueStatus.workers_available = workersWithVoiceCapacity;
 
-    console.log(event.eventType);
+    // console.log(event.eventType);
 
     try {
         switch (event.eventType) {

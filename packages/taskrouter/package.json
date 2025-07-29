@@ -1,12 +1,9 @@
 {
 	"dependencies": {
-		"@azure/identity": "^4.10.2",
-		"@azure/msal-browser": "^4.16.0",
-		"@azure/msal-react": "^3.0.16",
-		"@microsoft/microsoft-graph-client": "^3.0.7",
 		"@twilio-labs/serverless-runtime-types": "^4.0.0",
 		"@twilio/runtime-handler": "2.0.1",
-		"twilio": "5.0.3"
+		"twilio": "5.0.3",
+		"zod": "^4.0.13"
 	},
 	"devDependencies": {
 		"copyfiles": "^2.4.1",
@@ -19,15 +16,15 @@
 	"name": "@athena/taskrouter",
 	"private": true,
 	"scripts": {
-		"build": "tsc && npm run build:copy-assets",
+		"build": "tsc && bun run build:copy-assets",
 		"build:copy-assets": "copyfiles src/assets/* src/assets/**/* --up 2 --exclude **/*.ts dist/assets/",
 		"deploy": "twilio-run deploy --functions-folder dist/functions --assets-folder dist/assets",
-		"predeploy": "npm run build",
-		"prestart": "npm run build",
-		"dev": "npm run build && npm start",
+		"predeploy": "bun run build",
+		"prestart": "bun run build",
+		"dev": "bun run build && bun start",
 		"start": "twilio-run --functions-folder dist/functions --assets-folder dist/assets",
 		"test": "tsc --noEmit",
-		"clean": "rm -rf .turbo node_modules",
+		"clean": "rm -rf .turbo dist node_modules",
 		"lint": "biome check .",
 		"format": "biome format --write ."
 	},

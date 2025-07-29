@@ -8,6 +8,7 @@ import {
 	ServerlessFunctionSignature,
 } from "@twilio-labs/serverless-runtime-types/types";
 import type { TaskInstance } from "twilio/lib/rest/taskrouter/v1/workspace/task";
+import z from "zod";
 
 const { notifyWorker } = require(
 	Runtime.getFunctions()["helpers/twilio/call_operations"].path,
@@ -37,6 +38,81 @@ type QueueStatus = {
 	voicemails_in_queue: number;
 	workers_available: number;
 };
+
+export const eventCallbackSchema = z.discriminatedUnion("EventType", [
+	z.object({
+		WorkerActivityName: z.string(),
+		EventType: z.literal("worker.activity.update"),
+		ResourceType: z.literal("worker"),
+		WorkerTimeInPreviousActivityMs: z.string(),
+		Timestamp: z.string(),
+		WorkerActivitySid: z.string(),
+		WorkerPreviousActivitySid: z.string(),
+		WorkerTimeInPreviousActivity: z.string(),
+		AccountSid: z.string(),
+		WorkerName: z.string(),
+		Sid: z.string(),
+		TimestampMs: z.string(),
+		WorkerVersion: z.string(),
+		WorkerSid: z.string(),
+		WorkspaceSid: z.string(),
+		WorkspaceName: z.string(),
+		OperatingUnitSid: z.string(),
+		WorkerPreviousActivityName: z.string(),
+		EventDescription: z.string(),
+		ResourceSid: z.string(),
+		WorkerAttributes: z.string(),
+	}),
+	z.object({
+		TaskPriority: z.string(),
+		EventType: z.enum([
+			"reservation.created",
+			"reservation.accepted",
+			"reservation.rejected",
+			"reservation.canceled",
+			"reservation.timeout",
+			"reservation.rescinded",
+			"reservation.wrapup",
+			"reservation.completed",
+		]),
+		WorkflowName: z.string(),
+		Timestamp: z.string(),
+		TaskAge: z.string(),
+		TaskAssignmentStatus: z.string(),
+		WorkerVersion: z.string(),
+		TaskAttributes: z.string(),
+		TaskVersion: z.string(),
+		WorkerSid: z.string(),
+		TaskChannelUniqueName: z.string(),
+		WorkspaceName: z.string(),
+		OperatingUnitSid: z.string(),
+		TaskChannelSid: z.string(),
+		TaskIgnoreCapacity: z.string(),
+		TaskQueueEnteredDate: z.string(),
+		TaskDateCreated: z.string(),
+		WorkerActivityName: z.string(),
+		ReservationSid: z.string(),
+		ReservationVersion: z.string(),
+		TaskVirtualStartTime: z.string(),
+		WorkerChannelConsumedCapacity: z.string().optional(),
+		ResourceType: z.string(),
+		TaskQueueName: z.string(),
+		WorkerActivitySid: z.string(),
+		WorkflowSid: z.string(),
+		AccountSid: z.string(),
+		WorkerName: z.string(),
+		Sid: z.string(),
+		TimestampMs: z.string(),
+		TaskQueueTargetExpression: z.string(),
+		WorkerChannelCapacity: z.string().optional(),
+		WorkspaceSid: z.string(),
+		TaskQueueSid: z.string(),
+		EventDescription: z.string(),
+		TaskSid: z.string(),
+		ResourceSid: z.string(),
+		WorkerAttributes: z.string(),
+	}),
+]);
 
 // If you want to use environment variables, you will need to type them like
 // this and add them to the Context in the function signature as
@@ -95,6 +171,8 @@ export const handler: ServerlessFunctionSignature = async function (
 		const requestDict = event;
 		const eventType = requestDict.EventType;
 
+		// console.log(event);
+
 		// if (
 		// 	(eventType === "reservation.accepted" ||
 		// 		eventType === "reservation.created") && requestDict.TaskSid
@@ -114,8 +192,25 @@ export const handler: ServerlessFunctionSignature = async function (
 		// 		});
 		// }
 
-		// if (eventType?.startsWith("worker.")) {
-		// 	await syncTaskrouterWorkers({ client, syncService });
+		if (
+			eventType?.startsWith("reservation.") ||
+			eventType === "worker.activity.update"
+		) {
+			const { error, data } = eventCallbackSchema.safeParse(event);
+
+			if (error) {
+				console.error("Parsed error:", error, event.EventType);
+			} else {
+				await syncTaskrouterWorkers({
+					client,
+					syncService,
+					eventCallbackSchema: data,
+				});
+			}
+		}
+
+		// if (eventType?.startsWith("worker.activity")) {
+		// 	await syncTaskrouterWorkers({ client, syncService, event });
 		// }
 
 		// if (

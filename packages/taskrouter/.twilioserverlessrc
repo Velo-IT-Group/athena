@@ -2,9 +2,12 @@
 	"commands": {},
 	"environments": {},
 	"projects": {},
+	"assetsFolder": "./dist/assets",
+	"functionsFolder": "./dist/functions",
 	"overrideExistingProject": true,
 	"detailedLogs": true,
 	"port": "3001",
 	"runtime": "node22",
-	"production": true
+	"serviceName": "athena-taskrouter",
+	"environment": "dev"
 }

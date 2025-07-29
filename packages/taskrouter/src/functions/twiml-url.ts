@@ -4,8 +4,8 @@ import {
     ServerlessEventObject,
     ServerlessFunctionSignature,
 } from "@twilio-labs/serverless-runtime-types/types";
-import { MyContext } from "./callback";
 import { TaskInstance } from "twilio/lib/rest/taskrouter/v1/workspace/task";
+import { MyContext } from "./callback";
 
 type MyEvent = {
     territoryName?: string;
@@ -62,61 +62,66 @@ export const handler: ServerlessFunctionSignature = async function (
         body: urlencoded,
     };
 
-    const res = await fetch(
-        `https://taskrouter.twilio.com/v1/Workspaces/${context.TWILIO_WORKSPACE_SID}/Tasks`,
-        requestOptions,
-    );
-
-    const task = await res.json() as TaskInstance;
-
-    const dial = response.dial();
-    dial.conference({
-        // beep: "true",
-        startConferenceOnEnter: true,
-        endConferenceOnExit: true,
-        waitUrl: "",
-        statusCallback:
-            "https://fd2ff4ac20d4.ngrok-free.app/conference/status-callback",
-        statusCallbackEvent: ["start", "join", "end"],
-        statusCallbackMethod: "POST",
-        // eventCallbackUrl: "http://localhost:3001/conference/status-callback",
-        // recordingStatusCallback:
-        //     "https://qqfkxhqzsbqgydssvfss.supabase.co/functions/v1/process-recording",
-        // recordingStatusCallbackEvent: ["completed"],
-        participantLabel: "worker",
-        // @ts-ignore
-        earlyMedia: true,
-    }, task.sid);
-
-    const participant = await client
-        .conferences(task.sid)
-        .participants.create({
-            from: event.from ?? "",
-            to: event.to ?? "",
-            beep: "true",
-            // record: true,
-            earlyMedia: true,
-            // conferenceRecord: "record-from-start",
-            startConferenceOnEnter: true,
-            endConferenceOnExit: true,
-            label: "customer",
-            conferenceStatusCallback:
-                "https://fd2ff4ac20d4.ngrok-free.app/conference/status-callback",
-            conferenceStatusCallbackEvent: ["end"],
-            conferenceStatusCallbackMethod: "POST",
-            // eventCallbackUrl:
-            //     "http://localhost:3001/conference/status-callback",
-
-            // endConferenceOnCustomerExit: true,
-            // transcribe: true,
-            // transcriptionConfiguration: 'Athena',
-            waitUrl: "",
-        });
-
     try {
-        await client.taskrouter.v1.workspaces(
-            context.TWILIO_WORKSPACE_SID!,
-        )
+        const res = await fetch(
+            `https://taskrouter.twilio.com/v1/Workspaces/${context.TWILIO_WORKSPACE_SID}/Tasks`,
+            requestOptions,
+        );
+
+        const task = (await res.json()) as TaskInstance;
+
+        const dial = response.dial();
+
+        dial.conference(
+            {
+                // beep: "true",
+                startConferenceOnEnter: true,
+                endConferenceOnExit: true,
+                waitUrl: "",
+                // statusCallback: "/conference/status-callback",
+                // statusCallbackEvent: ["start", "join", "end"],
+                // statusCallbackMethod: "POST",
+
+                // eventCallbackUrl: "http://localhost:3001/conference/status-callback",
+                // recordingStatusCallback:
+                //     "https://qqfkxhqzsbqgydssvfss.supabase.co/functions/v1/process-recording",
+                // recordingStatusCallbackEvent: ["completed"],
+                participantLabel: "worker",
+                // @ts-ignore
+                earlyMedia: true,
+            },
+            task.sid,
+        );
+
+        const conferenceStatusCallback = `${
+            context.DOMAIN_NAME.includes("localhost") ? "http" : "https"
+        }://${context.DOMAIN_NAME}/conference/status-callback`;
+
+        const participant = await client.conferences(task.sid).participants
+            .create({
+                from: event.from ?? "",
+                to: event.to ?? "",
+                beep: "true",
+                // record: true,
+                earlyMedia: true,
+                // conferenceRecord: "record-from-start",
+                startConferenceOnEnter: true,
+                endConferenceOnExit: true,
+                label: "customer",
+                conferenceStatusCallback,
+                conferenceStatusCallbackEvent: ["end"],
+                conferenceStatusCallbackMethod: "POST",
+                // eventCallbackUrl:
+                //     "http://localhost:3001/conference/status-callback",
+
+                // endConferenceOnCustomerExit: true,
+                // transcribe: true,
+                // transcriptionConfiguration: 'Athena',
+                waitUrl: "",
+            });
+
+        await client.taskrouter.v1
+            .workspaces(context.TWILIO_WORKSPACE_SID!)
             .tasks(task.sid)
             .update({
                 attributes: JSON.stringify({
@@ -130,14 +135,12 @@ export const handler: ServerlessFunctionSignature = async function (
                     },
                 }),
             });
-
-        // console.log(
-        //     "Task updated with conference details:",
-        //     newTask.attributes,
-        // );
+        return callback(null, response);
     } catch (error) {
-        console.error("Error updating task with conference details:", error);
+        console.error(
+            "Error creating conference participant:",
+            (error as Error).message,
+        );
+        return callback(error as Error, undefined);
     }
-
-    return callback(null, response);
 };
