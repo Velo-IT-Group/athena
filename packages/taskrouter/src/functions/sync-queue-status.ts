@@ -167,8 +167,8 @@ export const handler: ServerlessFunctionSignature = async function (
         // Update the sync document with the new queue status
         console.log(queueStatus);
         await queueStatusContext.update({ data: queueStatus });
-        callback(null, queueStatus);
+        return callback(null, queueStatus);
     } catch (error) {
-        callback(error as Error, undefined);
+        return callback(error as Error, undefined);
     }
 };
