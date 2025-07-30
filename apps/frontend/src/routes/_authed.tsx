@@ -45,7 +45,7 @@ export const Route = createFileRoute('/_authed')({
 		// 	defaultOpen: true,
 		// };
 	},
-	ssr: 'data-only',
+	// ssr: 'data-only',
 });
 
 function AuthComponent() {

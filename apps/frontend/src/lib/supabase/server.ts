@@ -1,3 +1,4 @@
+'use client';
 import { createBrowserClient } from '@supabase/ssr';
 // import { parseCookies, setCookie } from '@tanstack/react-start/server';
 import { env } from '@/lib/utils';
