@@ -7,6 +7,7 @@ import {
 	parseCookies,
 	setCookie,
 } from '@tanstack/react-start/server';
+import { env } from '@/lib/utils';
 // import { jwtVerify } from "jose";
 // import { env } from "@/lib/utils";
 // import type { WebToken } from "@/types/crypto";
@@ -43,7 +44,7 @@ export const createClient = () =>
 // 	} = await supabase.auth.getSession();
 
 // 	if (error) {
-// 		return { session: null, user: null, error: "No session found" };
+// 		return { session: null, user: null, error: 'No session found' };
 // 	}
 
 // 	const {
