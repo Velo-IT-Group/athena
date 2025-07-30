@@ -2,5 +2,7 @@
 	"commands": {},
 	"environments": {},
 	"projects": {},
-	"port": "3001"
+	"port": "3001",
+	"serviceName": "athena-conversations",
+	"environment": "dev"
 }
