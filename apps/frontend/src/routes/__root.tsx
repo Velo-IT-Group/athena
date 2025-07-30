@@ -48,18 +48,20 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 // 	};
 // };
 
-const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
-	const supabase = getSupabaseServerClient();
-	const {
-		data: { session },
-		error: _error,
-	} = await supabase.auth.getSession();
+// const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
+// 	const supabase = getSupabaseServerClient();
+// 	const {
+// 		data: { session },
+// 		error: _error,
+// 	} = await supabase.auth.getSession();
 
-	return session;
-});
+// 	return session;
+// });
 
 export const Route = createRootRoute({
-	// beforeLoad: async () => await fetchSessionUser(),
+	beforeLoad: async () => {
+		const supabase = getSupabaseServerClient();
+	},
 	errorComponent: (props) => {
 		return (
 			<RootDocument>
