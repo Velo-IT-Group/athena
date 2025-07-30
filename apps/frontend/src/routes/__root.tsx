@@ -15,8 +15,8 @@ import { Toaster } from 'sonner';
 import { DefaultCatchBoundary } from '@/components/DefaultCatchBoundary';
 import { NotFound } from '@/components/NotFound';
 import { createClient } from '@/lib/supabase/server';
-import { QueryProvider } from '@/providers/query-provider';
-import { ThemeProvider } from '@/providers/theme-provider';
+// import { QueryProvider } from '@/providers/query-provider';
+// import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
 
@@ -107,20 +107,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					} as React.CSSProperties
 				}
 			>
-				<ThemeProvider>
-					<QueryProvider>
-						{children}
+				{/* <ThemeProvider>
+					<QueryProvider> */}
+				{children}
 
-						<Toaster
-							richColors
-							swipeDirections={['right']}
-						/>
+				<Toaster
+					richColors
+					swipeDirections={['right']}
+				/>
 
-						<TanStackRouterDevtools position='bottom-left' />
+				<TanStackRouterDevtools position='bottom-left' />
 
-						<Scripts />
-					</QueryProvider>
-				</ThemeProvider>
+				<Scripts />
+				{/* </QueryProvider>
+				</ThemeProvider> */}
 			</body>
 		</html>
 	);
