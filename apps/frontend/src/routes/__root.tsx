@@ -8,7 +8,7 @@ import {
 	Scripts,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { createServerFn } from '@tanstack/react-start';
+// import { createServerFn } from '@tanstack/react-start';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import * as React from 'react';
 import { Toaster } from 'sonner';
@@ -19,7 +19,7 @@ import { NotFound } from '@/components/NotFound';
 // import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
-import { getSupabaseServerClient } from '@/lib/supabase/server';
+import { isoMorphicGetSBSession } from '@/lib/supabase/server';
 // import { getSupabaseServerClient } from '@/lib/supabase/server';
 // import { createClient } from '@/lib/supabase/server';
 // import { fetchSessionUser } from '@/lib/supabase/server';
@@ -59,9 +59,9 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 // });
 
 export const Route = createRootRoute({
-	// beforeLoad: async () => {
-	// 	const supabase = getSupabaseServerClient();
-	// },
+	beforeLoad: async () => {
+		const supabase = isoMorphicGetSBSession();
+	},
 	errorComponent: (props) => {
 		return (
 			<RootDocument>
