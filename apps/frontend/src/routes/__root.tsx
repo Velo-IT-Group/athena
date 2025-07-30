@@ -19,7 +19,32 @@ import { NotFound } from '@/components/NotFound';
 // import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
-import { fetchSessionUser } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+// import { fetchSessionUser } from '@/lib/supabase/server';
+
+export const fetchSessionUser = async () => {
+	const supabase = createClient();
+	const [
+		{
+			data: { user },
+		},
+		{
+			data: { session },
+		},
+	] = await Promise.all([
+		supabase.auth.getUser(),
+		supabase.auth.getSession(),
+	]);
+
+	if (!session || !user) {
+		return { session: null, user: null };
+	}
+
+	return {
+		session,
+		user,
+	};
+};
 
 export const Route = createRootRoute({
 	beforeLoad: async () => await fetchSessionUser(),
