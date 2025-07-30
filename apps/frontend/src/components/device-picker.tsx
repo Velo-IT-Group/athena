@@ -1,22 +1,22 @@
 'use client';
+import { useQuery } from '@tanstack/react-query';
+import { Loader2, Mic } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
+import DeviceAudioLevel from '@/components/device-audio-level';
+import { ListSelector } from '@/components/list-selector';
 import {
 	Command,
 	CommandEmpty,
 	CommandGroup,
 	CommandList,
 } from '@/components/ui/command';
-
-import { ListSelector } from '@/components/list-selector';
-import { Loader2, Mic } from 'lucide-react';
-import { toast } from 'sonner';
 import { useTwilio } from '@/contexts/twilio-provider';
+import { changeInputDevice, getMediaDevicesQuery } from '@/lib/utils/api';
 import {
 	MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY,
 	SPEAKER_DEVICE_ID_LOCAL_STORAGE_KEY,
 } from '@/utils/constants';
-import { useQuery } from '@tanstack/react-query';
-import DeviceAudioLevel from '@/components/device-audio-level';
 
 const DevicePicker = () => {
 	const { device } = useTwilio();
@@ -39,36 +39,8 @@ const DevicePicker = () => {
 
 	console.log(device?.audio?.inputDevice);
 
-	const { data, isLoading, error } = useQuery({
-		queryKey: ['inputDevices', navigator],
-		queryFn: async () => {
-			if (typeof navigator === 'undefined') return;
-			try {
-				await navigator.mediaDevices.getUserMedia({
-					audio: true,
-				});
-				return await navigator.mediaDevices.enumerateDevices();
-			} catch (error) {
-				throw new Error('Microphone access denied');
-			}
-		},
-		select(data) {
-			return {
-				inputDevices:
-					data?.filter(
-						(device) =>
-							device.kind === 'audioinput' &&
-							!device.label.includes('Default')
-					) ?? [],
-				outputDevices:
-					data?.filter(
-						(device) =>
-							device.kind === 'audiooutput' &&
-							!device.label.includes('Default')
-					) ?? [],
-			};
-		},
-	});
+	const { data, isLoading, error } = useQuery(getMediaDevicesQuery());
+	const deviceChange = changeInputDevice();
 
 	return (
 		<Command>
@@ -103,22 +75,23 @@ const DevicePicker = () => {
 								<CommandGroup heading='Microphone'>
 									<ListSelector
 										items={data?.inputDevices ?? []}
-										currentValue={
-											device?.audio?.inputDevice ??
-											device?.audio?.availableOutputDevices.get(
-												'Default'
-											) ??
-											(device?.audio?.availableOutputDevices.get(
-												'default'
-											) as MediaDeviceInfo)
-										}
+										// currentValue={
+										// 	data?.defaultInput ?? undefined
+										// 	// device?.audio?.inputDevice ??
+										// 	// device?.audio?.availableOutputDevices.get(
+										// 	// 	'Default'
+										// 	// ) ??
+										// 	// (device?.audio?.availableOutputDevices.get(
+										// 	// 	'default'
+										// 	// ) as MediaDeviceInfo)
+										// }
 										value={(item: MediaDeviceInfo) =>
 											item.groupId
 										}
 										searchable={false}
 										comparisonFn={(i) =>
 											i.groupId ===
-											selectedInputDevice?.groupId
+											data?.defaultInput?.groupId
 										}
 										itemView={(item) => (
 											<span
@@ -139,15 +112,16 @@ const DevicePicker = () => {
 										onSelect={async (item) => {
 											if (!item) return;
 											try {
-												await device?.audio?.setInputDevice(
-													item.deviceId
-												);
+												deviceChange.mutate(item);
+												// await device?.audio?.setInputDevice(
+												// 	item.deviceId
+												// );
 
 												setSelectedInputDevice(item);
-												localStorage.setItem(
-													MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY,
-													item.groupId
-												);
+												// localStorage.setItem(
+												// 	MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY,
+												// 	item.groupId
+												// );
 											} catch (error) {
 												console.error(error);
 												toast.error(

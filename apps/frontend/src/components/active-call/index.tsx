@@ -1,10 +1,10 @@
 'use client';
-import { Card } from '@/components/ui/card';
-import ActiveCallHeader from './header';
-import ActiveCallFooter from './footer';
-import ActiveCallParticipants from './participants';
-import { Engagement } from '@/contexts/twilio-provider';
 import { VoiceAttributes } from '@athena/utils';
+import { Card } from '@/components/ui/card';
+import { Engagement } from '@/contexts/twilio-provider';
+import ActiveCallFooter from './footer';
+import ActiveCallHeader from './header';
+import ActiveCallParticipants from './participants';
 
 type Props = {
 	engagement: Engagement;
@@ -18,7 +18,10 @@ export function ActiveCall({ engagement, attributes }: Props) {
 				queueName={engagement?.reservation?.task.queueName}
 			/>
 
-			<ActiveCallParticipants attributes={attributes} />
+			<ActiveCallParticipants
+				reservation={engagement?.reservation}
+				attributes={attributes}
+			/>
 
 			<ActiveCallFooter
 				engagement={engagement}

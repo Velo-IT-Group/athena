@@ -1,4 +1,8 @@
 'use client';
+import { VoiceAttributes } from '@athena/utils';
+import { useQuery } from '@tanstack/react-query';
+import { Grip, Mic, Pause, User } from 'lucide-react';
+import { Reservation } from 'twilio-taskrouter';
 import ParticipantListItem, {
 	Participant,
 } from '@/components/active-call/participant-list-item';
@@ -7,20 +11,42 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConference } from '@/hooks/use-conference';
+import { getConferenceParticipantsQuery } from '@/lib/twilio/api';
 import { cn } from '@/lib/utils';
-import { VoiceAttributes } from '@athena/utils';
-import { Grip, Mic, Pause, User } from 'lucide-react';
 
 const ActiveCallParticipants = ({
+	reservation,
 	attributes,
 }: {
+	reservation: Reservation;
 	attributes: VoiceAttributes;
 }) => {
-	const {
-		participantsQuery: { data: participantsData, isLoading },
-	} = useConference({
-		sid: attributes?.conference?.sid,
+	const { data: taskData } = useQuery({
+		queryKey: ['reservations', reservation.sid],
+		queryFn: () => reservation.task.fetchLatestVersion(),
+		refetchInterval: (d) =>
+			!attributes?.conference?.sid ? 1000 : undefined,
 	});
+
+	const query = getConferenceParticipantsQuery(
+		taskData?.attributes.conference.sid || attributes?.conference?.sid
+	);
+
+	const { data: participantsData, isLoading } = useQuery({
+		...query,
+		enabled:
+			!!attributes?.conference?.sid ||
+			!!taskData?.attributes.conference.sid,
+		// refetchInterval: (d) =>
+		// 	attributes?.conference?.sid || taskData?.attributes.conference.sid
+		// 		? undefined
+		// 		: 1000,
+	});
+	// const {
+	// 	participantsQuery: { data: participantsData, isLoading },
+	// } = useConference({
+	// 	sid: attributes?.conference?.sid,
+	// });
 
 	if (!attributes || !attributes.conference) return null;
 
@@ -33,9 +59,11 @@ const ActiveCallParticipants = ({
 	const filteredParticipants =
 		participantsData?.filter((p) => entries.includes(p.callSid)) || [];
 
+	console.log(filteredParticipants);
+
 	return (
 		<CardContent className='p-1.5 flex flex-col justify-start'>
-			{isLoading ? (
+			{filteredParticipants.length === 0 ? (
 				<>
 					{Array.from({ length: 2 }).map((_, index) => (
 						<div

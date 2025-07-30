@@ -1,6 +1,6 @@
 import { createServerFileRoute } from "@tanstack/react-start/server";
-import { createClient } from "@/utils/twilio";
 import { createClient as supabaseClient } from "@/lib/supabase/server";
+import { createClient } from "@/utils/twilio";
 
 export const ServerRoute = createServerFileRoute(
 	"/rest/v1/system/is-number-blacklisted",
@@ -19,7 +19,9 @@ export const ServerRoute = createServerFileRoute(
 		}
 
 		const client = await createClient();
-		const { phoneNumber } = await client.lookups.v2.phoneNumbers(from).fetch();
+		const { phoneNumber } = await client.lookups.v2
+			.phoneNumbers(from)
+			.fetch();
 
 		const supabase = supabaseClient();
 		const { data: phoneNumbers } = await supabase

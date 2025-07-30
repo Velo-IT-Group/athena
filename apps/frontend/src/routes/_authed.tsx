@@ -1,23 +1,18 @@
+import { useQueries } from '@tanstack/react-query';
 import {
 	createFileRoute,
 	Link,
 	Outlet,
 	redirect,
 } from '@tanstack/react-router';
-import {
-	SidebarInset,
-	SidebarMenuButton,
-	SidebarMenuItem,
-	SidebarProvider,
-	SidebarTrigger,
-} from '@/components/ui/sidebar';
+import { zodValidator } from '@tanstack/zod-adapter';
 import { ChevronDown } from 'lucide-react';
+import { useEffect } from 'react';
+import z, { email } from 'zod';
+import { SiteHeader } from '@/components/app-header';
+import VeloLogo from '@/components/logo';
 import NavigationalSidebar from '@/components/navigational-sidebar';
-import { linksConfig } from '@/config/links';
-import { useQueries } from '@tanstack/react-query';
-import { getProfile } from '@/lib/supabase/read';
-import { getAccessTokenQuery } from '@/lib/twilio/api';
-import { createAccessToken } from '@/lib/twilio';
+import { SearchModal } from '@/components/search/search-modal';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -26,15 +21,20 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { SearchModal } from '@/components/search/search-modal';
+import {
+	SidebarInset,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarProvider,
+	SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { linksConfig } from '@/config/links';
 import { TwilioProvider } from '@/contexts/twilio-provider';
-import { zodValidator } from '@tanstack/zod-adapter';
-import z from 'zod';
-import VeloLogo from '@/components/logo';
-import { SiteHeader } from '@/components/app-header';
-import { workerAttributesSchema } from '@/types/twilio';
-import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { getProfile } from '@/lib/supabase/read';
+import { createAccessToken } from '@/lib/twilio';
+import { getAccessTokenQuery } from '@/lib/twilio/api';
+import { workerAttributesSchema } from '@/types/twilio';
 
 const schema = z.object({
 	modal: z.enum(['note']).optional(),
@@ -61,7 +61,7 @@ export const Route = createFileRoute('/_authed')({
 
 		const accessToken = await createAccessToken({
 			data: {
-				identity: attributes.identity,
+				identity: user?.email ?? attributes.identity,
 				workerSid,
 			},
 		});
@@ -72,7 +72,7 @@ export const Route = createFileRoute('/_authed')({
 			profile,
 			accessToken,
 			workerSid,
-			identity: attributes.identity,
+			identity: user?.email ?? attributes.identity,
 			features: { hideQueueStatus: false },
 			defaultOpen: true,
 		};
@@ -85,7 +85,6 @@ function AuthComponent() {
 		user,
 		accessToken: initialAccessToken,
 		workerSid,
-		session,
 		identity,
 		defaultOpen,
 	} = Route.useRouteContext();

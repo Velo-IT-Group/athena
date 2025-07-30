@@ -1,37 +1,33 @@
-import { Suspense, useMemo } from 'react';
-
-import { ChevronDown, Circle, MessageCircle, Phone } from 'lucide-react';
-
-import { z } from 'zod';
-
 import { createFileRoute, Link } from '@tanstack/react-router';
-
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
-
 import { zodValidator } from '@tanstack/zod-adapter';
-
+import { ChevronDown, Circle, MessageCircle, Phone } from 'lucide-react';
+import { Suspense, useMemo } from 'react';
 import type { TaskInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/task';
 import type { WorkerInstance } from 'twilio/lib/rest/taskrouter/v1/workspace/worker';
+import { z } from 'zod';
 
 import { activityOrder } from '@/components/activity-list';
+import ActivityListItem from '@/components/activity-list-item';
+import ManageUserAvatar from '@/components/avatar/manage-user-avatar';
+import { WorkerPane } from '@/components/panes/worker-pane';
 import { columns } from '@/components/table-columns/teams';
+import Timer from '@/components/timer';
+import { ColoredBadge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import DataTableDisplay from '@/components/ui/data-table/display';
-import useSyncMap from '@/hooks/use-sync-map';
+import { ListGroup, ListItem } from '@/components/ui/list';
+import { Separator } from '@/components/ui/separator';
 import {
 	Sheet,
 	SheetContent,
 	SheetDescription,
 	SheetHeader,
 	SheetTitle,
+	SheetTrigger,
 } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ColoredBadge } from '@/components/ui/badge';
-import { WorkerPane } from '@/components/panes/worker-pane';
-import { ListGroup, ListItem } from '@/components/ui/list';
-import ManageUserAvatar from '@/components/avatar/manage-user-avatar';
-import { Separator } from '@/components/ui/separator';
-import ActivityListItem from '@/components/activity-list-item';
-import Timer from '@/components/timer';
+import useSyncMap from '@/hooks/use-sync-map';
 import { getDateOffset } from '@/utils/date';
 
 const schema = z.object({
@@ -44,6 +40,23 @@ export const Route = createFileRoute('/_authed/teams/')({
 	validateSearch: zodValidator(schema),
 	ssr: 'data-only',
 });
+
+type ReservationSyncInstance = {
+	sid: string;
+	taskSid: string;
+	reservationStatus: string;
+	dateCreated: Date;
+	dateUpdated: Date;
+	taskAttributes: string;
+	wrapUpTime?: Date;
+};
+
+type WorkerSyncInstance = {
+	name: string;
+	activity: string;
+	dateActivityChanged: Date;
+	reservations: ReservationSyncInstance[];
+};
 
 export type WorkerConversation = WorkerInstance & {
 	id: string;
@@ -58,47 +71,50 @@ function RouteComponent() {
 	const { items: conversations, isLoading: isLoadingConversations } =
 		useSyncMap({
 			token: accessToken,
-			mapKey: 'SyncTaskRouterTasks',
+			mapKey: 'Sync Worker Reservations',
 		});
 
-	const { items: workers, isLoading: isLoadingWorkers } = useSyncMap({
-		token: accessToken,
-		mapKey: 'SyncTaskRouterWorkers',
-	});
+	// const { items: workers, isLoading: isLoadingWorkers } = useSyncMap({
+	// 	token: accessToken,
+	// 	mapKey: 'SyncTaskRouterWorkers',
+	// });
 
-	const filterWorkers = workers.filter(
-		(w) =>
-			(
-				(w.data as WorkerInstance).attributes as unknown as Record<
-					string,
-					any
-				>
-			).active
-	);
+	// const filterWorkers = workers.filter(
+	// 	(w) =>
+	// 		(
+	// 			(w.data as WorkerInstance).attributes as unknown as Record<
+	// 				string,
+	// 				any
+	// 			>
+	// 		).active
+	// );
 
-	const conversationsByWorker: WorkerConversation[] = useMemo(
-		() =>
-			filterWorkers.map((w) => {
-				const worker = w.data as WorkerInstance;
+	// const conversationsByWorker: WorkerConversation[] = useMemo(
+	// 	() =>
+	// 		filterWorkers.map((w) => {
+	// 			const worker = w.data as WorkerInstance;
 
-				return {
-					...worker,
-					tasks: conversations
-						.filter(
-							(c) =>
-								JSON.parse(
-									c.data.attributes as unknown as string
-								).worker_sid === worker.sid
-						)
-						.map((c) => c.data as TaskInstance),
-				} as WorkerConversation;
-			}),
-		[conversations, filterWorkers]
-	);
+	// 			return {
+	// 				...worker,
+	// 				tasks: conversations
+	// 					.filter(
+	// 						(c) =>
+	// 							JSON.parse(
+	// 								c.data.attributes as unknown as string
+	// 							).worker_sid === worker.sid
+	// 					)
+	// 					.map((c) => c.data as TaskInstance),
+	// 			} as WorkerConversation;
+	// 		}),
+	// 	[conversations, filterWorkers]
+	// );
 
 	const groupedConversationsByWorker = useMemo(() => {
-		return Object.groupBy(conversationsByWorker, (w) => w.activityName);
-	}, [conversationsByWorker]) as Record<string, WorkerConversation[]>;
+		return Object.groupBy(
+			conversations,
+			(w) => (w.data as WorkerSyncInstance).activity
+		);
+	}, [conversations]);
 
 	// const { data: activities } = useSuspenseQuery(getActivitiesQuery());
 
@@ -135,28 +151,22 @@ function RouteComponent() {
 							key={activityName}
 							heading={activityName}
 						>
-							{filterWorkers
-								.sort(
-									(a, b) =>
-										new Date(
-											b.dateStatusChanged
-										).getTime() -
-										new Date(a.dateStatusChanged).getTime()
-								)
-								.map((w) => (
+							{filterWorkers?.map((w) => {
+								const worker = w.data as WorkerSyncInstance;
+								return (
 									<ListItem
-										key={w.sid}
+										key={w.key}
 										className='gap-8 grid grid-cols-[3fr_2fr_2fr_1fr_1.2fr_1.2fr_1fr] items-center inset-shadow-[0px_-1px_0px_0px_var(--border)]'
 									>
 										<Link
 											to='/teams'
 											search={{
 												pane: 'worker',
-												itemId: w.sid,
+												itemId: w.key,
 											}}
 											className='flex items-center px-3 py-4 gap-1.5'
 										>
-											<ManageUserAvatar
+											{/* <ManageUserAvatar
 												memberId={
 													JSON.parse(
 														JSON.stringify(
@@ -164,28 +174,19 @@ function RouteComponent() {
 														)
 													).member_id
 												}
-											/>
+											/> */}
 
 											<div className='flex flex-col items-start'>
-												<p>
-													{
-														(
-															w.attributes as unknown as Record<
-																string,
-																any
-															>
-														).full_name
-													}
-												</p>
+												<p>{worker.name}</p>
 
 												<div className='flex items-center gap-1.5'>
 													<ActivityListItem
 														activityName={
-															w.activityName
+															worker.activity
 														}
 													/>
 
-													{/* <Separator
+													<Separator
 														orientation='vertical'
 														className='data-[orientation=vertical]:h-2.5'
 													/>
@@ -195,22 +196,36 @@ function RouteComponent() {
 															offsetTimestamp:
 																getDateOffset(
 																	new Date(
-																		w.dateStatusChanged
+																		worker.dateActivityChanged
 																	)
 																),
 															autoStart: true,
 														}}
-													/> */}
+													/>
 												</div>
 											</div>
 										</Link>
 
-										<div
-											className='rounded pattern-diagonal-lines pattern-primary pattern-bg-background
+										{worker.reservations.length > 0 ? (
+											<>
+												{worker.reservations.map(
+													(res) => (
+														<ActiveCall
+															key={res.sid}
+															reservation={res}
+														/>
+													)
+												)}
+											</>
+										) : (
+											<div
+												className='rounded pattern-diagonal-lines pattern-primary pattern-bg-background
   pattern-size-2 pattern-opacity-15 w-full h-12 border border-primary'
-										/>
+											/>
+										)}
 									</ListItem>
-								))}
+								);
+							})}
 						</ListGroup>
 					))}
 			</div>
@@ -252,17 +267,41 @@ function RouteComponent() {
 	);
 }
 
-const GroupedConversations = ({ data }: { data: WorkerConversation[] }) => {
-	const table = useReactTable({
-		columns,
-		data,
-		getCoreRowModel: getCoreRowModel(),
-	});
+function ActiveCall({ reservation }: { reservation: ReservationSyncInstance }) {
+	// const isWrapping = task.assignmentStatus === 'wrapping';
+	const parsedAttributes = JSON.parse(reservation.taskAttributes ?? '{}');
 
 	return (
-		<DataTableDisplay
-			table={table}
-			columns={columns}
-		/>
+		<div
+			// variant='outline'
+			// size='lg'
+			className='h-12 items-center gap-[1.125rem] w-56 border-primary justify-start px-4 border rounded-md flex'
+		>
+			{reservation.reservationStatus === 'wrapping' ? (
+				<Phone className='rotate-[135deg]' />
+			) : (
+				<Phone />
+			)}
+
+			<div className='flex flex-col items-start'>
+				<span className='text-xs'>{parsedAttributes.name}</span>
+
+				<div className='flex text-xs text-muted-foreground'>
+					<Timer
+						stopwatchSettings={{
+							offsetTimestamp: getDateOffset(
+								reservation.wrapUpTime ??
+									reservation.dateUpdated
+							),
+							autoStart: true,
+						}}
+						hideDays
+						hideHours
+					/>
+					<span className=''>&nbsp;</span>|{' '}
+					{/* {task.taskQueueFriendlyName} */}
+				</div>
+			</div>
+		</div>
 	);
-};
+}

@@ -64,6 +64,7 @@ import { ServerRoute as ApiProposalsConvertToManageServerRouteImport } from './r
 import { ServerRoute as ApiAuthEncryptServerRouteImport } from './routes/api/auth/encrypt'
 import { ServerRoute as ApiAuthDecryptServerRouteImport } from './routes/api/auth/decrypt'
 import { ServerRoute as ApiAuthCallbackServerRouteImport } from './routes/api/auth/callback'
+import { ServerRoute as RestV1EngagementsIndexServerRouteImport } from './routes/rest/v1/engagements/index'
 import { ServerRoute as RestV1SystemSearchNumberServerRouteImport } from './routes/rest/v1/system/search-number'
 import { ServerRoute as RestV1SystemIsOpenServerRouteImport } from './routes/rest/v1/system/is-open'
 import { ServerRoute as RestV1SystemIsNumberBlacklistedServerRouteImport } from './routes/rest/v1/system/is-number-blacklisted'
@@ -355,6 +356,12 @@ const ApiAuthCallbackServerRoute = ApiAuthCallbackServerRouteImport.update({
   path: '/api/auth/callback',
   getParentRoute: () => rootServerRouteImport,
 } as any)
+const RestV1EngagementsIndexServerRoute =
+  RestV1EngagementsIndexServerRouteImport.update({
+    id: '/rest/v1/engagements/',
+    path: '/rest/v1/engagements/',
+    getParentRoute: () => rootServerRouteImport,
+  } as any)
 const RestV1SystemSearchNumberServerRoute =
   RestV1SystemSearchNumberServerRouteImport.update({
     id: '/rest/v1/system/search-number',
@@ -664,6 +671,7 @@ export interface FileServerRoutesByFullPath {
   '/rest/v1/system/is-number-blacklisted': typeof RestV1SystemIsNumberBlacklistedServerRoute
   '/rest/v1/system/is-open': typeof RestV1SystemIsOpenServerRoute
   '/rest/v1/system/search-number': typeof RestV1SystemSearchNumberServerRoute
+  '/rest/v1/engagements': typeof RestV1EngagementsIndexServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/$id': typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number': typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
@@ -684,6 +692,7 @@ export interface FileServerRoutesByTo {
   '/rest/v1/system/is-number-blacklisted': typeof RestV1SystemIsNumberBlacklistedServerRoute
   '/rest/v1/system/is-open': typeof RestV1SystemIsOpenServerRoute
   '/rest/v1/system/search-number': typeof RestV1SystemSearchNumberServerRoute
+  '/rest/v1/engagements': typeof RestV1EngagementsIndexServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/$id': typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number': typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
@@ -705,6 +714,7 @@ export interface FileServerRoutesById {
   '/rest/v1/system/is-number-blacklisted': typeof RestV1SystemIsNumberBlacklistedServerRoute
   '/rest/v1/system/is-open': typeof RestV1SystemIsOpenServerRoute
   '/rest/v1/system/search-number': typeof RestV1SystemSearchNumberServerRoute
+  '/rest/v1/engagements/': typeof RestV1EngagementsIndexServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/$id': typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/': typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
@@ -727,6 +737,7 @@ export interface FileServerRouteTypes {
     | '/rest/v1/system/is-number-blacklisted'
     | '/rest/v1/system/is-open'
     | '/rest/v1/system/search-number'
+    | '/rest/v1/engagements'
     | '/rest/v1/taskrouter/blacklisted-phone-number/$id'
     | '/rest/v1/taskrouter/blacklisted-phone-number'
   fileServerRoutesByTo: FileServerRoutesByTo
@@ -747,6 +758,7 @@ export interface FileServerRouteTypes {
     | '/rest/v1/system/is-number-blacklisted'
     | '/rest/v1/system/is-open'
     | '/rest/v1/system/search-number'
+    | '/rest/v1/engagements'
     | '/rest/v1/taskrouter/blacklisted-phone-number/$id'
     | '/rest/v1/taskrouter/blacklisted-phone-number'
   id:
@@ -767,6 +779,7 @@ export interface FileServerRouteTypes {
     | '/rest/v1/system/is-number-blacklisted'
     | '/rest/v1/system/is-open'
     | '/rest/v1/system/search-number'
+    | '/rest/v1/engagements/'
     | '/rest/v1/taskrouter/blacklisted-phone-number/$id'
     | '/rest/v1/taskrouter/blacklisted-phone-number/'
   fileServerRoutesById: FileServerRoutesById
@@ -788,6 +801,7 @@ export interface RootServerRouteChildren {
   RestV1SystemIsNumberBlacklistedServerRoute: typeof RestV1SystemIsNumberBlacklistedServerRoute
   RestV1SystemIsOpenServerRoute: typeof RestV1SystemIsOpenServerRoute
   RestV1SystemSearchNumberServerRoute: typeof RestV1SystemSearchNumberServerRoute
+  RestV1EngagementsIndexServerRoute: typeof RestV1EngagementsIndexServerRoute
   RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute: typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute: typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
@@ -1169,6 +1183,13 @@ declare module '@tanstack/react-start/server' {
       preLoaderRoute: typeof ApiAuthCallbackServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
+    '/rest/v1/engagements/': {
+      id: '/rest/v1/engagements/'
+      path: '/rest/v1/engagements'
+      fullPath: '/rest/v1/engagements'
+      preLoaderRoute: typeof RestV1EngagementsIndexServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
     '/rest/v1/system/search-number': {
       id: '/rest/v1/system/search-number'
       path: '/rest/v1/system/search-number'
@@ -1385,6 +1406,7 @@ const rootServerRouteChildren: RootServerRouteChildren = {
     RestV1SystemIsNumberBlacklistedServerRoute,
   RestV1SystemIsOpenServerRoute: RestV1SystemIsOpenServerRoute,
   RestV1SystemSearchNumberServerRoute: RestV1SystemSearchNumberServerRoute,
+  RestV1EngagementsIndexServerRoute: RestV1EngagementsIndexServerRoute,
   RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute:
     RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute,
   RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute:

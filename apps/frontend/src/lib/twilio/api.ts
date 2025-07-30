@@ -1,13 +1,35 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getActivities } from "./taskrouter/worker/helpers";
+import type { ParticipantInstance } from "twilio/lib/rest/api/v2010/account/conference/participant";
+import type {
+	MessageInstance,
+	MessageListInstanceOptions,
+} from "twilio/lib/rest/api/v2010/account/message";
+import { WorkspaceInstance } from "twilio/lib/rest/taskrouter/v1/workspace";
 import type {
 	ActivityInstance,
 	ActivityListInstanceOptions,
 } from "twilio/lib/rest/taskrouter/v1/workspace/activity";
+import type {
+	TaskInstance,
+	TaskListInstanceOptions,
+} from "twilio/lib/rest/taskrouter/v1/workspace/task";
+import type {
+	ReservationInstance,
+	ReservationListInstanceOptions,
+} from "twilio/lib/rest/taskrouter/v1/workspace/task/reservation";
+import { TaskQueueListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/taskQueue";
 import {
-	getAllEventTasks,
-	getWorkerStats,
-} from "@/lib/twilio/taskrouter/helpers";
+	type WorkerInstance,
+	type WorkerListInstanceOptions,
+} from "twilio/lib/rest/taskrouter/v1/workspace/worker";
+import type {
+	WorkerStatisticsContextFetchOptions,
+	WorkerStatisticsInstance,
+} from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
+import { WorkflowListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/workflow";
+import { SyncClient } from "twilio-sync";
+import { DAY_IN_MS } from "@/components/template-catalog";
+import { createAccessToken } from "@/lib/twilio";
 import {
 	getChannels,
 	getConferenceParticipants,
@@ -25,34 +47,12 @@ import {
 	getWorkspace,
 	getWorkspaceCumulativeStatistics,
 } from "@/lib/twilio/read";
-import type { ParticipantInstance } from "twilio/lib/rest/api/v2010/account/conference/participant";
-import { createAccessToken } from "@/lib/twilio";
 import {
-	type WorkerInstance,
-	type WorkerListInstanceOptions,
-} from "twilio/lib/rest/taskrouter/v1/workspace/worker";
-import { SyncClient } from "twilio-sync";
-import type {
-	WorkerStatisticsContextFetchOptions,
-	WorkerStatisticsInstance,
-} from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
-import type {
-	TaskInstance,
-	TaskListInstanceOptions,
-} from "twilio/lib/rest/taskrouter/v1/workspace/task";
-import type {
-	ReservationInstance,
-	ReservationListInstanceOptions,
-} from "twilio/lib/rest/taskrouter/v1/workspace/task/reservation";
-import type {
-	MessageInstance,
-	MessageListInstanceOptions,
-} from "twilio/lib/rest/api/v2010/account/message";
+	getAllEventTasks,
+	getWorkerStats,
+} from "@/lib/twilio/taskrouter/helpers";
 import { getWorkflow, getWorkflows } from "@/lib/twilio/taskrouter/task/read";
-import { WorkflowListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/workflow";
-import { WorkspaceInstance } from "twilio/lib/rest/taskrouter/v1/workspace";
-import { TaskQueueListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/taskQueue";
-import { DAY_IN_MS } from "@/components/template-catalog";
+import { getActivities } from "./taskrouter/worker/helpers";
 
 export const getActivitiesQuery = (options?: ActivityListInstanceOptions) =>
 	queryOptions({
@@ -89,52 +89,48 @@ export const getTranscriptSentencesQuery = (transcriptSid: string) =>
 export const getTaskReservationQuery = (
 	taskSid: string,
 	reservationSid: string,
-) =>
-	queryOptions({
-		queryKey: ["reservations", reservationSid],
-		queryFn: () =>
-			getTaskReservation({
-				data: { taskSid, reservationSid },
-			}),
-		staleTime: Infinity,
-	});
+) => queryOptions({
+	queryKey: ["reservations", reservationSid],
+	queryFn: () =>
+		getTaskReservation({
+			data: { taskSid, reservationSid },
+		}),
+	staleTime: Infinity,
+});
 
 export const getTaskReservationsQuery = (
 	taskSid: string,
 	options?: ReservationListInstanceOptions,
-) =>
-	queryOptions({
-		queryKey: ["reservations", taskSid, options],
-		queryFn: () =>
-			getTaskReservations({
-				data: { taskSid, options },
-			}),
-		staleTime: Infinity,
-	});
+) => queryOptions({
+	queryKey: ["reservations", taskSid, options],
+	queryFn: () =>
+		getTaskReservations({
+			data: { taskSid, options },
+		}),
+	staleTime: Infinity,
+});
 
 export const getWorkerReservationQuery = (
 	workerSid: string,
 	reservationSid: string,
-) =>
-	queryOptions({
-		queryKey: ["reservations", workerSid, reservationSid],
-		queryFn: async () => {
-			return (await getWorkerReservation({
-				data: { workerSid, reservationSid },
-			})) as ReservationInstance;
-		},
-		staleTime: Infinity,
-	});
+) => queryOptions({
+	queryKey: ["reservations", workerSid, reservationSid],
+	queryFn: async () => {
+		return (await getWorkerReservation({
+			data: { workerSid, reservationSid },
+		})) as ReservationInstance;
+	},
+	staleTime: Infinity,
+});
 
 export const getWorkerReservationsQuery = (
 	workerSid: string,
 	options?: ReservationListInstanceOptions,
-) =>
-	queryOptions({
-		queryKey: ["reservations", workerSid, options],
-		queryFn: () => getWorkerReservations({ data: { workerSid, options } }),
-		staleTime: Infinity,
-	});
+) => queryOptions({
+	queryKey: ["reservations", workerSid, options],
+	queryFn: () => getWorkerReservations({ data: { workerSid, options } }),
+	staleTime: Infinity,
+});
 
 export const getEventsQuery = (startDate?: Date, endDate?: Date) =>
 	queryOptions({
@@ -143,11 +139,11 @@ export const getEventsQuery = (startDate?: Date, endDate?: Date) =>
 		staleTime: Infinity,
 	});
 
-export const getConferenceParticipantsQuery = (sid: string) =>
+export const getConferenceParticipantsQuery = (sid?: string) =>
 	queryOptions({
 		queryKey: ["conferences", sid, "participants"],
 		queryFn: () =>
-			getConferenceParticipants({ data: sid }) as Promise<
+			getConferenceParticipants({ data: sid ?? "" }) as Promise<
 				ParticipantInstance[]
 			>,
 		enabled: !!sid,
@@ -212,7 +208,8 @@ export const getWorkerQuery = (sid: string) =>
 export const getMessagesQuery = (options?: MessageListInstanceOptions) =>
 	queryOptions({
 		queryKey: ["messages", options],
-		queryFn: () => getMessages({ data: options }) as Promise<MessageInstance[]>,
+		queryFn: () =>
+			getMessages({ data: options }) as Promise<MessageInstance[]>,
 		// staleTime: Infinity,
 	});
 
@@ -247,15 +244,14 @@ export const getTaskQueuesQuery = (options?: TaskQueueListInstanceOptions) =>
 export const getWorkerStatsQuery = (
 	workerSid: string,
 	params: WorkerStatisticsContextFetchOptions = {},
-) =>
-	queryOptions({
-		queryKey: ["workers", workerSid, "stats"],
-		queryFn: () =>
-			getWorkerStats({
-				data: { workerSid, params },
-			}) as Promise<WorkerStatisticsInstance>,
-		staleTime: Infinity,
-	});
+) => queryOptions({
+	queryKey: ["workers", workerSid, "stats"],
+	queryFn: () =>
+		getWorkerStats({
+			data: { workerSid, params },
+		}) as Promise<WorkerStatisticsInstance>,
+	staleTime: Infinity,
+});
 
 export const getSyncMapQuery = ({
 	mapKey,

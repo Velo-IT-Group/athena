@@ -1,7 +1,7 @@
-import { getSyncMapQuery } from "@/lib/twilio/api";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { SyncMapItem } from "twilio-sync";
+import type { SyncMapItem } from "twilio-sync";
+import { getSyncMapQuery } from "@/lib/twilio/api";
 
 /**
  * Sync map hook
@@ -15,49 +15,36 @@ const useSyncMap = ({ token, mapKey }: { token: string; mapKey: string }) => {
 	const { data, isLoading } = useQuery(getSyncMapQuery({ mapKey, token }));
 
 	const handleItemAdded = useCallback(
-		({ item, isLocal }: { item: SyncMapItem; isLocal: boolean }) => {
-			console.log("item updated", item);
-			console.log("current items", items);
-			const newItems = [...items.filter((i) => i.key !== item.key), item];
-			setItems(newItems);
-		},
-		[items],
+		({ item }: { item: SyncMapItem; isLocal: boolean }) =>
+			setItems(
+				(items) => [...items.filter((i) => i.key !== item.key), item],
+			),
+		[],
 	);
 
 	const handleItemUpdated = useCallback(
 		({
 			item,
-			isLocal,
-			previousItemData,
 		}: {
 			item: SyncMapItem;
 			isLocal: boolean;
 			previousItemData: object;
-		}) => {
-			console.log("item updated", item);
-			console.log("current items", items);
-			const newItems = [...items.filter((i) => i.key !== item.key), item];
-			setItems(newItems);
-		},
-		[items],
+		}) =>
+			setItems(
+				(items) => [...items.filter((i) => i.key !== item.key), item],
+			),
+		[],
 	);
 
 	const handleItemRemoved = useCallback(
 		({
-			previousItemData,
 			key,
-			isLocal,
 		}: {
 			previousItemData: SyncMapItem;
 			key: string;
 			isLocal: boolean;
-		}) => {
-			console.log("item deleted", key);
-			console.log("current items", items);
-			const newItems = [...items.filter((i) => i.key !== key)];
-			setItems(newItems);
-		},
-		[items],
+		}) => setItems((items) => [...items.filter((i) => i.key !== key)]),
+		[],
 	);
 
 	useEffect(() => {
@@ -90,13 +77,19 @@ const useSyncMap = ({ token, mapKey }: { token: string; mapKey: string }) => {
 		return () => {
 			map.off("itemUpdated", handleItemUpdated);
 
-			map.on("itemAdded", handleItemAdded);
+			map.off("itemAdded", handleItemAdded);
 
 			map.off("itemRemoved", handleItemRemoved);
 
 			map.close();
 		};
-	}, [data]);
+	}, [
+		data,
+		handleItemAdded,
+		handleItemUpdated,
+		handleItemRemoved,
+		isLoading,
+	]);
 
 	return {
 		items,

@@ -1,7 +1,7 @@
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Conditions } from '@/utils/manage/params';
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 
 interface MetricProps<TData> {
 	label: string;
@@ -14,18 +14,26 @@ interface MetricProps<TData> {
 
 const numberFormatter = new Intl.NumberFormat('en-US');
 
-const Metric = <TData,>({ label, value, params, queryFn }: MetricProps<TData>) => {
+const Metric = <TData,>({
+	label,
+	value,
+	params,
+	queryFn,
+}: MetricProps<TData>) => {
 	const { data: fn, isLoading } = useSuspenseQuery({
 		queryKey: [params ?? label],
 		queryFn: async ({ queryKey }) =>
 			// @ts-ignore
 			await queryFn?.({ ...(queryKey?.[0] ?? {}) }),
+		enabled: !!queryFn,
 	});
 
 	return (
 		<Card>
 			<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 p-3'>
-				<CardTitle className='text-sm font-medium truncate'>{label}</CardTitle>
+				<CardTitle className='text-sm font-medium truncate'>
+					{label}
+				</CardTitle>
 			</CardHeader>
 
 			<CardContent className='pb-3 px-3'>

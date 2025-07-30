@@ -13,7 +13,10 @@ export default defineConfig({
 		}),
 		tanstackStart({
 			customViteReactPlugin: true,
-			// target: "vercel",
+			target: "vercel",
+			spa: {
+				enabled: true,
+			},
 		}),
 		tailwindcss(),
 		react(),

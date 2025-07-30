@@ -1,10 +1,10 @@
-import { buttonVariants } from '@/components/ui/button';
-import useSyncClient from '@/hooks/use-sync-client';
-import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ConnectionState } from 'twilio-sync';
+import { buttonVariants } from '@/components/ui/button';
+import useSyncClient from '@/hooks/use-sync-client';
+import { cn } from '@/lib/utils';
 
 type Props = {
 	token: string;
@@ -23,8 +23,6 @@ const QueueStatus = ({ token }: Props) => {
 		undefined
 	);
 
-	console.log(queueStatus);
-
 	const { data: document } = useQuery({
 		queryKey: ['queueStatus', client?.connectionState ?? 'unknown'],
 		queryFn: async () => client?.document('Queue Status'),
@@ -33,6 +31,7 @@ const QueueStatus = ({ token }: Props) => {
 
 	const handleQueueStatusUpdate = useCallback(
 		(event: { data: any; previousData: any; isLocal: boolean }) => {
+			console.log(event.data);
 			setQueueStatus(event.data as QueueStatus);
 		},
 		[queueStatus, document]

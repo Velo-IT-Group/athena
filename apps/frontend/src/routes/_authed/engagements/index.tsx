@@ -1,14 +1,23 @@
 import {
+	useInfiniteQuery,
+	useQueries,
+	useQuery,
+	useQueryClient,
+} from '@tanstack/react-query';
+import {
 	createFileRoute,
 	Link,
 	type UseNavigateResult,
 } from '@tanstack/react-router';
+import { zodValidator } from '@tanstack/zod-adapter';
+import { enUS } from 'date-fns/locale/en-US';
 import {
 	Building,
 	Calendar,
 	Calendar1,
 	Headset,
 	PauseCircle,
+	Phone,
 	PhoneIncoming,
 	PhoneMissed,
 	PhoneOutgoing,
@@ -17,20 +26,20 @@ import {
 	User,
 	Voicemail,
 } from 'lucide-react';
-import { zodValidator } from '@tanstack/zod-adapter';
 import { z } from 'zod';
-import { getEngagementsQuery } from '@/lib/supabase/api';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { cn, filterSchema, paginationSchema, sortSchema } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { enUS } from 'date-fns/locale/en-US';
+import { Input } from '@/components/ui/input';
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import {
+	getEngagementSummaryByPeriodQuery,
+	getEngagementsQuery,
+} from '@/lib/supabase/api';
+import { cn, filterSchema, paginationSchema, sortSchema } from '@/lib/utils';
 
 export const Route = createFileRoute('/_authed/engagements/')({
 	component: RouteComponent,
@@ -75,7 +84,7 @@ function RouteComponent() {
 	const call_date =
 		startDate && endDate
 			? [startOfDay(new Date(startDate)), endOfDay(new Date(endDate))]
-			: undefined;
+			: startOfDay(new Date());
 
 	const queryFilter: EngagementQueryOptions = {
 		call_date,
@@ -91,33 +100,55 @@ function RouteComponent() {
 		// { pageSize: 1000, page: 0 }
 	);
 
-	const { data, isLoading } = useQuery(engagementQuery);
-
-	// const totalCalls =
-	// 	engagements?.reduce((acc, engagement) => {
-	// 		return acc + (engagement.total_engagements ?? 0);
-	// 	}, 0) ?? 0;
-
-	// const totalInboundCalls =
-	// 	engagements?.reduce((acc, engagement) => {
-	// 		return acc + (engagement.inbound_engagements ?? 0);
-	// 	}, 0) ?? 0;
-
-	// const totalOutboundCalls =
-	// 	engagements?.reduce((acc, engagement) => {
-	// 		return acc + (engagement.outbound_engagements ?? 0);
-	// 	}, 0) ?? 0;
-
-	// const totalVoicemails =
-	// 	engagements?.reduce((acc, engagement) => {
-	// 		return acc + (engagement.voicemails ?? 0);
-	// 	}, 0) ?? 0;
+	const { data } = useQuery(engagementQuery);
 
 	const dateFormatter = new Intl.DateTimeFormat('en-US', {
 		dateStyle: 'medium',
 	});
 
-	const groupedDays = Object.groupBy(data?.data ?? [], (engagement) =>
+	const {
+		data: engagments,
+		fetchNextPage,
+		fetchPreviousPage,
+		isLoading,
+	} = useInfiniteQuery({
+		queryKey: [
+			'my-key',
+			// any other keys, e.g. for search params filters
+		],
+		queryFn: async ({ pageParam }) => {
+			const { cursor, direction } = pageParam;
+			const res = await fetch(
+				`/rest/v1/engagements?cursor=${cursor}&direction=${direction}`
+			);
+			const json: ReturnType<NestedEngagement> = await res.json();
+			// For direction "next": { data: [...], nextCursor: 1741526294, prevCursor: null }
+			// For direction "prev": { data: [...], nextCursor: null, prevCursor: 1741526295 }
+			return json;
+		},
+		// Initialize with current timestamp and get the most recent data in the past
+		initialPageParam: {
+			cursor: new Date().toISOString(),
+			direction: 'next',
+		},
+		// Function to fetch newer data
+		getPreviousPageParam: (firstPage, allPages) => {
+			if (!firstPage.prevCursor) return null;
+			return { cursor: firstPage.prevCursor, direction: 'prev' };
+		},
+		// Function to fetch older data
+		getNextPageParam: (lastPage, allPages) => {
+			if (!lastPage.nextCursor) return null;
+			return { cursor: lastPage.nextCursor, direction: 'next' };
+		},
+	});
+
+	const flatData: NestedEngagement[] = useMemo(
+		() => engagments?.pages?.flatMap((page) => page.data ?? []) ?? [],
+		[engagments?.pages]
+	);
+
+	const groupedDays = Object.groupBy(flatData ?? [], (engagement) =>
 		formatRelative(new Date(engagement.created_at), new Date(), {
 			locale: {
 				...enUS,
@@ -128,51 +159,173 @@ function RouteComponent() {
 
 	const client = useQueryClient();
 
-	useEffect(() => {
-		if (!live) return;
-		const supabase = createClient();
+	const engagementSummaryByPeriodQuery =
+		getEngagementSummaryByPeriodQuery(queryFilter);
 
-		const channel = supabase
-			.channel('engagements')
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'reporting',
-					table: 'engagements',
-				},
-				(payload) => {
-					console.log(payload);
-					payload.eventType === 'UPDATE';
-					client.invalidateQueries({
-						queryKey: engagementQuery.queryKey,
-					});
-					const previousData = client.getQueryData(
-						engagementQuery.queryKey
-					);
-					console.log(previousData);
-					client.setQueryData(engagementQuery.queryKey, {
-						...(previousData ?? {}),
-						data: (previousData?.data ?? []).map((e) =>
-							e.id === payload.new.id
-								? { ...e, ...payload.new }
-								: e
-						),
-						count: previousData?.count ?? 0,
-					});
-				}
-			)
-			.subscribe();
+	// useEffect(() => {
+	// 	if (!live) return;
+	// 	const supabase = createClient();
 
-		console.log(channel);
+	// 	const channel = supabase
+	// 		.channel('engagements')
+	// 		.on(
+	// 			'postgres_changes',
+	// 			{
+	// 				event: '*',
+	// 				schema: 'reporting',
+	// 				table: 'engagements',
+	// 			},
+	// 			(payload) => {
+	// 				console.log(payload);
+	// 				if (payload.eventType === 'UPDATE') {
+	// 					client.invalidateQueries({
+	// 						queryKey: engagementQuery.queryKey,
+	// 					});
+	// 					const previousData = client.getQueryData(
+	// 						engagementQuery.queryKey
+	// 					);
+	// 					console.log(previousData);
+	// 					client.setQueryData(engagementQuery.queryKey, {
+	// 						...(previousData ?? {}),
+	// 						data: (previousData?.data ?? []).map((e) =>
+	// 							e.id === payload.new.id
+	// 								? { ...e, ...payload.new }
+	// 								: e
+	// 						),
+	// 						count: previousData?.count ?? 0,
+	// 					});
+	// 				} else if (payload.eventType === 'INSERT') {
+	// 					client.invalidateQueries({
+	// 						queryKey: engagementQuery.queryKey,
+	// 					});
+	// 					client.invalidateQueries({
+	// 						queryKey: engagementSummaryByPeriodQuery.queryKey,
+	// 					});
+	// 					const previousData = client.getQueryData(
+	// 						engagementQuery.queryKey
+	// 					);
+	// 					console.log(previousData);
+	// 					client.setQueryData(engagementQuery.queryKey, {
+	// 						...(previousData ?? {}),
+	// 						data: [payload.new, ...(previousData?.data ?? [])],
+	// 						count: (previousData?.count ?? 0) + 1,
+	// 					});
+	// 				} else if (payload.eventType === 'DELETE') {
+	// 					client.invalidateQueries({
+	// 						queryKey: engagementQuery.queryKey,
+	// 					});
+	// 					client.invalidateQueries({
+	// 						queryKey: engagementSummaryByPeriodQuery.queryKey,
+	// 					});
+	// 					const previousData = client.getQueryData(
+	// 						engagementQuery.queryKey
+	// 					);
+	// 					console.log(previousData);
+	// 					client.setQueryData(engagementQuery.queryKey, {
+	// 						...(previousData ?? {}),
+	// 						data: (previousData?.data ?? []).filter(
+	// 							(e) => e.id !== payload.old.id
+	// 						),
+	// 						count: (previousData?.count ?? 0) - 1,
+	// 					});
+	// 				}
+	// 			}
+	// 		)
+	// 		.subscribe();
 
-		return () => {
-			channel.unsubscribe();
-		};
-	}, [live]);
+	// 	console.log(channel);
+
+	// 	return () => {
+	// 		channel.unsubscribe();
+	// 	};
+	// }, [live]);
 
 	return (
 		<>
+			<div className='flex flex-col pt-1 gap-1 bg-muted max-w-full inset-shadow-[0px_-1px_0px_0px_var(--border)]'>
+				<div className='flex px-4 pt-2 pb-1'>
+					<h2 className='text-xs font-medium tracking-tight text-muted-foreground'>
+						Metrics
+					</h2>
+				</div>
+
+				<div className='flex flex-col w-full h-full overflow-hidden'>
+					<div className='grid grid-cols-4 gap-3 w-full h-full items-stretch scroll-px-4 px-4 py-3'>
+						<Metric
+							label='Total Engagements'
+							icon={Phone}
+							queryFn={getEngagementSummaryByPeriodQuery(
+								queryFilter
+							)}
+							renderOption={(data) => {
+								const total =
+									data?.reduce((acc, engagement) => {
+										return (
+											acc +
+											(engagement.total_engagements ?? 0)
+										);
+									}, 0) ?? 0;
+								return <NumberFlow value={total} />;
+							}}
+						/>
+
+						<Metric
+							label='Inbound Engagements'
+							icon={PhoneIncoming}
+							queryFn={getEngagementSummaryByPeriodQuery(
+								queryFilter
+							)}
+							renderOption={(data) => {
+								const total =
+									data?.reduce((acc, engagement) => {
+										return (
+											acc +
+											(engagement.inbound_engagements ??
+												0)
+										);
+									}, 0) ?? 0;
+								return <NumberFlow value={total} />;
+							}}
+						/>
+
+						<Metric
+							label='Outbound Engagements'
+							icon={PhoneOutgoing}
+							queryFn={getEngagementSummaryByPeriodQuery(
+								queryFilter
+							)}
+							renderOption={(data) => {
+								const total =
+									data?.reduce((acc, engagement) => {
+										return (
+											acc +
+											(engagement.outbound_engagements ??
+												0)
+										);
+									}, 0) ?? 0;
+								return <NumberFlow value={total} />;
+							}}
+						/>
+
+						<Metric
+							label='Voicemails Left'
+							icon={Voicemail}
+							queryFn={getEngagementSummaryByPeriodQuery(
+								queryFilter
+							)}
+							renderOption={(data) => {
+								const total =
+									data?.reduce((acc, engagement) => {
+										return (
+											acc + (engagement.voicemails ?? 0)
+										);
+									}, 0) ?? 0;
+								return <NumberFlow value={total} />;
+							}}
+						/>
+					</div>
+				</div>
+			</div>
 			{/* <section className='grid grid-cols-4 gap-3 mt-6'>
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 p-3 pb-2'>
@@ -269,7 +422,8 @@ function RouteComponent() {
 				<div className='ml-auto flex items-center gap-2'>
 					<Expandable placeholder='Search engagements...' />
 
-					<Button
+					<LiveModeButton fetchPreviousPage={fetchPreviousPage} />
+					{/* <Button
 						variant='outline'
 						className={cn(
 							// 'ml-auto',
@@ -285,7 +439,7 @@ function RouteComponent() {
 							<PlayCircle className='stroke-current' />
 						)}
 						<span>{live ? 'Pause' : 'Live'}</span>
-					</Button>
+					</Button> */}
 				</div>
 			</div>
 
@@ -342,136 +496,163 @@ function RouteComponent() {
 						</ListGroup>
 					</div>
 				) : (
-					<></>
-				)}
+					<>
+						{Object.entries(groupedDays).map(
+							([day, engagements]) => (
+								<ListGroup
+									key={day}
+									heading={day}
+									className='top-0'
+								>
+									{engagements?.map((engagement) => {
+										const { data: attributes, error } =
+											voiceAttributesSchema.safeParse(
+												engagement.attributes
+											);
 
-				{Object.entries(groupedDays).map(([day, engagements]) => (
-					<ListGroup
-						key={day}
-						heading={day}
-						className='top-0'
-					>
-						{engagements?.map((engagement) => {
-							const { data: attributes, error } =
-								voiceAttributesSchema.safeParse(
-									engagement.attributes
-								);
+										if (error) console.error(error);
 
-							if (error) console.error(error);
-
-							return (
-								<ListItem key={engagement.id}>
-									<Link
-										to='/engagements/$id'
-										params={{ id: engagement.id }}
-										className={cn(
-											'grid grid-cols-[0.25fr_1fr_1fr_1fr_1fr_1fr] min-h-12 max-h-12 py-3 px-4 items-center max-w-full gap-8 flex-[1_1_auto] inset-shadow-[0px_-1px_0px_0px_var(--border)] text-sm text-muted-foreground',
-											engagement.is_canceled &&
-												'bg-yellow-200/20 dark:bg-yellow-500/40',
-											engagement.is_voicemail &&
-												'bg-destructive/20 dark:bg-destructive/80 hover:bg-destructive/25 dark:hover:bg-destructive/50'
-										)}
-									>
-										<div className='flex items-center justify-start gap-1 overflow-hidden'>
-											{engagement.is_canceled ||
-											engagement.is_voicemail ? (
-												<>
-													{engagement.is_canceled && (
-														<PhoneMissed />
+										return (
+											<ListItem key={engagement.id}>
+												<Link
+													to='/engagements/$id'
+													params={{
+														id: engagement.id,
+													}}
+													className={cn(
+														'grid grid-cols-[0.25fr_1fr_1fr_1fr_1fr_1fr] min-h-12 max-h-12 py-3 px-4 items-center max-w-full gap-8 flex-[1_1_auto] inset-shadow-[0px_-1px_0px_0px_var(--border)] text-sm text-muted-foreground',
+														engagement.is_canceled &&
+															'bg-yellow-200/20 dark:bg-yellow-500/40',
+														engagement.is_voicemail &&
+															'bg-destructive/20 dark:bg-destructive/80 hover:bg-destructive/25 dark:hover:bg-destructive/50'
 													)}
+												>
+													<div className='flex items-center justify-start gap-1 overflow-hidden'>
+														{engagement.is_canceled ||
+														engagement.is_voicemail ? (
+															<>
+																{engagement.is_canceled && (
+																	<PhoneMissed />
+																)}
 
-													{engagement.is_voicemail && (
-														<Voicemail />
-													)}
-												</>
-											) : (
-												<>
-													{engagement.is_inbound ? (
-														<PhoneIncoming />
-													) : (
-														<PhoneOutgoing />
-													)}
-												</>
-											)}
-										</div>
+																{engagement.is_voicemail && (
+																	<Voicemail />
+																)}
+															</>
+														) : (
+															<>
+																{engagement.is_inbound ? (
+																	<PhoneIncoming />
+																) : (
+																	<PhoneOutgoing />
+																)}
+															</>
+														)}
+													</div>
 
-										<div className='flex items-center justify-start gap-1 overflow-hidden'>
-											{attributes?.name ??
-												(
-													engagement.attributes as Record<
-														string,
-														any
-													>
-												)?.name}
-											{/* {attributes?.direction === 'inbound'
+													<div className='flex items-center justify-start gap-1 overflow-hidden'>
+														{attributes?.name ??
+															(
+																engagement.attributes as Record<
+																	string,
+																	any
+																>
+															)?.name}
+														{/* {attributes?.direction === 'inbound'
 												? attributes.from
 												: attributes?.outbound_to} */}
-										</div>
+													</div>
 
-										<div className='flex items-center justify-start gap-1 overflow-hidden'>
-											{(
-												engagement.contact as Record<
-													string,
-													any
-												>
-											)?.name ?? '----'}
-										</div>
+													<div className='flex items-center justify-start gap-1 overflow-hidden'>
+														{(
+															engagement.contact as Record<
+																string,
+																any
+															>
+														)?.name ?? '----'}
+													</div>
 
-										<div className='flex items-center justify-start gap-1 overflow-hidden'>
-											{(
-												engagement.company as Record<
-													string,
-													any
-												>
-											)?.name ?? '----'}
-										</div>
+													<div className='flex items-center justify-start gap-1 overflow-hidden'>
+														{(
+															engagement.company as Record<
+																string,
+																any
+															>
+														)?.name ?? '----'}
+													</div>
 
-										<div className='flex items-center justify-start gap-1 overflow-hidden'>
-											{engagement.reservations?.length ===
-											1 ? (
-												<Avatar className='size-5 rounded-full'>
-													<AvatarFallback className='size-5 text-xs rounded-full bg-amber-500 text-white'>
-														N
-													</AvatarFallback>
-												</Avatar>
-											) : (
-												<AvatarStack
-													avatars={
-														engagement.reservations?.map(
-															(e) => ({
-																image: '',
-																name: e.worker_sid,
-															})
-														) ?? []
-													}
-													avatarSize='xs'
-												/>
-												// <ColoredBadge variant='green'>
-												// 	{engagement.reservations
-												// 		?.length ?? 0}
-												// </ColoredBadge>
-											)}
-										</div>
+													<div className='flex items-center justify-start gap-1 overflow-hidden'>
+														{engagement.reservations
+															?.length === 1 ? (
+															<Avatar className='size-5 rounded-full'>
+																<AvatarFallback className='size-5 text-xs rounded-full bg-amber-500 text-white'>
+																	N
+																</AvatarFallback>
+															</Avatar>
+														) : (
+															<AvatarStack
+																avatars={
+																	engagement.reservations?.map(
+																		(
+																			e
+																		) => ({
+																			image: '',
+																			name: e.worker_sid,
+																		})
+																	) ?? []
+																}
+																avatarSize='xs'
+															/>
+															// <ColoredBadge variant='green'>
+															// 	{engagement.reservations
+															// 		?.length ?? 0}
+															// </ColoredBadge>
+														)}
+													</div>
 
-										<div className='flex items-center justify-start gap-1 overflow-hidden capitalize'>
-											{formatRelative(
-												new Date(engagement.created_at),
-												new Date()
-											)}
-										</div>
-									</Link>
-								</ListItem>
-							);
-						})}
-					</ListGroup>
-				))}
+													<div className='flex items-center justify-start gap-1 overflow-hidden capitalize'>
+														{formatRelative(
+															new Date(
+																engagement.created_at
+															),
+															new Date()
+														)}
+													</div>
+												</Link>
+											</ListItem>
+										);
+									})}
+								</ListGroup>
+							)
+						)}
+					</>
+				)}
 			</div>
 		</>
 	);
 }
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import NumberFlow from '@number-flow/react';
+import {
+	endOfDay,
+	endOfMonth,
+	endOfWeek,
+	FormatRelativeToken,
+	formatRelative,
+	startOfDay,
+	startOfMonth,
+	startOfWeek,
+	startOfYesterday,
+	subWeeks,
+} from 'date-fns';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { AvatarStack } from '@/components/avatar-stack';
+import { LiveModeButton } from '@/components/live-mode-button';
+import Metric from '@/components/metric-tracker-header/metric';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import Expandable from '@/components/ui/expandable';
 import {
 	Form,
 	FormControl,
@@ -480,27 +661,11 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form';
-import {
-	endOfDay,
-	endOfMonth,
-	endOfWeek,
-	formatRelative,
-	FormatRelativeToken,
-	startOfDay,
-	startOfMonth,
-	startOfWeek,
-	startOfYesterday,
-	subWeeks,
-} from 'date-fns';
-import type { EngagementQueryOptions } from '@/lib/supabase/read';
 import { ListGroup, ListItem } from '@/components/ui/list';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { AvatarStack } from '@/components/avatar-stack';
-import { voiceAttributesSchema } from '@/types/twilio';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import Expandable from '@/components/ui/expandable';
+import { createClient } from '@/lib/supabase/client';
+import type { EngagementQueryOptions } from '@/lib/supabase/read';
+import { voiceAttributesSchema } from '@/types/twilio';
 
 const formSchema = z.object({
 	start_date: z.string().optional(),

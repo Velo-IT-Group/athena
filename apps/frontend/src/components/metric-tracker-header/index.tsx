@@ -1,16 +1,17 @@
 'use client';
+import NumberFlow from '@number-flow/react';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { formatDate } from 'date-fns';
-import { createClient } from '@/lib/supabase/client';
-import { getTicketsCountQuery, getTicketsQuery } from '@/lib/manage/api';
-import Metric from '@/components/metric-tracker-header/metric';
 import {
 	Calendar1,
 	CalendarMinus,
 	CalendarPlus,
 	Voicemail,
 } from 'lucide-react';
-import NumberFlow from '@number-flow/react';
+import Metric from '@/components/metric-tracker-header/metric';
+import { getTicketsCountQuery, getTicketsQuery } from '@/lib/manage/api';
+import { getEngagementSummaryByPeriodQuery } from '@/lib/supabase/api';
+import { createClient } from '@/lib/supabase/client';
 
 const MetricTrackerHeader = () => {
 	const now = new Date();
@@ -311,22 +312,16 @@ const MetricTrackerHeader = () => {
 
 			<Metric
 				label='Voicemails Left Today'
-				renderOption={(value) => <>{value?.count}</>}
-				value={voicemails_by_day}
-				queryFn={getTicketsQuery({
-					conditions: {
-						closedFlag: true,
-						closedDate: {
-							value: ` [${todayStartString}]`,
-							comparison: '>',
-						},
-						dateEntered: {
-							value: ` [${todayStartString}]`,
-							comparison: '>',
-						},
-						'board/id': 31,
-						parentTicketId: null,
-					},
+				renderOption={(value) => {
+					const total =
+						value?.reduce((acc, engagement) => {
+							return acc + (engagement.voicemails ?? 0);
+						}, 0) ?? 0;
+
+					return <>{total}</>;
+				}}
+				queryFn={getEngagementSummaryByPeriodQuery({
+					call_date: new Date(),
 				})}
 				icon={Voicemail}
 			/>

@@ -1,9 +1,8 @@
 'use client';
-import { env } from '@/lib/utils';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Supervisor } from 'twilio-taskrouter';
-
 import type { Reservation, Worker, WorkerOptions } from 'twilio-taskrouter';
+import { Supervisor } from 'twilio-taskrouter';
+import { env } from '@/lib/utils';
 
 interface Props {
 	token: string;
@@ -115,18 +114,29 @@ export const useWorker = ({
 			);
 			onReservationCompleted?.(reservation);
 		},
-		[]
+		[onReservationCompleted]
 	);
 
-	const handleReservationEvents = useCallback((res: Reservation) => {
-		res.on('accepted', handleReservationAccepted);
-		res.on('canceled', handleReservationCanceled);
-		res.on('completed', handleReservationCompleted);
-		res.on('rejected', handleReservationRejected);
-		res.on('rescinded', handleReservationRescinded);
-		res.on('timeout', handleReservationTimeout);
-		res.on('wrapup', handleReservationWrapup);
-	}, []);
+	const handleReservationEvents = useCallback(
+		(res: Reservation) => {
+			res.on('accepted', handleReservationAccepted);
+			res.on('canceled', handleReservationCanceled);
+			res.on('completed', handleReservationCompleted);
+			res.on('rejected', handleReservationRejected);
+			res.on('rescinded', handleReservationRescinded);
+			res.on('timeout', handleReservationTimeout);
+			res.on('wrapup', handleReservationWrapup);
+		},
+		[
+			handleReservationAccepted,
+			handleReservationCanceled,
+			handleReservationCompleted,
+			handleReservationRejected,
+			handleReservationRescinded,
+			handleReservationTimeout,
+			handleReservationWrapup,
+		]
+	);
 
 	const handleReservationCreation = useCallback(
 		async (reservation: Reservation) => {
@@ -150,52 +160,90 @@ export const useWorker = ({
 		[onReservationFailed]
 	);
 
-	const handleWorkerReady = useCallback((worker: Worker) => {
-		onWorkerReady?.(worker);
-		setIsReady(true);
+	const handleWorkerReady = useCallback(
+		(worker: Worker) => {
+			onWorkerReady?.(worker);
+			setIsReady(true);
 
-		// Convert already created reservations into an array
-		const reservations = Array.from(worker.reservations.values());
+			// Convert already created reservations into an array
+			const reservations = Array.from(worker.reservations.values());
 
-		// Setup event listeners for each reservation
-		reservations.forEach((res) => handleReservationEvents(res));
+			// Setup event listeners for each reservation
+			reservations.forEach((res) => handleReservationEvents(res));
 
-		// Set the reservations to state
-		setReservations(reservations);
+			// Set the reservations to state
+			setReservations(reservations);
+		},
+		[handleReservationEvents, onWorkerReady]
+	);
+
+	const handleActivityUpdated = useCallback((worker: Worker) => {
+		setActivity(worker.activity);
+	}, []);
+
+	const handleAttributesUpdated = useCallback((worker: Worker) => {
+		setActivity(worker.activity);
+	}, []);
+
+	const handleDisconnection = useCallback((worker: Worker) => {
+		console.log(worker);
+	}, []);
+
+	const handleError = useCallback((error: Error) => {
+		console.error('Worker error:', error);
+	}, []);
+
+	const handleTokenExpiration = useCallback(() => {
+		console.error('Worker token expired');
+	}, []);
+
+	const handleTokenUpdate = useCallback(() => {
+		console.error('Worker token updated');
 	}, []);
 
 	useEffect(() => {
 		const supervisor = workerRef.current || new Supervisor(token, options);
 
-		supervisor.on('activityUpdated', (w) => setActivity(w.activity));
-		supervisor.on('attributesUpdated', (w) => setAttributes(w.attributes));
-		supervisor.on('disconnected', (error) => {});
-		supervisor.on('error', (error) => {
-			console.error('Worker error:', error);
-		});
+		supervisor.on('activityUpdated', handleActivityUpdated);
+		supervisor.on('attributesUpdated', handleAttributesUpdated);
+
+		supervisor.on('disconnected', handleDisconnection);
+		supervisor.on('error', handleError);
+
 		supervisor.on('ready', handleWorkerReady);
 		supervisor.on('reservationCreated', handleReservationCreation);
 		supervisor.on('reservationFailed', handleReservationFailed);
-		supervisor.on('tokenExpired', () => {});
-		supervisor.on('tokenUpdated', () => {
-			console.log('Token updated');
-		});
+
+		supervisor.on('tokenExpired', handleTokenExpiration);
+		supervisor.on('tokenUpdated', handleTokenUpdate);
 
 		workerRef.current = supervisor;
 
 		return () => {
+			supervisor.off('activityUpdated', handleActivityUpdated);
+			supervisor.off('attributesUpdated', handleAttributesUpdated);
+
+			supervisor.off('disconnected', handleDisconnection);
+			supervisor.off('error', handleError);
+
 			supervisor.off('ready', handleWorkerReady);
 			supervisor.off('reservationCreated', handleReservationCreation);
 			supervisor.off('reservationFailed', handleReservationFailed);
-			supervisor.off('attributesUpdated', (w) =>
-				setAttributes(w.attributes)
-			);
-			supervisor.off('activityUpdated', (w) => setActivity(w.activity));
+
+			supervisor.off('tokenExpired', handleTokenExpiration);
+			supervisor.off('tokenUpdated', handleTokenUpdate);
 		};
 	}, [
 		token,
+		options,
 		handleReservationCreation,
 		handleReservationFailed,
+		handleActivityUpdated,
+		handleDisconnection,
+		handleError,
+		handleTokenExpiration,
+		handleTokenUpdate,
+		handleAttributesUpdated,
 		handleWorkerReady,
 	]);
 

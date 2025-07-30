@@ -1,17 +1,12 @@
 'use client';
-import { z } from 'zod';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { cn, env } from '@/lib/utils';
-import { Form, FormField, FormItem } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
+import { createEngagementSchema } from '@athena/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
 import { Loader, Phone } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import { Keypad } from '@/components/keypad';
-import { useTwilio } from '@/contexts/twilio-provider';
 import { useCallback, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import DevicePicker from '@/components/device-picker';
+import { Keypad } from '@/components/keypad';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -22,8 +17,13 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import DevicePicker from '@/components/device-picker';
-import { createEngagementSchema } from '@athena/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Form, FormField, FormItem } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { useTwilio } from '@/contexts/twilio-provider';
+import { cn, env } from '@/lib/utils';
 
 export const numbers: Record<string, string> = {
 	'214': '+12142148356',
@@ -115,6 +115,9 @@ const OutboundDialer = () => {
 
 										<Keypad
 											onValueChange={(e) => {
+												device?.audio?.speakerDevices.test(
+													`https://sdk.twilio.com/js/client/sounds/releases/1.0.0/dtmf-${e}.mp3?cache=2.15.0`
+												);
 												const newValue =
 													(form.getValues()?.to ??
 														'') + e;

@@ -1,12 +1,18 @@
+import { useQuery } from '@tanstack/react-query';
+import { type Call, Device, type TwilioError } from '@twilio/voice-sdk';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useOnInteraction } from '@/hooks/use-on-interaction';
+import {
+	changeInputDevice,
+	changeOutputDevice,
+	getMediaDevicesQuery,
+} from '@/lib/utils/api';
 import {
 	MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY,
 	SPEAKER_DEVICE_ID_LOCAL_STORAGE_KEY,
 } from '@/utils/constants';
-import { type Call, Device, TwilioError } from '@twilio/voice-sdk';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
 
 interface Props {
 	token: string;
@@ -27,7 +33,12 @@ export const useDevice = ({
 	const [isRegistered, setIsRegistered] = useState(false);
 	const [isTokenExpiring, setIsTokenExpiring] = useState(false);
 	const [calls, setCalls] = useState<Call[]>([]);
-	const [hasDetectedAudio, setHasDetectedAudio] = useState(false);
+	const [hasDetectedAudio, setHasDetectedAudio] = useState<
+		boolean | undefined
+	>();
+	const { data } = useQuery(getMediaDevicesQuery());
+	// const changeInputDeviceMutation = changeInputDevice();
+	// const changeOutputDeviceMutation = changeOutputDevice();
 
 	const interacted = useOnInteraction();
 
@@ -39,44 +50,67 @@ export const useDevice = ({
 		[onIncomingCall]
 	);
 
-	const handleVolumeChange = useCallback(
-		(v: number) => {
-			if (v < 0.01) return;
-			console.log(v);
-			setHasDetectedAudio(true);
-		},
-		[hasDetectedAudio]
-	);
+	const handleVolumeChange = useCallback((v: number) => {
+		console.log('running handleVolumeChange', v);
+		if (v < 0.01) return;
+		console.log(v);
+		setHasDetectedAudio(true);
+	}, []);
 
 	const handleRegistration = useCallback(async () => {
 		setIsRegistered(true);
 		toast.info('Device registered successfully');
 		console.log('Device registered successfully');
 
-		try {
-			await deviceRef.current?.audio?.setInputDevice('default');
-			console.log('Audio input device set to default');
-		} catch (error) {
-			console.error('Error setting audio input device: ', error);
-			await deviceRef.current?.audio?.setInputDevice('Default');
+		if (data?.defaultInput) {
+			try {
+				await deviceRef.current?.audio?.setInputDevice(
+					data.defaultInput?.deviceId
+				);
+			} catch (error) {
+				console.error((error as TwilioError.TwilioError).message);
+				try {
+					await deviceRef.current?.audio?.setInputDevice('Default');
+				} catch (error) {
+					console.error((error as TwilioError.TwilioError).message);
+					await deviceRef.current?.audio?.setInputDevice('default');
+				}
+			}
+		} else {
+			try {
+				await deviceRef.current?.audio?.setInputDevice('Default');
+			} catch (error) {
+				console.error((error as TwilioError.TwilioError).message);
+				await deviceRef.current?.audio?.setInputDevice('default');
+			}
 		}
 
-		try {
-			await deviceRef.current?.audio?.speakerDevices.set('default');
-		} catch (error) {
-			console.error('Error setting audio output device: ', error);
+		setHasDetectedAudio(false);
+
+		if (data?.defaultOutput) {
+			// changeOutputDeviceMutation.mutate(data.defaultOutput);
 			await deviceRef.current?.audio?.speakerDevices.set(
-				localStorage.getItem('Default')!
+				data.defaultOutput.deviceId
 			);
+			console.log('Audio output device set to default');
+		} else {
+			try {
+				await deviceRef.current?.audio?.speakerDevices.set('default');
+			} catch (error) {
+				console.error('Error setting audio output device: ', error);
+				await deviceRef.current?.audio?.speakerDevices.set(
+					localStorage.getItem('Default')!
+				);
+			}
 		}
 
 		onDeviceRegistration?.();
-	}, [onDeviceRegistration, deviceRef]);
+	}, [onDeviceRegistration, data]);
 
 	const handleUnregistration = useCallback(() => {
 		setIsRegistered(false);
 		toast.info('Device unregistered successfully');
-	}, [onDeviceRegistration]);
+	}, []);
 
 	const handleDestruction = useCallback(() => {
 		setIsRegistered(false);
@@ -104,7 +138,7 @@ export const useDevice = ({
 			onTokenExpiring?.(deviceRef.current!);
 		}, 1000);
 		console.log('USE DEVICE TOKEN AFTER UPDATE: ', deviceRef.current.token);
-	}, [deviceRef, onTokenExpiring]);
+	}, [onTokenExpiring]);
 
 	const handleError = useCallback((twilioError: TwilioError.TwilioError) => {
 		console.error(twilioError);
@@ -189,7 +223,7 @@ export const useDevice = ({
 		};
 	}, [
 		interacted,
-		deviceRef,
+		// deviceRef,
 		token,
 		handleRegistration,
 		handleUnregistration,
@@ -200,13 +234,17 @@ export const useDevice = ({
 	]);
 
 	useEffect(() => {
-		if (!deviceRef.current?.audio || hasDetectedAudio) return;
-		deviceRef.current.audio.on('inputVolume', handleVolumeChange);
+		if (hasDetectedAudio) return;
+		deviceRef.current?.audio?.on('inputVolume', handleVolumeChange);
 
 		return () => {
 			deviceRef.current?.audio?.off('inputVolume', handleVolumeChange);
 		};
-	}, [deviceRef.current?.audio, handleVolumeChange]);
+	}, [
+		// deviceRef.current?.audio,
+		handleVolumeChange,
+		hasDetectedAudio,
+	]);
 
 	const runPreflightTest = useCallback(() => {
 		if (!deviceRef.current) return;
@@ -220,7 +258,7 @@ export const useDevice = ({
 		preflightTest.on('failed', (error) => {
 			console.log(error);
 		});
-	}, [deviceRef.current, token, hasDetectedAudio]);
+	}, [token]);
 
 	return {
 		token,

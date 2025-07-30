@@ -1,16 +1,16 @@
-import { getContacts, getSystemMembers } from "@/lib/manage/read";
-import { createClient } from "@/lib/supabase/server";
-import { getWorkers } from "@/lib/twilio/read";
 import { User } from "@supabase/supabase-js";
-import { createWorker } from "@/lib/twilio/create";
 import {
 	createServerFileRoute,
 	deleteCookie,
 	setCookie,
 } from "@tanstack/react-start/server";
+import { getContacts, getSystemMembers } from "@/lib/manage/read";
+import { createClient } from "@/lib/supabase/server";
+import { createWorker } from "@/lib/twilio/create";
+import { getWorkers } from "@/lib/twilio/read";
 import { updateWorker } from "@/lib/twilio/update";
-import { WorkerAttributes } from "@/types/twilio";
 import { env } from "@/lib/utils";
+import { WorkerAttributes } from "@/types/twilio";
 
 const handleAuthenticatedUser = async (user: User) => {
 	const supabase = createClient();
@@ -47,8 +47,6 @@ const handleAuthenticatedUser = async (user: User) => {
 		}),
 	]);
 
-	console.log(members, contacts);
-
 	if (!members?.length) {
 		throw new Error("No members found for the user");
 	}
@@ -58,7 +56,7 @@ const handleAuthenticatedUser = async (user: User) => {
 	const workers = await getWorkers({ data: { friendlyName: email } });
 
 	const user_metadata: WorkerAttributes = {
-		contact_uri: `client:${member.identifier}`,
+		contact_uri: `client:${email}`,
 		contact_id: contacts?.[0]?.id,
 		member_id: member.id,
 		team_name: member.salesDefaultLocation?.name || "Alpha",

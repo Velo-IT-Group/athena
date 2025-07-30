@@ -1,11 +1,11 @@
+import { createServerFn } from "@tanstack/react-start";
+import { formatDate, startOfDay } from "date-fns";
+import { z, ZodArray } from "zod";
 import { DAY_IN_MS } from "@/components/template-catalog";
 import type { UseSupabaseUploadOptions } from "@/hooks/use-supabase-upload";
 import { createClient } from "@/lib/supabase/server";
 import { env, filterSchema, paginationSchema, sortSchema } from "@/lib/utils";
-import { createServerFn } from "@tanstack/react-start";
-import { z, ZodArray } from "zod";
 import type { Database as DB } from "@/types/supabase.d.ts";
-import { startOfDay } from "date-fns";
 
 type Workflow = Database["system"]["Tables"]["workflow_entity"]["Row"];
 
@@ -35,18 +35,25 @@ export const getEngagementSummaryByPeriod = createServerFn()
 			.from("call_summary_by_period")
 			.select();
 
-		if (options?.call_date instanceof ZodArray) {
-			if (Array.isArray(options.call_date)) {
-				query.gte("call_date", options.call_date[0]);
-				query.lt("call_date", options.call_date[1]);
-			} else if (options.call_date) {
-				query.eq("call_date", options.call_date.toISOString());
-			}
+		if (Array.isArray(options?.call_date)) {
+			query.gte(
+				"call_date",
+				options.call_date[0].toISOString().split("T")[0],
+			);
+			query.lt(
+				"call_date",
+				options.call_date[1].toISOString().split("T")[0],
+			);
+		} else {
+			query.eq(
+				"call_date",
+				(options?.call_date ?? new Date())?.toISOString().split("T")[0],
+			);
 		}
 
-		query.order("call_date");
+		query.order("call_date", { ascending: false });
 
-		query.range(0, 1);
+		// query.range(0, 1);
 
 		const { data } = await query.throwOnError();
 
@@ -75,7 +82,9 @@ export const getEngagementReservations = createServerFn()
 			);
 		}
 
-		return JSON.parse(JSON.stringify({ data: data ?? [], count: count ?? 0 }));
+		return JSON.parse(
+			JSON.stringify({ data: data ?? [], count: count ?? 0 }),
+		);
 	});
 
 // @ts-ignore
@@ -89,62 +98,79 @@ export const getEngagements = createServerFn()
 			})
 			.optional(),
 	)
-	.handler<{ data: Engagement[]; count: number }>(async ({ data: filters }) => {
-		const supabase = createClient();
+	.handler<{ data: Engagement[]; count: number }>(
+		async ({ data: filters }) => {
+			const supabase = createClient();
 
-		const query = supabase.schema("reporting").from("engagements").select();
+			const query = supabase
+				.schema("reporting")
+				.from("engagements")
+				.select("*, reservations:engagement_reservations(*)");
 
-		console.log(filters?.options?.call_date);
+			// console.log(filters?.options?.call_date);
 
-		if (
-			filters?.options?.call_date &&
-			Array.isArray(filters?.options.call_date)
-		) {
-			query.gte("created_at", filters.options.call_date?.[0].toISOString());
-			query.lte("created_at", filters.options.call_date?.[1].toISOString());
-		} else if (
-			filters?.options?.call_date &&
-			!Array.isArray(filters?.options.call_date)
-		) {
-			console.log(filters?.options?.call_date);
-			query.gte(
-				"created_at",
-				(filters?.options.call_date ?? new Date()).toISOString(),
-			);
-		}
+			if (
+				filters?.options?.call_date &&
+				Array.isArray(filters?.options.call_date)
+			) {
+				console.log(filters.options.call_date?.[0].toISOString());
+				query.gte(
+					"created_at",
+					filters.options.call_date?.[0].toISOString(),
+				);
+				query.lt(
+					"created_at",
+					filters.options.call_date?.[1].toISOString(),
+				);
+			} else if (
+				filters?.options?.call_date &&
+				!Array.isArray(filters?.options.call_date)
+			) {
+				console.log(filters?.options?.call_date);
+				query.gte(
+					"created_at",
+					(filters?.options.call_date ?? new Date()).toISOString(),
+				);
+			}
 
-		if (filters?.options?.contactId) {
-			query.eq("contact->id", filters.options.contactId);
-		}
+			if (filters?.options?.contactId) {
+				query.eq("contact->id", filters.options.contactId);
+			}
 
-		if (filters?.options?.companyId) {
-			query.eq("company->id", filters.options.companyId);
-		}
+			if (filters?.options?.companyId) {
+				query.eq("company->id", filters.options.companyId);
+			}
 
-		query.order(filters?.sort?.field ?? "created_at", {
-			ascending: filters?.sort?.direction === "asc",
-		});
+			query.order(filters?.sort?.field ?? "created_at", {
+				ascending: filters?.sort?.direction === "asc",
+			});
 
-		// query.eq("workspace_sid", env.VITE_TWILIO_WORKSPACE_SID);
+			query.eq("workspace_sid", env.VITE_TWILIO_WORKSPACE_SID);
 
-		if (filters?.options?.in_business_hours) {
-			query.eq("in_business_hours", filters?.options?.in_business_hours);
-		}
+			if (filters?.options?.in_business_hours) {
+				query.eq(
+					"in_business_hours",
+					filters?.options?.in_business_hours,
+				);
+			}
 
-		if (filters?.pagination) {
-			query.range(
-				(filters.pagination?.pageSize ?? 25) * (filters.pagination?.page ?? 1),
-				(filters.pagination?.pageSize ?? 25) * (filters.pagination?.page ?? 1) +
-					(filters.pagination?.pageSize ?? 25),
-			);
-		} else {
-			query.range(0, 25);
-		}
+			if (filters?.pagination) {
+				query.range(
+					(filters.pagination?.pageSize ?? 25) *
+						(filters.pagination?.page ?? 1),
+					(filters.pagination?.pageSize ?? 25) *
+							(filters.pagination?.page ?? 1) +
+						(filters.pagination?.pageSize ?? 25),
+				);
+			} else {
+				// query.range(0, 25);
+			}
 
-		const { data, count } = await query.throwOnError();
+			const { data, count } = await query.throwOnError();
 
-		return { data: data ?? [], count: count ?? 0 };
-	});
+			return { data: data ?? [], count: count ?? 0 };
+		},
+	);
 
 // @ts-ignore
 export const getEngagement = createServerFn()
@@ -161,7 +187,10 @@ export const getEngagement = createServerFn()
 
 		if (error) {
 			throw new Error(
-				"Error in getting engagement for id " + id + " " + error.message,
+				"Error in getting engagement for id " +
+					id +
+					" " +
+					error.message,
 				{
 					cause: error,
 				},
@@ -373,7 +402,10 @@ export const getConversations = createServerFn()
 	.handler(async ({ data: { contactId, companyId, workerId, limit } }) => {
 		const supabase = createClient();
 
-		const query = supabase.schema("reporting").from("conversations").select();
+		const query = supabase
+			.schema("reporting")
+			.from("conversations")
+			.select();
 
 		if (contactId) {
 			query.eq("contact_id", contactId);
@@ -487,9 +519,12 @@ export const getProposalTotals = createServerFn()
 			.single();
 
 		if (error) {
-			throw new Error("Error in getting proposal totals " + error.message, {
-				cause: error,
-			});
+			throw new Error(
+				"Error in getting proposal totals " + error.message,
+				{
+					cause: error,
+				},
+			);
 		}
 
 		return data;
@@ -506,9 +541,12 @@ export const getProposalFollowers = createServerFn()
 			.eq("proposal_id", id);
 
 		if (error) {
-			throw new Error("Error in getting proposal followers " + error.message, {
-				cause: error,
-			});
+			throw new Error(
+				"Error in getting proposal followers " + error.message,
+				{
+					cause: error,
+				},
+			);
 		}
 
 		return data;
@@ -574,7 +612,13 @@ export const getPhase = createServerFn()
 
 export const getPhases = createServerFn()
 	.validator(
-		({ versionId, proposalId }: { versionId: string; proposalId: string }) => ({
+		({
+			versionId,
+			proposalId,
+		}: {
+			versionId: string;
+			proposalId: string;
+		}) => ({
 			versionId,
 			proposalId,
 		}),
@@ -602,7 +646,13 @@ export const getPhases = createServerFn()
 
 export const getSections = createServerFn()
 	.validator(
-		({ versionId, proposalId }: { versionId: string; proposalId: string }) => ({
+		({
+			versionId,
+			proposalId,
+		}: {
+			versionId: string;
+			proposalId: string;
+		}) => ({
 			proposalId,
 			versionId,
 		}),
@@ -729,7 +779,9 @@ export const getStorageFiles = createServerFn()
 	.handler(async ({ data: { bucketName, path } }) => {
 		const supabase = createClient();
 
-		const { data, error } = await supabase.storage.from(bucketName).list(path);
+		const { data, error } = await supabase.storage
+			.from(bucketName)
+			.list(path);
 
 		if (error) {
 			throw new Error("Error in getting files" + error.message, {
@@ -776,9 +828,12 @@ export const getProposalSettings = createServerFn()
 			.single();
 
 		if (error) {
-			throw new Error("Error in getting proposal settings " + error.message, {
-				cause: error,
-			});
+			throw new Error(
+				"Error in getting proposal settings " + error.message,
+				{
+					cause: error,
+				},
+			);
 		}
 
 		return data;

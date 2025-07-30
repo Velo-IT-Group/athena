@@ -1,8 +1,8 @@
 'use client';
-import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { Input } from '@/components/ui/input';
 
 type Props = {
 	placeholder: string;
@@ -45,7 +45,7 @@ const Expandable = ({ placeholder, onChange }: Props) => {
 			<Input
 				data-expanded={expanded}
 				placeholder={placeholder}
-				className='border-0 outline-none p-0 m-0 flex flex-[1_1_auto] tracking-tight font-medium md:text-xs w-0 transition-all data-[expanded="true"]:w-[var(--input-width)] data-[expanded="true"]:opacity-100'
+				className='h-7 border-0 outline-none p-0 m-0 flex flex-[1_1_auto] tracking-tight font-medium md:text-xs w-0 transition-all data-[expanded="true"]:w-[var(--input-width)] data-[expanded="true"]:opacity-100 dark:bg-transparent'
 				value={value}
 				autoFocus={expanded}
 				onChange={(e) => {
