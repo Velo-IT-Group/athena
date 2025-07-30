@@ -14,14 +14,14 @@ import * as React from 'react';
 import { Toaster } from 'sonner';
 import { DefaultCatchBoundary } from '@/components/DefaultCatchBoundary';
 import { NotFound } from '@/components/NotFound';
-import { fetchSessionUser } from '@/lib/supabase/server';
+// import { fetchSessionUser } from '@/lib/supabase/server';
 // import { QueryProvider } from '@/providers/query-provider';
 // import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
 
 export const Route = createRootRoute({
-	beforeLoad: async () => await fetchSessionUser(),
+	// beforeLoad: async () => await fetchSessionUser(),
 	errorComponent: (props) => {
 		return (
 			<RootDocument>
