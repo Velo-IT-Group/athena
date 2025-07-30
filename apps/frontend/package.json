@@ -46,7 +46,7 @@
 		"@radix-ui/react-tooltip": "^1.2.7",
 		"@radix-ui/react-use-controllable-state": "^1.2.2",
 		"@supabase/postgrest-js": "^1.21.1",
-		"@supabase/ssr": "^0.6.1",
+		"@supabase/ssr": "^0.5.2",
 		"@supabase/supabase-js": "^2.53.0",
 		"@tailwindcss/postcss": "^4.1.11",
 		"@tailwindcss/vite": "^4.1.11",

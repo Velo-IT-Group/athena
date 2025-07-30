@@ -1,20 +1,20 @@
-"use server";
+'use server';
+import { createServerClient } from '@supabase/ssr';
+import type { Session } from '@supabase/supabase-js';
+import { createServerFn } from '@tanstack/react-start';
 import {
 	getCookie,
 	parseCookies,
 	setCookie,
-} from "@tanstack/react-start/server";
-import { createServerClient } from "@supabase/ssr";
-import { env } from "@/lib/utils";
-import { createServerFn } from "@tanstack/react-start";
-import { jwtVerify } from "jose";
-import type { WebToken } from "@/types/crypto";
-import type { Session } from "@supabase/supabase-js";
+} from '@tanstack/react-start/server';
+import { jwtVerify } from 'jose';
+import { env } from '@/lib/utils';
+import type { WebToken } from '@/types/crypto';
 
 export const createClient = () =>
 	createServerClient<Database>(
-		env.VITE_SUPABASE_URL!,
-		env.VITE_SUPABASE_ANON_KEY!,
+		env.VITE_SUPABASE_URL,
+		env.VITE_SUPABASE_ANON_KEY,
 		{
 			cookies: {
 				getAll() {
@@ -23,7 +23,7 @@ export const createClient = () =>
 							({
 								name,
 								value,
-							}) as { name: string; value: string },
+							}) as { name: string; value: string }
 					);
 				},
 				setAll(cookies) {
@@ -32,7 +32,7 @@ export const createClient = () =>
 					});
 				},
 			},
-		},
+		}
 	);
 
 export async function getSafeSession() {
@@ -43,7 +43,7 @@ export async function getSafeSession() {
 	} = await supabase.auth.getSession();
 
 	if (error) {
-		return { session: null, user: null, error: "No session found" };
+		return { session: null, user: null, error: 'No session found' };
 	}
 
 	const {
@@ -72,15 +72,15 @@ export const fetchSessionUser = createServerFn().handler(async () => {
 });
 
 export const getUserCookie = createServerFn().handler(async () => {
-	const cookie = getCookie("connect_wise:auth");
+	const cookie = getCookie('connect_wise:auth');
 
 	if (!cookie) {
-		throw new Error("No cookie found");
+		throw new Error('No cookie found');
 	}
 
 	const jwt = await jwtVerify(
 		decodeURIComponent(cookie),
-		new TextEncoder().encode(env.VITE_SECRET_KEY),
+		new TextEncoder().encode(env.VITE_SECRET_KEY)
 	);
 
 	return jwt.payload as WebToken;
