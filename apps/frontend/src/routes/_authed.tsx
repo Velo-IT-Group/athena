@@ -1,14 +1,7 @@
-import { useQueries } from '@tanstack/react-query';
-import {
-	createFileRoute,
-	Link,
-	Outlet,
-	redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
-import { ChevronDown } from 'lucide-react';
-import { useEffect } from 'react';
-import z, { email } from 'zod';
+import { ChevronDown, LogOut } from 'lucide-react';
+import z from 'zod';
 import { SiteHeader } from '@/components/app-header';
 import VeloLogo from '@/components/logo';
 import NavigationalSidebar from '@/components/navigational-sidebar';
@@ -18,7 +11,6 @@ import {
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -30,11 +22,7 @@ import {
 } from '@/components/ui/sidebar';
 import { linksConfig } from '@/config/links';
 import { TwilioProvider } from '@/contexts/twilio-provider';
-import { createClient } from '@/lib/supabase/client';
-import { getProfile } from '@/lib/supabase/read';
-import { createAccessToken } from '@/lib/twilio';
-import { getAccessTokenQuery } from '@/lib/twilio/api';
-import { workerAttributesSchema } from '@/types/twilio';
+import { useAuth } from '@/hooks/use-auth';
 
 const schema = z.object({
 	modal: z.enum(['note']).optional(),
@@ -44,105 +32,50 @@ const schema = z.object({
 export const Route = createFileRoute('/_authed')({
 	component: AuthComponent,
 	validateSearch: zodValidator(schema),
-	beforeLoad: async ({ context, location }) => {
-		if (!context.session)
-			throw redirect({
-				to: '/auth/login',
-				search: { redirect: location.href },
-			});
-
-		const { session, user } = context;
-
-		const profile = await getProfile({ data: user.id });
-
-		const workerSid = profile.worker_sid ?? '';
-
-		const attributes = workerAttributesSchema.parse(user.user_metadata);
-
-		const accessToken = await createAccessToken({
-			data: {
-				identity: user?.email ?? attributes.identity,
-				workerSid,
-			},
-		});
-
-		return {
-			user,
-			session,
-			profile,
-			accessToken,
-			workerSid,
-			identity: user?.email ?? attributes.identity,
-			features: { hideQueueStatus: false },
-			defaultOpen: true,
-		};
-	},
+	// beforeLoad: async ({ context, location }) => {
+	// 	// if (!context.session)
+	// 	// 	throw redirect({
+	// 	// 		to: '/auth/login',
+	// 	// 		search: { redirect: location.href },
+	// 	// 	});
+	// 	// const { session, user } = context;
+	// 	// const profile = await getProfile({ data: user.id });
+	// 	// const workerSid = profile.worker_sid ?? '';
+	// 	// const attributes = workerAttributesSchema.parse(user.user_metadata);
+	// 	// const accessToken = await createAccessToken({
+	// 	// 	data: {
+	// 	// 		identity: user?.email ?? attributes.identity,
+	// 	// 		workerSid,
+	// 	// 	},
+	// 	// });
+	// 	// return {
+	// 	// 	profile,
+	// 	// 	accessToken,
+	// 	// 	workerSid,
+	// 	// 	identity: user?.email ?? attributes.identity,
+	// 	// 	features: { hideQueueStatus: false },
+	// 	// 	defaultOpen: true,
+	// 	// };
+	// },
 	ssr: 'data-only',
 });
 
 function AuthComponent() {
-	const {
-		user,
-		accessToken: initialAccessToken,
-		workerSid,
-		identity,
-		defaultOpen,
-	} = Route.useRouteContext();
+	const { user, handleSignOut, accessToken, workerSid } = useAuth();
 
-	useEffect(() => {
-		const supabase = createClient();
-
-		const authListener = supabase.auth.onAuthStateChange(
-			(event, session) => {
-				if (session && session.provider_token) {
-					window.localStorage.setItem(
-						'oauth_provider_token',
-						session.provider_token
-					);
-				}
-				if (session && session.provider_refresh_token) {
-					window.localStorage.setItem(
-						'oauth_provider_refresh_token',
-						session.provider_refresh_token
-					);
-				}
-				if (event === 'SIGNED_OUT') {
-					window.localStorage.removeItem('oauth_provider_token');
-					window.localStorage.removeItem(
-						'oauth_provider_refresh_token'
-					);
-				}
-			}
-		);
-
-		return () => {
-			authListener.data.subscription.unsubscribe();
-		};
-	}, []);
+	console.log(user, accessToken, workerSid);
 
 	const { modal, id } = Route.useSearch();
 	const { sidebarNav } = linksConfig;
 
-	const [{ data: accessToken }] = useQueries({
-		queries: [
-			{
-				...getAccessTokenQuery({
-					identity,
-					workerSid,
-				}),
-				initialData: initialAccessToken,
-			},
-		],
-	});
-
 	return (
 		<SidebarProvider
-			defaultOpen={defaultOpen}
-			// className='flex h-screen flex-col overflow-hidden flex-[1_1 auto] relative'
+		// defaultOpen={defaultOpen}
+		// className='flex h-screen flex-col overflow-hidden flex-[1_1 auto] relative'
 		>
 			<TwilioProvider
-				token={accessToken}
-				workerSid={workerSid}
+				token={accessToken ?? ''}
+				workerSid={workerSid ?? ''}
 				identity={user?.email ?? ''}
 			>
 				<div className='flex flex-1'>
@@ -178,7 +111,7 @@ function AuthComponent() {
 										align='start'
 										alignOffset={8}
 									>
-										{linksConfig.userDropdown.map(
+										{/* {linksConfig.userDropdown.map(
 											(item, index) => (
 												<DropdownMenuGroup
 													key={`dropdown-group-${index}`}
@@ -218,7 +151,20 @@ function AuthComponent() {
 													</>
 												</DropdownMenuGroup>
 											)
-										)}
+										)} */}
+										<DropdownMenuGroup>
+											<DropdownMenuItem
+												onClick={() =>
+													handleSignOut?.mutate()
+												}
+												disabled={
+													handleSignOut?.isPending
+												}
+											>
+												<LogOut />
+												<span>Log Out</span>
+											</DropdownMenuItem>
+										</DropdownMenuGroup>
 									</DropdownMenuContent>
 								</DropdownMenu>
 							</SidebarMenuItem>

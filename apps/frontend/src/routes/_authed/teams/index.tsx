@@ -29,6 +29,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import useSyncMap from '@/hooks/use-sync-map';
 import { getDateOffset } from '@/utils/date';
+import { useAuth } from '@/hooks/use-auth';
 
 const schema = z.object({
 	pane: z.enum(['worker', 'call']).optional(),
@@ -64,13 +65,13 @@ export type WorkerConversation = WorkerInstance & {
 };
 
 function RouteComponent() {
-	const { accessToken } = Route.useRouteContext();
+	const { accessToken } = useAuth();
 	const { pane, itemId } = Route.useSearch();
 	const navigate = Route.useNavigate();
 
 	const { items: conversations, isLoading: isLoadingConversations } =
 		useSyncMap({
-			token: accessToken,
+			token: accessToken ?? '',
 			mapKey: 'Sync Worker Reservations',
 		});
 

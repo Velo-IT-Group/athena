@@ -98,9 +98,7 @@ export const Route = createFileRoute('/_authed/proposals/$id/$version')({
 	beforeLoad: async ({ params }) => {
 		const stripe = createClient();
 		return {
-			invoice: await stripe.invoices.retrieve(
-				'in_1RlCQrI6Q4ne5nTqXIElgw2S'
-			),
+			invoice: await stripe.invoices.retrieve(''),
 		};
 	},
 });

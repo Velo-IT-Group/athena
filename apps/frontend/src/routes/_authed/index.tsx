@@ -5,6 +5,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import PrivateNotepad from '@/components/widgets/private-notepad';
 import TimeEntriesProgress from '@/components/time-entries-progress';
 import MetricTrackerHeader from '@/components/metric-tracker-header';
+import { useAuth } from '@/hooks/use-auth';
 
 export const Route = createFileRoute('/_authed/')({
 	component: Home,
@@ -12,7 +13,7 @@ export const Route = createFileRoute('/_authed/')({
 });
 
 function Home() {
-	const { profile, user } = Route.useRouteContext();
+	const { user } = useAuth();
 
 	const today = new Date();
 	const isAfternoon = today.getHours() >= 12 && today.getHours() < 18;
@@ -35,10 +36,14 @@ function Home() {
 						: isMorning
 							? 'morning'
 							: 'evening'}
-					, {profile?.first_name}
+					,{' '}
+					{user?.user_metadata?.full_name.split(' ')?.[0] ??
+						user?.email ??
+						'there'}
+					!
 				</h3>
 
-				<TimeEntriesProgress user={user} />
+				<TimeEntriesProgress user={user!} />
 
 				<MetricTrackerHeader />
 

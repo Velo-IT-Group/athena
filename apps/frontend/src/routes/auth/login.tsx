@@ -1,6 +1,7 @@
 import LabeledInput from '@/components/labeled-input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/use-auth';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
@@ -25,60 +26,12 @@ export const Route = createFileRoute('/auth/login')({
 });
 
 function RouteComponent() {
-	const navigate = useNavigate();
-	const { redirect } = Route.useSearch();
-
-	const handlePassswordLogin = useMutation({
-		mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
-			e.preventDefault();
-			const supabase = createClient();
-
-			const { data, error } = await supabase.auth.signInWithPassword({
-				email: 'nicholas.black98@icloud.com',
-				password: 'Bl@ck1998!',
-			});
-
-			if (error) throw error;
-
-			// redirect({ to: '/' });
-		},
-		onError(error) {
-			console.log(error);
-			toast.error(error.message);
-		},
-		onSuccess(data, variables, context) {
-			navigate({ to: '/' });
-		},
-	});
-
-	const handleSocialLogin = useMutation({
-		mutationFn: async () => {
-			const supabase = createClient();
-
-			const params = new URLSearchParams();
-
-			if (redirect) {
-				params.set('next', redirect);
-			}
-
-			const { error } = await supabase.auth.signInWithOAuth({
-				provider: 'azure',
-				options: {
-					scopes: 'offline_access openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite',
-					redirectTo:
-						`${window.location.origin}/rest/v1/auth/callback` +
-						`?${params.toString()}`,
-				},
-			});
-
-			if (error) throw error;
-		},
-	});
+	const { handleSocialLogin } = useAuth();
 
 	return (
 		<form
 			className={cn('flex flex-col gap-6')}
-			onSubmit={handlePassswordLogin.mutate}
+			// onSubmit={handlePassswordLogin.mutate}
 		>
 			<div className='flex flex-col items-center gap-3 text-center'>
 				<h1 className='text-2xl font-bold'>Welcome to Athena</h1>
@@ -106,12 +59,12 @@ function RouteComponent() {
 					required
 				/>
 
-				<Button disabled={handlePassswordLogin.isPending}>
+				{/* <Button disabled={handlePassswordLogin.isPending}>
 					{handlePassswordLogin.isPending && (
 						<Loader2 className='animate-spin' />
 					)}
 					{handlePassswordLogin.isPending ? 'Logging in...' : 'Login'}
-				</Button>
+				</Button> */}
 
 				<div className='flex items-center gap-3'>
 					<Separator
@@ -131,10 +84,10 @@ function RouteComponent() {
 					variant='outline'
 					className='w-full text-base font-medium'
 					size='lg'
-					onClick={() => handleSocialLogin.mutate()}
-					disabled={handleSocialLogin.isPending}
+					onClick={() => handleSocialLogin?.mutate()}
+					disabled={handleSocialLogin?.isPending}
 				>
-					{handleSocialLogin.isPending ? (
+					{handleSocialLogin?.isPending ? (
 						<Loader2 className='size-3.5 rounded-xs' />
 					) : (
 						<img

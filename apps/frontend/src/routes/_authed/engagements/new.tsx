@@ -53,6 +53,7 @@ import { z } from 'zod';
 import { createClient } from '@/utils/twilio';
 import AudioSelector from '@/components/audio-selector';
 import { useTwilio } from '@/contexts/twilio-provider';
+import { useAuth } from '@/hooks/use-auth';
 
 const attributesSchema = z.object({
 	contactId: z.number(),
@@ -78,7 +79,7 @@ export const Route = createFileRoute('/_authed/engagements/new')({
 
 function RouteComponent() {
 	const { channel, to, attributes } = Route.useSearch();
-	const { workerSid, accessToken } = Route.useRouteContext();
+	const { workerSid, accessToken } = useAuth();
 
 	const { device } = useTwilio();
 
@@ -98,7 +99,7 @@ function RouteComponent() {
 					await getPhoneNumbers({ data: { beta: false } }),
 			},
 			getActivitiesQuery(),
-			getWorkerQuery(workerSid),
+			getWorkerQuery(workerSid ?? ''),
 		],
 	});
 

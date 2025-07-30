@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getAccessTokenQuery } from '@/lib/twilio/api';
 import { useRouteContext } from '@tanstack/react-router';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/use-auth';
 
 interface UseTwilioVoiceProps {
 	accessToken?: string;
@@ -25,14 +26,14 @@ export const useTwilioVoice = ({
 	);
 	const [updateTokenAfterCall, setUpdateTokenAfterCall] = useState(false);
 
-	const { workerSid, user, identity } = useRouteContext({ from: '/_authed' }); // Adjust the path as needed
+	const { workerSid, user, identity } = useAuth(); // Adjust the path as needed
 
 	const interacted = useOnInteraction();
 
 	const refreshDeviceToken = async (device: Device) => {
 		const query = getAccessTokenQuery({
-			identity,
-			workerSid,
+			identity: identity ?? '',
+			workerSid: workerSid ?? '',
 		});
 
 		const data = await client.fetchQuery(query);

@@ -8,50 +8,51 @@ import {
 	Scripts,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { createServerFn } from '@tanstack/react-start';
+// import { createServerFn } from '@tanstack/react-start';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import * as React from 'react';
 import { Toaster } from 'sonner';
 import { DefaultCatchBoundary } from '@/components/DefaultCatchBoundary';
 import { NotFound } from '@/components/NotFound';
-import { createClient } from '@/lib/supabase/server';
+// import { createClient } from '@/lib/supabase/server';
 import { QueryProvider } from '@/providers/query-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
+import { AuthProvider } from '@/hooks/use-auth';
 
-export const fetchSessionUser = createServerFn().handler<{
-	session: Session | null;
-	user: User | null;
-}>(async () => {
-	const supabase = createClient();
-	const [
-		{
-			data: { user },
-		},
-		{
-			data: { session },
-		},
-	] = await Promise.all([
-		supabase.auth.getUser(),
-		supabase.auth.getSession(),
-	]);
+// export const fetchSessionUser = createServerFn().handler<{
+// 	session: Session | null;
+// 	user: User | null;
+// }>(async () => {
+// 	const supabase = createClient();
+// 	const [
+// 		{
+// 			data: { user },
+// 		},
+// 		{
+// 			data: { session },
+// 		},
+// 	] = await Promise.all([
+// 		supabase.auth.getUser(),
+// 		supabase.auth.getSession(),
+// 	]);
 
-	if (!session || !user) {
-		return { session: null, user: null };
-	}
+// 	if (!session || !user) {
+// 		return { session: null, user: null };
+// 	}
 
-	return {
-		session,
-		user,
-	};
-});
+// 	return {
+// 		session,
+// 		user,
+// 	};
+// });
 
 export const Route = createRootRoute({
-	beforeLoad: async () => {
-		const session = await fetchSessionUser();
-		return session as { session: Session; user: User };
-	},
+	// beforeLoad: async () => {
+	// 	const session = await fetchSessionUser();
+	// 	return session as { session: Session; user: User };
+	// },
 	errorComponent: (props) => {
 		return (
 			<RootDocument>
@@ -109,8 +110,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			>
 				<ThemeProvider>
 					<QueryProvider>
-						{children}
-
+						<AuthProvider>{children}</AuthProvider>
 						<Toaster
 							richColors
 							swipeDirections={['right']}

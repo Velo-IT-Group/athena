@@ -34,7 +34,7 @@ import { linksConfig } from '@/config/links';
 import { useTwilio } from '@/contexts/twilio-provider';
 import { getEngagementReservationsQuery } from '@/lib/supabase/api';
 import { env } from '@/lib/utils';
-import { attributeIdentifier, voiceAttributesSchema } from '@/types/twilio';
+import { voiceAttributesSchema } from '@/types/twilio';
 import { useMutation, useQueries } from '@tanstack/react-query';
 import {
 	useLocation,
@@ -53,6 +53,7 @@ import {
 } from 'lucide-react';
 import { createServerFn } from '@tanstack/react-start';
 import z from 'zod';
+import { useAuth } from '@/hooks/use-auth';
 
 const refreshTokenResponseSchema = z.object({
 	access_token: z.string(),
@@ -89,9 +90,7 @@ export function SiteHeader({
 	title?: string;
 	hideVoice?: boolean;
 }) {
-	const { identity, workerSid, accessToken } = useRouteContext({
-		from: '/_authed',
-	});
+	const { workerSid, user, accessToken } = useAuth();
 	const { activeEngagement } = useTwilio();
 	const pathname = useLocation({ select: (l) => l.pathname });
 	const router = useRouter();
@@ -205,7 +204,7 @@ export function SiteHeader({
 
 			<div className='overflow-visible shrink-0 flex items-center'>
 				<div className='flex items-center justify-center gap-2'>
-					<QueueStatus token={accessToken} />
+					<QueueStatus token={accessToken ?? ''} />
 
 					<Separator
 						orientation='vertical'
@@ -277,7 +276,7 @@ export function SiteHeader({
 						<Avatar className='size-5 bg-[#f97514] text-white rounded-full'>
 							<AvatarImage src={photoData} />
 							<AvatarFallback className='text-xs font-normal'>
-								{identity?.charAt(0).toUpperCase() ?? 'U'}
+								{user?.email?.charAt(0).toUpperCase() ?? 'U'}
 							</AvatarFallback>
 						</Avatar>
 					</div>

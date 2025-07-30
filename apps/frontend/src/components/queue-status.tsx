@@ -24,7 +24,7 @@ const QueueStatus = ({ token }: Props) => {
 	);
 
 	const { data: document } = useQuery({
-		queryKey: ['queueStatus', client?.connectionState ?? 'unknown'],
+		queryKey: ['queueStatus', token, client?.connectionState ?? 'unknown'],
 		queryFn: async () => client?.document('Queue Status'),
 		enabled: client?.connectionState === 'connected',
 	});

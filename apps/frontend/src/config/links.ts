@@ -13,8 +13,8 @@ import {
 	Ticket,
 	User,
 	Users,
-} from "lucide-react";
-import type { NavItem, NavSection } from "@/types/nav";
+} from 'lucide-react';
+import type { NavItem, NavSection } from '@/types/nav';
 
 export interface LinksConfig {
 	modules: NavItem[];
@@ -34,9 +34,9 @@ export const linksConfig: LinksConfig = {
 		{
 			items: [
 				{
-					title: "Home",
+					title: 'Home',
 					icon: Home,
-					to: "/",
+					to: '/',
 				},
 			],
 		},
@@ -44,24 +44,24 @@ export const linksConfig: LinksConfig = {
 			// label: "Client Experience",
 			items: [
 				{
-					title: "Engagements",
+					title: 'Engagements',
 					icon: ChartBarDecreasing,
-					to: "/engagements",
+					to: '/engagements',
 					// badge: "2",
 				},
 				{
-					title: "Teams",
+					title: 'Teams',
 					icon: Users,
-					to: "/teams",
+					to: '/teams',
 				},
 			],
 		},
 		{
 			items: [
 				{
-					title: "Proposals",
+					title: 'Proposals',
 					icon: FileText,
-					to: "/proposals",
+					to: '/proposals',
 				},
 			],
 		},
@@ -70,87 +70,87 @@ export const linksConfig: LinksConfig = {
 		{
 			items: [
 				{
-					title: "Activity",
+					title: 'Activity',
 					icon: Activity,
-					to: "/companies/$id/activity",
+					to: '/companies/$id/activity',
 				},
 				{
-					title: "Tickets",
+					title: 'Tickets',
 					icon: Ticket,
-					to: "/companies/$id/tickets",
+					to: '/companies/$id/tickets',
 				},
 				{
-					title: "Contacts",
+					title: 'Contacts',
 					icon: User,
-					to: "/companies/$id/contacts",
+					to: '/companies/$id/contacts',
 				},
 				{
-					title: "Configurations",
+					title: 'Configurations',
 					icon: Cable,
-					to: "/companies/$id/configurations",
+					to: '/companies/$id/configurations',
 				},
 				{
-					title: "Proposals",
+					title: 'Proposals',
 					icon: FileText,
-					to: "/companies/$id/proposals",
+					to: '/companies/$id/proposals',
 				},
 				{
-					title: "Notes",
+					title: 'Notes',
 					icon: File,
-					to: "/companies/$id/proposals",
+					to: '/companies/$id/proposals',
 				},
 			],
 		},
 	],
 	teamTabs: [
 		{
-			title: "Overview",
+			title: 'Overview',
 			icon: LayoutDashboard,
-			to: "/teams/$id",
+			to: '/teams/$id',
 		},
 	],
 	contactTabs: [
 		{
-			title: "Overview",
+			title: 'Overview',
 			icon: LayoutDashboard,
-			to: "/contacts/$id",
+			to: '/contacts/$id',
 		},
 		{
-			title: "Tickets",
+			title: 'Tickets',
 			icon: Ticket,
-			to: "/contacts/$id/tickets",
+			to: '/contacts/$id/tickets',
 		},
 		{
-			title: "Configurations",
+			title: 'Configurations',
 			icon: Cable,
-			to: "/contacts/$id/configurations",
+			to: '/contacts/$id/configurations',
 		},
 		{
-			title: "Engagements",
+			title: 'Engagements',
 			icon: AudioLines,
-			to: "/contacts/$id/engagements",
+			to: '/contacts/$id/engagements',
 		},
 	],
 	proposalTabs: [
 		{
 			items: [
 				{
-					title: "Overview",
+					title: 'Overview',
 					icon: LayoutDashboard,
-					to: "/proposals/$id/$version",
+					to: '/proposals/$id/$version',
 				},
 			],
 		},
 		{
 			items: [
 				{
-					title: "Workplan",
-					to: "/proposals/$id/$version/workplan",
+					title: 'Workplan',
+					to: '/proposals/$id/$version/workplan',
 					icon: ListChecks,
 				},
 				{
-					title: "Products",
-					to: "/proposals/$id/$version/products",
+					title: 'Products',
+					to: '/proposals/$id/$version/products',
 					icon: ShoppingBag,
 				},
 			],
@@ -160,9 +160,9 @@ export const linksConfig: LinksConfig = {
 		{
 			items: [
 				{
-					title: "Sign out",
+					title: 'Sign out',
 					icon: LogOut,
-					to: "/auth/login",
+					to: '/auth/login',
 				},
 			],
 		},
