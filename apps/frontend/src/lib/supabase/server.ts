@@ -1,6 +1,6 @@
 'use server';
 import { createServerClient } from '@supabase/ssr';
-import type { Session } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import { createServerFn } from '@tanstack/react-start';
 import {
 	getCookie,
@@ -62,14 +62,14 @@ export async function getSafeSession() {
 	};
 }
 
-export const fetchSessionUser = createServerFn().handler(async () => {
-	const supabase = createClient();
-	const {
-		data: { session },
-	} = await supabase.auth.getSession();
+// export const fetchSessionUser = createServerFn().handler(async () => {
+// 	const supabase = createClient();
+// 	const {
+// 		data: { session },
+// 	} = await supabase.auth.getSession();
 
-	return { session: session as Session };
-});
+// 	return { session: session as Session };
+// });
 
 export const getUserCookie = createServerFn().handler(async () => {
 	const cookie = getCookie('connect_wise:auth');
@@ -84,4 +84,31 @@ export const getUserCookie = createServerFn().handler(async () => {
 	);
 
 	return jwt.payload;
+});
+
+export const fetchSessionUser = createServerFn().handler<{
+	session: Session | null;
+	user: User | null;
+}>(async () => {
+	const supabase = createClient();
+	const [
+		{
+			data: { user },
+		},
+		{
+			data: { session },
+		},
+	] = await Promise.all([
+		supabase.auth.getUser(),
+		supabase.auth.getSession(),
+	]);
+
+	if (!session || !user) {
+		return { session: null, user: null };
+	}
+
+	return {
+		session,
+		user,
+	};
 });
