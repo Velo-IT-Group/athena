@@ -1,24 +1,24 @@
 /// <reference types="vite/client" />
-import appCss from '@/styles/app.css?url';
-import * as React from 'react';
 
+import type { Session, User } from '@supabase/supabase-js';
 import {
+	createRootRoute,
 	HeadContent,
 	Outlet,
 	Scripts,
-	createRootRoute,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+import { createServerFn } from '@tanstack/react-start';
+import { NuqsAdapter } from 'nuqs/adapters/react';
+import * as React from 'react';
+import { Toaster } from 'sonner';
 import { DefaultCatchBoundary } from '@/components/DefaultCatchBoundary';
 import { NotFound } from '@/components/NotFound';
-import { QueryProvider } from '@/providers/query-provider';
-import { seo } from '@/utils/seo';
-import { ThemeProvider } from '@/providers/theme-provider';
-import { NuqsAdapter } from 'nuqs/adapters/react';
-import { Toaster } from 'sonner';
 import { createClient } from '@/lib/supabase/server';
-import { createServerFn } from '@tanstack/react-start';
-import type { Session, User } from '@supabase/supabase-js';
+import { QueryProvider } from '@/providers/query-provider';
+import { ThemeProvider } from '@/providers/theme-provider';
+import appCss from '@/styles/app.css?url';
+import { seo } from '@/utils/seo';
 
 export const fetchSessionUser = createServerFn().handler<{
 	session: Session | null;
