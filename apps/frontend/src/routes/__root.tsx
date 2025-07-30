@@ -90,6 +90,7 @@ export const Route = createRootRoute({
 			{ rel: 'manifest', href: '/site.webmanifest', color: '#fffff' },
 		],
 	}),
+	ssr: false,
 });
 
 function RootComponent() {
