@@ -1,5 +1,5 @@
-'use client';
-import { createBrowserClient } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
+import { parseCookies, setCookie } from '@tanstack/react-start/server';
 // import { createIsomorphicFn } from '@tanstack/react-start-client';
 // import { parseCookies, setCookie } from '@tanstack/react-start/server';
 import { env } from '@/lib/utils';
@@ -10,7 +10,23 @@ export type SerializableSession = {
 };
 
 export const createClient = () =>
-	createBrowserClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
+	createServerClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY, {
+		cookies: {
+			getAll() {
+				return Object.entries(parseCookies()).map(([name, value]) => ({
+					name,
+					value,
+				}));
+			},
+			setAll(cookies) {
+				cookies.forEach((cookie) => {
+					setCookie(cookie.name, cookie.value);
+				});
+			},
+		},
+	});
+// export const createClient = () =>
+// 	createBrowserClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
 
 // export const isoMorphicGetSBSession = createIsomorphicFn()
 // 	.client(async (): Promise<SerializableSession | null> => {
