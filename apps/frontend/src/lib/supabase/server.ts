@@ -1,4 +1,3 @@
-'use client';
 import { createIsomorphicFn } from '@tanstack/react-start-client';
 // import { parseCookies, setCookie } from '@tanstack/react-start/server';
 import { env } from '@/lib/utils';
