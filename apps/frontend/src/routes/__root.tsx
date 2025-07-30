@@ -59,9 +59,9 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 // });
 
 export const Route = createRootRoute({
-	beforeLoad: async () => {
-		const supabase = getSupabaseServerClient();
-	},
+	// beforeLoad: async () => {
+	// 	const supabase = getSupabaseServerClient();
+	// },
 	errorComponent: (props) => {
 		return (
 			<RootDocument>
@@ -90,7 +90,6 @@ export const Route = createRootRoute({
 			{ rel: 'manifest', href: '/site.webmanifest', color: '#fffff' },
 		],
 	}),
-	ssr: false,
 });
 
 function RootComponent() {
