@@ -1,7 +1,25 @@
+import { useMutation, useQueries } from '@tanstack/react-query';
+import {
+	useLocation,
+	useRouteContext,
+	useRouter,
+} from '@tanstack/react-router';
+import { createServerFn } from '@tanstack/react-start';
+import {
+	Ban,
+	Ellipsis,
+	Headset,
+	History,
+	Phone,
+	PhoneIncoming,
+	PhoneMissed,
+	PhoneOutgoing,
+} from 'lucide-react';
+import z from 'zod';
 import ActivitySelector from '@/components/activity-selector';
 import DevicePicker from '@/components/device-picker';
 import { ListSelector } from '@/components/list-selector';
-import QueueStatus from '@/components/queue-status';
+// import QueueStatus from '@/components/queue-status';
 import TaskNotification from '@/components/task-notification';
 import {
 	AlertDialog,
@@ -32,28 +50,10 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { PROVIDER_KEY, PROVIDER_REFRESH_KEY } from '@/config';
 import { linksConfig } from '@/config/links';
 import { useTwilio } from '@/contexts/twilio-provider';
+import { useAuth } from '@/hooks/use-auth';
 import { getEngagementReservationsQuery } from '@/lib/supabase/api';
 import { env } from '@/lib/utils';
 import { voiceAttributesSchema } from '@/types/twilio';
-import { useMutation, useQueries } from '@tanstack/react-query';
-import {
-	useLocation,
-	useRouteContext,
-	useRouter,
-} from '@tanstack/react-router';
-import {
-	Ban,
-	Ellipsis,
-	Headset,
-	History,
-	Phone,
-	PhoneIncoming,
-	PhoneMissed,
-	PhoneOutgoing,
-} from 'lucide-react';
-import { createServerFn } from '@tanstack/react-start';
-import z from 'zod';
-import { useAuth } from '@/hooks/use-auth';
 
 const refreshTokenResponseSchema = z.object({
 	access_token: z.string(),
@@ -204,7 +204,7 @@ export function SiteHeader({
 
 			<div className='overflow-visible shrink-0 flex items-center'>
 				<div className='flex items-center justify-center gap-2'>
-					<QueueStatus token={accessToken ?? ''} />
+					{/* <QueueStatus token={accessToken ?? ''} /> */}
 
 					<Separator
 						orientation='vertical'

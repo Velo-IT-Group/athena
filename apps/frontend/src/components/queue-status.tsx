@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ConnectionState } from 'twilio-sync';
-import { buttonVariants } from '@/components/ui/button';
 import useSyncClient from '@/hooks/use-sync-client';
 import { cn } from '@/lib/utils';
 

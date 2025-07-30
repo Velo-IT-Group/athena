@@ -27,8 +27,7 @@ import type {
 	WorkerStatisticsInstance,
 } from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
 import { WorkflowListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/workflow";
-import { SyncClient } from "twilio-sync";
-import { DAY_IN_MS } from "@/components/template-catalog";
+// import { SyncClient } from "twilio-sync";
 import { createAccessToken } from "@/lib/twilio";
 import {
 	getChannels,
@@ -253,26 +252,22 @@ export const getWorkerStatsQuery = (
 	staleTime: Infinity,
 });
 
-export const getSyncMapQuery = ({
-	mapKey,
-	token,
-}: {
-	mapKey: string;
-	token: string;
-}) => {
-	const syncMapClient = new SyncClient(token);
+// export const getSyncMapQuery = ({
+// 	mapKey,
+// 	token,
+// }: {
+// 	mapKey: string;
+// 	token: string;
+// }) => {
+// 	const syncMapClient = new SyncClient(token);
 
-	return queryOptions({
-		queryKey: ["syncMapClient", mapKey, token],
-		queryFn: async () => {
-			const map = await syncMapClient.map(mapKey);
-			const { items } = await map.getItems();
-			return { client: syncMapClient, map, items };
-		},
-		// refetchIntervalInBackground: true,
-		// refetchOnWindowFocus: 'always',
-		// refetchOnMount: 'always',
-		// refetchOnReconnect: 'always',
-		enabled: !!token && !!mapKey,
-	});
-};
+// 	return queryOptions({
+// 		queryKey: ["syncMapClient", mapKey, token],
+// 		queryFn: async () => {
+// 			const map = await syncMapClient.map(mapKey);
+// 			const { items } = await map.getItems();
+// 			return { client: syncMapClient, map, items };
+// 		},
+// 		enabled: !!token && !!mapKey,
+// 	});
+// };
