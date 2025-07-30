@@ -19,7 +19,7 @@ import { NotFound } from '@/components/NotFound';
 // import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
-import { getSupabaseServerClient } from '@/lib/supabase/server';
+// import { getSupabaseServerClient } from '@/lib/supabase/server';
 // import { createClient } from '@/lib/supabase/server';
 // import { fetchSessionUser } from '@/lib/supabase/server';
 
@@ -47,18 +47,18 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 // 	};
 // };
 
-const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
-	const supabase = getSupabaseServerClient();
-	const { data, error: _error } = await supabase.auth.getUser();
+// const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
+// 	const supabase = getSupabaseServerClient();
+// 	const { data, error: _error } = await supabase.auth.getUser();
 
-	if (!data.user?.email) {
-		return null;
-	}
+// 	if (!data.user?.email) {
+// 		return null;
+// 	}
 
-	return {
-		email: data.user.email,
-	};
-});
+// 	return {
+// 		email: data.user.email,
+// 	};
+// });
 
 export const Route = createRootRoute({
 	// beforeLoad: async () => await fetchSessionUser(),
