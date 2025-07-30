@@ -19,9 +19,10 @@ import { NotFound } from '@/components/NotFound';
 // import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
+import { fetchSessionUser } from '@/lib/supabase/server';
 
 export const Route = createRootRoute({
-	// beforeLoad: async () => await fetchSessionUser(),
+	beforeLoad: async () => await fetchSessionUser(),
 	errorComponent: (props) => {
 		return (
 			<RootDocument>

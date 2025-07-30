@@ -108,7 +108,7 @@ export const fetchSessionUser = createServerFn().handler<{
 	}
 
 	return {
-		session,
-		user,
+		session: JSON.parse(JSON.stringify(session)),
+		user: JSON.parse(JSON.stringify(user)),
 	};
 });
