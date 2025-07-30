@@ -36,32 +36,32 @@ export const createClient = () =>
 		}
 	);
 
-// export async function getSafeSession() {
-// 	const supabase = createClient();
-// 	const {
-// 		data: { session },
-// 		error,
-// 	} = await supabase.auth.getSession();
+export async function getSafeSession() {
+	const supabase = createClient();
+	const {
+		data: { session },
+		error,
+	} = await supabase.auth.getSession();
 
-// 	if (error) {
-// 		return { session: null, user: null, error: 'No session found' };
-// 	}
+	if (error) {
+		return { session: null, user: null, error: 'No session found' };
+	}
 
-// 	const {
-// 		data: { user },
-// 		error: userError,
-// 	} = await supabase.auth.getUser();
+	const {
+		data: { user },
+		error: userError,
+	} = await supabase.auth.getUser();
 
-// 	if (userError) {
-// 		return { session, user: null, error: userError.message };
-// 	}
+	if (userError) {
+		return { session, user: null, error: userError.message };
+	}
 
-// 	return {
-// 		session,
-// 		user,
-// 		error: null,
-// 	};
-// }
+	return {
+		session,
+		user,
+		error: null,
+	};
+}
 
 // export const fetchSessionUser = createServerFn().handler(async () => {
 // 	const supabase = createClient();
