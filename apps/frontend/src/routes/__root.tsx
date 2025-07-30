@@ -59,7 +59,7 @@ import { isoMorphicGetSBSession } from '@/lib/supabase/server';
 // });
 
 export const Route = createRootRoute({
-	beforeLoad: async () => await isoMorphicGetSBSession(),
+	// beforeLoad: async () => await isoMorphicGetSBSession(),
 	errorComponent: (props) => {
 		return (
 			<RootDocument>

@@ -1,5 +1,7 @@
+import { createClient } from '@/lib/supabase/server';
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
+import { useEffect } from 'react';
 import z from 'zod';
 
 // import { linksConfig } from '@/config/links';
@@ -57,36 +59,36 @@ function AuthComponent() {
 	// 	defaultOpen,
 	// } = Route.useRouteContext();
 
-	// useEffect(() => {
-	// 	const supabase = createClient();
+	useEffect(() => {
+		const supabase = createClient();
 
-	// 	const authListener = supabase.auth.onAuthStateChange(
-	// 		(event, session) => {
-	// 			if (session && session.provider_token) {
-	// 				window.localStorage.setItem(
-	// 					'oauth_provider_token',
-	// 					session.provider_token
-	// 				);
-	// 			}
-	// 			if (session && session.provider_refresh_token) {
-	// 				window.localStorage.setItem(
-	// 					'oauth_provider_refresh_token',
-	// 					session.provider_refresh_token
-	// 				);
-	// 			}
-	// 			if (event === 'SIGNED_OUT') {
-	// 				window.localStorage.removeItem('oauth_provider_token');
-	// 				window.localStorage.removeItem(
-	// 					'oauth_provider_refresh_token'
-	// 				);
-	// 			}
-	// 		}
-	// 	);
+		const authListener = supabase.auth.onAuthStateChange(
+			(event, session) => {
+				if (session && session.provider_token) {
+					window.localStorage.setItem(
+						'oauth_provider_token',
+						session.provider_token
+					);
+				}
+				if (session && session.provider_refresh_token) {
+					window.localStorage.setItem(
+						'oauth_provider_refresh_token',
+						session.provider_refresh_token
+					);
+				}
+				if (event === 'SIGNED_OUT') {
+					window.localStorage.removeItem('oauth_provider_token');
+					window.localStorage.removeItem(
+						'oauth_provider_refresh_token'
+					);
+				}
+			}
+		);
 
-	// 	return () => {
-	// 		authListener.data.subscription.unsubscribe();
-	// 	};
-	// }, []);
+		return () => {
+			authListener.data.subscription.unsubscribe();
+		};
+	}, []);
 
 	// const { modal, id } = Route.useSearch();
 	// const { sidebarNav } = linksConfig;
