@@ -8,7 +8,7 @@ import {
 	Scripts,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-// import { createServerFn } from '@tanstack/react-start';
+import { createServerFn } from '@tanstack/react-start';
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import * as React from 'react';
 import { Toaster } from 'sonner';
@@ -19,35 +19,49 @@ import { NotFound } from '@/components/NotFound';
 // import { ThemeProvider } from '@/providers/theme-provider';
 import appCss from '@/styles/app.css?url';
 import { seo } from '@/utils/seo';
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
+// import { createClient } from '@/lib/supabase/server';
 // import { fetchSessionUser } from '@/lib/supabase/server';
 
-export const fetchSessionUser = async () => {
-	const supabase = createClient();
-	const [
-		{
-			data: { user },
-		},
-		{
-			data: { session },
-		},
-	] = await Promise.all([
-		supabase.auth.getUser(),
-		supabase.auth.getSession(),
-	]);
+// export const fetchSessionUser = async () => {
+// 	const supabase = createClient();
+// 	const [
+// 		{
+// 			data: { user },
+// 		},
+// 		{
+// 			data: { session },
+// 		},
+// 	] = await Promise.all([
+// 		supabase.auth.getUser(),
+// 		supabase.auth.getSession(),
+// 	]);
 
-	if (!session || !user) {
-		return { session: null, user: null };
+// 	if (!session || !user) {
+// 		return { session: null, user: null };
+// 	}
+
+// 	return {
+// 		session,
+// 		user,
+// 	};
+// };
+
+const fetchUser = createServerFn({ method: 'GET' }).handler(async () => {
+	const supabase = getSupabaseServerClient();
+	const { data, error: _error } = await supabase.auth.getUser();
+
+	if (!data.user?.email) {
+		return null;
 	}
 
 	return {
-		session,
-		user,
+		email: data.user.email,
 	};
-};
+});
 
 export const Route = createRootRoute({
-	beforeLoad: async () => await fetchSessionUser(),
+	// beforeLoad: async () => await fetchSessionUser(),
 	errorComponent: (props) => {
 		return (
 			<RootDocument>

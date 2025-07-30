@@ -24,32 +24,26 @@ export const Route = createFileRoute('/_authed')({
 		// 		to: '/auth/login',
 		// 		search: { redirect: location.href },
 		// 	});
-
-		const { session, user } = context;
-
+		// const { session, user } = context;
 		// const profile = await getProfile({ data: user.id });
-
 		// const workerSid = profile.worker_sid ?? '';
-
 		// const attributes = workerAttributesSchema.parse(user.user_metadata);
-
 		// const accessToken = await createAccessToken({
 		// 	data: {
 		// 		identity: user?.email ?? attributes.identity,
 		// 		workerSid,
 		// 	},
 		// });
-
-		return {
-			user,
-			session,
-			// profile,
-			accessToken: '',
-			// workerSid,
-			// identity: user?.email ?? attributes.identity,
-			features: { hideQueueStatus: false },
-			defaultOpen: true,
-		};
+		// return {
+		// 	user,
+		// 	session,
+		// 	// profile,
+		// 	accessToken: '',
+		// 	// workerSid,
+		// 	// identity: user?.email ?? attributes.identity,
+		// 	features: { hideQueueStatus: false },
+		// 	defaultOpen: true,
+		// };
 	},
 	ssr: 'data-only',
 });
