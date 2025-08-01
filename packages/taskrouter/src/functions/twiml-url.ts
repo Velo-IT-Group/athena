@@ -55,6 +55,7 @@ export const handler: ServerlessFunctionSignature = async function (
     urlencoded.append("RoutingTarget", event.workerSid ?? "");
     urlencoded.append("TaskQueueSid", "WQ54b5a1ea6521d9ae425bf421e407810f");
     urlencoded.append("Attributes", JSON.stringify(event));
+    urlencoded.append("TaskChannel", "voice");
     urlencoded.append("WorkflowSid", "WW5eb5a86b4c1603593ab18da34115b7dc");
 
     const requestOptions = {
