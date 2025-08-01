@@ -95,90 +95,101 @@ function RouteComponent() {
 							activityOrder.get(activityNameA) -
 							activityOrder.get(activityNameB)
 					)
-					.map(([activityName, filterWorkers]) => (
-						<ListGroup
-							key={activityName}
-							heading={activityName}
-						>
-							{filterWorkers
-								?.sort(
-									(a, b) =>
-										(
-											a.data as WorkerSyncInstance
-										).dateActivityChanged.getTime() -
-										(
-											b.data as WorkerSyncInstance
-										).dateActivityChanged.getTime()
-								)
-								?.map((w) => {
-									const worker = w.data as WorkerSyncInstance;
-									return (
-										<ListItem
-											key={w.key}
-											className='gap-8 grid grid-cols-[3fr_2fr_2fr_1fr_1.2fr_1.2fr_1fr] items-center inset-shadow-[0px_-1px_0px_0px_var(--border)]'
-										>
-											<Link
-												to='/teams'
-												search={{
-													pane: 'worker',
-													itemId: w.key,
-												}}
-												className='flex items-center px-3 py-4 gap-1.5'
+					.map(([activityName, filterWorkers]) => {
+						return (
+							<ListGroup
+								key={activityName}
+								heading={activityName}
+							>
+								{filterWorkers
+									?.sort(
+										(a, b) =>
+											new Date(
+												(
+													b.data as WorkerSyncInstance
+												).dateActivityChanged
+											).getTime() -
+											new Date(
+												(
+													a.data as WorkerSyncInstance
+												).dateActivityChanged
+											).getTime()
+									)
+									?.map((w) => {
+										const worker =
+											w.data as WorkerSyncInstance;
+										return (
+											<ListItem
+												key={w.key}
+												className='gap-8 grid grid-cols-[3fr_2fr_2fr_1fr_1.2fr_1.2fr_1fr] items-center inset-shadow-[0px_-1px_0px_0px_var(--border)]'
 											>
-												<div className='flex flex-col items-start'>
-													<p>{worker.name}</p>
+												<Link
+													to='/teams'
+													search={{
+														pane: 'worker',
+														itemId: w.key,
+													}}
+													className='flex items-center px-3 py-4 gap-1.5'
+												>
+													<div className='flex flex-col items-start'>
+														<p>{worker.name}</p>
 
-													<div className='flex items-center gap-1.5'>
-														<ActivityListItem
-															activityName={
-																worker.activity
-															}
-														/>
-
-														<Separator
-															orientation='vertical'
-															className='data-[orientation=vertical]:h-2.5'
-														/>
-
-														<Timer
-															stopwatchSettings={{
-																offsetTimestamp:
-																	getDateOffset(
-																		new Date(
-																			worker.dateActivityChanged
-																		)
-																	),
-																autoStart: true,
-															}}
-														/>
-													</div>
-												</div>
-											</Link>
-
-											{worker.reservations.length > 0 ? (
-												<>
-													{worker.reservations.map(
-														(res) => (
-															<ActiveCall
-																key={res.sid}
-																reservation={
-																	res
+														<div className='flex items-center gap-1.5'>
+															<ActivityListItem
+																activityName={
+																	worker.activity
 																}
 															/>
-														)
-													)}
-												</>
-											) : (
-												<div
-													className='rounded pattern-diagonal-lines pattern-primary pattern-bg-background
+
+															<Separator
+																orientation='vertical'
+																className='data-[orientation=vertical]:h-2.5'
+															/>
+
+															<Timer
+																stopwatchSettings={{
+																	offsetTimestamp:
+																		getDateOffset(
+																			new Date(
+																				worker.dateActivityChanged
+																			)
+																		),
+																	autoStart:
+																		true,
+																}}
+															/>
+														</div>
+													</div>
+												</Link>
+
+												{worker.reservations.length >
+												0 ? (
+													<>
+														{worker.reservations.map(
+															(res) => (
+																<ActiveCall
+																	key={
+																		res.sid
+																	}
+																	reservation={
+																		res
+																	}
+																/>
+															)
+														)}
+													</>
+												) : (
+													<div
+														className='rounded pattern-diagonal-lines pattern-primary pattern-bg-background
 		  pattern-size-2 pattern-opacity-15 w-full h-12 border border-primary'
-												/>
-											)}
-										</ListItem>
-									);
-								})}
-						</ListGroup>
-					))}
+													/>
+												)}
+											</ListItem>
+										);
+									})}
+							</ListGroup>
+						);
+					})}
 			</div>
 			<SheetContent
 				hideClose

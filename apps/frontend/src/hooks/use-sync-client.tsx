@@ -1,6 +1,6 @@
 'use client';
 import { useQueryClient } from '@tanstack/react-query';
-import { ConnectionState } from '@twilio/conversations';
+import type { ConnectionState } from '@twilio/conversations';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SyncClient } from 'twilio-sync';
 
@@ -37,7 +37,7 @@ export default function useSyncClient(token: string) {
 				);
 			}
 		},
-		[client]
+		[]
 	);
 
 	useEffect(() => {
@@ -61,7 +61,12 @@ export default function useSyncClient(token: string) {
 			newClient.off('tokenAboutToExpire', handleTokenExpiring);
 			newClient.off('tokenExpired', handleTokenExpiration);
 		};
-	}, [token]);
+	}, [
+		token,
+		handleConnectionStateChange,
+		handleTokenExpiring,
+		handleTokenExpiration,
+	]);
 
 	return { client: clientRef.current, status, errorMessage };
 }
