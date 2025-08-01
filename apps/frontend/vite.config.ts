@@ -14,25 +14,11 @@ export default defineConfig({
 		tanstackStart({
 			customViteReactPlugin: true,
 			target: "cloudflare-module",
-			// spa: {
-			// 	enabled: true,
-			// },
 		}),
 		tailwindcss(),
 		react(),
 	],
 	server: {
 		port: 3000,
-	},
-	build: {
-		ssr: false,
-		rollupOptions: {
-			external: ["bufferutil", "utf-8-validate"],
-			output: {
-				generatedCode: {
-					symbols: true,
-				},
-			},
-		},
 	},
 });

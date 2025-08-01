@@ -1,16 +1,28 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { workerAttributesSchema } from '@athena/utils';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+	createFileRoute,
+	Outlet,
+	redirect,
+	useNavigate,
+} from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
-import { ChevronDown, LogOut } from 'lucide-react';
+import { ChevronDown, LogOut, Moon, MoonStar, Sun } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 import z from 'zod';
 import { SiteHeader } from '@/components/app-header';
 import VeloLogo from '@/components/logo';
 import NavigationalSidebar from '@/components/navigational-sidebar';
-import { SearchModal } from '@/components/search/search-modal';
 import {
 	DropdownMenu,
+	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuGroup,
 	DropdownMenuItem,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -22,7 +34,11 @@ import {
 } from '@/components/ui/sidebar';
 import { linksConfig } from '@/config/links';
 import { TwilioProvider } from '@/contexts/twilio-provider';
-import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/lib/supabase/client';
+import { getProfile } from '@/lib/supabase/read';
+import { createAccessToken } from '@/lib/twilio';
+import { getAccessTokenQuery } from '@/lib/twilio/api';
+import { useTheme } from '@/providers/theme-provider';
 
 const schema = z.object({
 	modal: z.enum(['note']).optional(),
@@ -32,46 +48,96 @@ const schema = z.object({
 export const Route = createFileRoute('/_authed')({
 	component: AuthComponent,
 	validateSearch: zodValidator(schema),
-	// beforeLoad: async ({ context, location }) => {
-	// 	// if (!context.session)
-	// 	// 	throw redirect({
-	// 	// 		to: '/auth/login',
-	// 	// 		search: { redirect: location.href },
-	// 	// 	});
-	// 	// const { session, user } = context;
-	// 	// const profile = await getProfile({ data: user.id });
-	// 	// const workerSid = profile.worker_sid ?? '';
-	// 	// const attributes = workerAttributesSchema.parse(user.user_metadata);
-	// 	// const accessToken = await createAccessToken({
-	// 	// 	data: {
-	// 	// 		identity: user?.email ?? attributes.identity,
-	// 	// 		workerSid,
-	// 	// 	},
-	// 	// });
-	// 	// return {
-	// 	// 	profile,
-	// 	// 	accessToken,
-	// 	// 	workerSid,
-	// 	// 	identity: user?.email ?? attributes.identity,
-	// 	// 	features: { hideQueueStatus: false },
-	// 	// 	defaultOpen: true,
-	// 	// };
-	// },
+	beforeLoad: async ({ context, location }) => {
+		if (!context.session) {
+			throw redirect({
+				to: '/auth/login',
+				search: { redirect: location.href },
+			});
+		}
+		const { session, user } = context;
+		const profile = await getProfile({ data: user.id });
+		const workerSid = profile.worker_sid ?? '';
+		const attributes = workerAttributesSchema.parse(user.user_metadata);
+		const accessToken = await createAccessToken({
+			data: {
+				identity: user?.email ?? attributes.identity,
+				workerSid,
+			},
+		});
+		return {
+			profile,
+			accessToken,
+			workerSid,
+			identity: user?.email ?? attributes.identity,
+			features: { hideQueueStatus: false },
+			defaultOpen: true,
+		};
+	},
 	ssr: 'data-only',
 });
 
 function AuthComponent() {
-	const { user, handleSignOut, accessToken, workerSid } = useAuth();
+	const { user, accessToken, identity, workerSid, defaultOpen } =
+		Route.useRouteContext();
+	const navigate = useNavigate();
 
-	console.log(user, accessToken, workerSid);
+	const supabase = createClient();
 
-	const { modal, id } = Route.useSearch();
+	// const { modal, id } = Route.useSearch();
 	const { sidebarNav } = linksConfig;
+
+	useEffect(() => {
+		const {
+			data: { subscription },
+		} = supabase.auth.onAuthStateChange((event, session) => {
+			if (session?.provider_token) {
+				window.localStorage.setItem(
+					'oauth_provider_token',
+					session.provider_token
+				);
+			}
+			if (session?.provider_refresh_token) {
+				window.localStorage.setItem(
+					'oauth_provider_refresh_token',
+					session.provider_refresh_token
+				);
+			}
+			if (event === 'SIGNED_OUT') {
+				window.localStorage.removeItem('oauth_provider_token');
+				window.localStorage.removeItem('oauth_provider_refresh_token');
+			}
+		});
+
+		return () => {
+			subscription.unsubscribe();
+		};
+	}, [supabase.auth.onAuthStateChange]);
+
+	useQuery({
+		...getAccessTokenQuery({ identity, workerSid }),
+		initialData: accessToken,
+	});
+
+	const handleSignOut = useMutation({
+		mutationFn: async () => supabase.auth.signOut(),
+		onError(error) {
+			toast.error(
+				`There was an error in signing you out: ${error.message}`
+			);
+		},
+		onSuccess: () => {
+			toast.success('Signed out successfully');
+			navigate({ to: '/auth/login' });
+		},
+	});
+
+	const { theme: activeTheme, setTheme, themes } = useTheme();
 
 	return (
 		<SidebarProvider
-		// defaultOpen={defaultOpen}
-		// className='flex h-screen flex-col overflow-hidden flex-[1_1 auto] relative'
+			defaultOpen={defaultOpen}
+			// className='flex h-screen flex-col overflow-hidden flex-[1_1 auto] relative'
 		>
 			<TwilioProvider
 				token={accessToken ?? ''}
@@ -107,51 +173,59 @@ function AuthComponent() {
 									</div>
 
 									<DropdownMenuContent
-										className='w-72'
+										className='w-'
 										align='start'
 										alignOffset={8}
 									>
-										{/* {linksConfig.userDropdown.map(
-											(item, index) => (
-												<DropdownMenuGroup
-													key={`dropdown-group-${index}`}
-												>
-													<>
-														{item.items.map(
-															(item) => (
-																<DropdownMenuItem
-																	key={
-																		item.title
-																	}
-																	asChild
-																>
-																	<Link
-																		{...item}
-																		className='flex items-center gap-2'
-																	>
-																		{item.icon && (
-																			<item.icon className='size-4' />
-																		)}
-																		<span>
-																			{
-																				item.title
-																			}
-																		</span>
-																	</Link>
-																</DropdownMenuItem>
-															)
-														)}
-														{index !==
-															linksConfig
-																.userDropdown
-																.length -
-																1 && (
-															<DropdownMenuSeparator />
-														)}
-													</>
+										<DropdownMenuSub>
+											<DropdownMenuSubTrigger className='capitalize'>
+												<Sun className='rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 mr-1.5' />
+												<Moon className='absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 mr-1.5' />
+												{activeTheme}
+											</DropdownMenuSubTrigger>
+											<DropdownMenuSubContent>
+												<DropdownMenuGroup>
+													{themes.map((theme) => (
+														<DropdownMenuCheckboxItem
+															key={theme}
+															checked={
+																theme ===
+																activeTheme
+															}
+															onCheckedChange={(
+																e
+															) => {
+																if (e) {
+																	setTheme(
+																		theme
+																	);
+																} else {
+																	setTheme(
+																		'system'
+																	);
+																}
+															}}
+															className='capitalize'
+														>
+															{theme ===
+																'light' && (
+																<Sun className='mr-1.5' />
+															)}
+															{theme ===
+																'dark' && (
+																<Moon className='mr-1.5' />
+															)}
+															{theme ===
+																'system' && (
+																<Sun className='mr-1.5' />
+															)}
+															{theme}
+														</DropdownMenuCheckboxItem>
+													))}
 												</DropdownMenuGroup>
-											)
-										)} */}
+											</DropdownMenuSubContent>
+										</DropdownMenuSub>
+
 										<DropdownMenuGroup>
 											<DropdownMenuItem
 												onClick={() =>
@@ -185,15 +259,12 @@ function AuthComponent() {
 						<div className='flex w-full'>
 							<div className='flex flex-[1_1_auto] flex-col items-stretch justify-start gap-0 max-w-full !overflow-y-visible'>
 								<SiteHeader />
-
 								<Outlet />
 							</div>
 						</div>
 					</SidebarInset>
 				</div>
 			</TwilioProvider>
-
-			<SearchModal />
 		</SidebarProvider>
 	);
 }

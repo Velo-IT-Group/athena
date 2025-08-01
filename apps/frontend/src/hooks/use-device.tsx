@@ -4,15 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useOnInteraction } from '@/hooks/use-on-interaction';
-import {
-	changeInputDevice,
-	changeOutputDevice,
-	getMediaDevicesQuery,
-} from '@/lib/utils/api';
-import {
-	MICROPHONE_DEVICE_ID_LOCAL_STORAGE_KEY,
-	SPEAKER_DEVICE_ID_LOCAL_STORAGE_KEY,
-} from '@/utils/constants';
+import { getMediaDevicesQuery } from '@/lib/utils/api';
 
 interface Props {
 	token: string;
@@ -36,6 +28,7 @@ export const useDevice = ({
 	const [hasDetectedAudio, setHasDetectedAudio] = useState<
 		boolean | undefined
 	>();
+	const [listenToAudio, setListenToAudio] = useState(true);
 	const { data } = useQuery(getMediaDevicesQuery());
 	// const changeInputDeviceMutation = changeInputDevice();
 	// const changeOutputDeviceMutation = changeOutputDevice();
@@ -98,9 +91,7 @@ export const useDevice = ({
 				await deviceRef.current?.audio?.speakerDevices.set('default');
 			} catch (error) {
 				console.error('Error setting audio output device: ', error);
-				await deviceRef.current?.audio?.speakerDevices.set(
-					localStorage.getItem('Default')!
-				);
+				await deviceRef.current?.audio?.speakerDevices.set('Default');
 			}
 		}
 
@@ -234,7 +225,7 @@ export const useDevice = ({
 	]);
 
 	useEffect(() => {
-		if (hasDetectedAudio) return;
+		if (hasDetectedAudio || !listenToAudio) return;
 		deviceRef.current?.audio?.on('inputVolume', handleVolumeChange);
 
 		return () => {
@@ -244,6 +235,7 @@ export const useDevice = ({
 		// deviceRef.current?.audio,
 		handleVolumeChange,
 		hasDetectedAudio,
+		listenToAudio,
 	]);
 
 	const runPreflightTest = useCallback(() => {
@@ -259,6 +251,31 @@ export const useDevice = ({
 			console.log(error);
 		});
 	}, [token]);
+
+	useEffect(() => {
+		// Only start timeout if we haven't detected audio and we're listening
+		if (hasDetectedAudio || !listenToAudio || !isRegistered) return;
+
+		let counter = 0;
+		const interval = setInterval(() => {
+			if (hasDetectedAudio) {
+				clearInterval(interval);
+				console.log('Audio listen timeout stopped - audio detected');
+				return;
+			}
+
+			counter++;
+			console.log(`Audio listen timeout: ${counter}/10 seconds`);
+
+			if (counter >= 10) {
+				setListenToAudio((prev) => !prev);
+				clearInterval(interval);
+				console.log('Audio listen state flipped after 10 seconds');
+			}
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, [hasDetectedAudio, listenToAudio, isRegistered]);
 
 	return {
 		token,

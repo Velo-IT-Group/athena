@@ -1,12 +1,12 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { getPhasesQuery } from '@/lib/supabase/api';
 import { createPhase, newTemplate } from '@/lib/supabase/create';
 import { deletePhase } from '@/lib/supabase/delete';
 import { updatePhase } from '@/lib/supabase/update';
-import { updateArrayCacheItem, updateCacheItem } from '@/lib/utils';
+import { updateArrayCacheItem } from '@/lib/utils';
 import type { ProjectTemplate } from '@/types/manage';
 import { createNestedPhaseFromTemplate } from '@/utils/helpers';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 interface Props {
 	params: { id: string; version: string };
@@ -19,6 +19,8 @@ export const usePhase = ({ params, initialData }: Props) => {
 	const { id, version } = params;
 	const query = getPhasesQuery(id, version);
 	const { queryKey } = query;
+
+	console.log(queryKey);
 
 	const { data } = useQuery({ ...query, initialData });
 

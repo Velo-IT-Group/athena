@@ -17,53 +17,20 @@ import { Route as AuthedIndexRouteImport } from './routes/_authed/index'
 import { Route as AuthTokenSetupRouteImport } from './routes/auth/token-setup'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthAuthCodeErrorRouteImport } from './routes/auth/auth-code-error'
-import { Route as AuthedWorkflowsIndexRouteImport } from './routes/_authed/workflows/index'
-import { Route as AuthedTicketsIndexRouteImport } from './routes/_authed/tickets/index'
 import { Route as AuthedTeamsIndexRouteImport } from './routes/_authed/teams/index'
 import { Route as AuthedProposalsIndexRouteImport } from './routes/_authed/proposals/index'
 import { Route as AuthedEngagementsIndexRouteImport } from './routes/_authed/engagements/index'
-import { Route as AuthedCoordinatorViewIndexRouteImport } from './routes/_authed/coordinator-view/index'
-import { Route as AuthedContactsIndexRouteImport } from './routes/_authed/contacts/index'
-import { Route as AuthedCompaniesIndexRouteImport } from './routes/_authed/companies/index'
-import { Route as AuthedTicketsIdRouteImport } from './routes/_authed/tickets/$id'
-import { Route as AuthedEngagementsNewRouteImport } from './routes/_authed/engagements/new'
 import { Route as AuthedEngagementsIdRouteImport } from './routes/_authed/engagements/$id'
-import { Route as AuthedTeamsIdRouteRouteImport } from './routes/_authed/teams/$id/route'
-import { Route as AuthedContactsIdRouteRouteImport } from './routes/_authed/contacts/$id/route'
-import { Route as AuthedCompaniesIdRouteRouteImport } from './routes/_authed/companies/$id/route'
 import { Route as ReviewIdVersionIndexRouteImport } from './routes/review/$id/$version/index'
-import { Route as AuthedWorkflowsIdIndexRouteImport } from './routes/_authed/workflows/$id/index'
-import { Route as AuthedTeamsIdIndexRouteImport } from './routes/_authed/teams/$id/index'
-import { Route as AuthedContactsIdIndexRouteImport } from './routes/_authed/contacts/$id/index'
-import { Route as AuthedCompaniesIdIndexRouteImport } from './routes/_authed/companies/$id/index'
-import { Route as AuthedTeamsIdCalendarRouteImport } from './routes/_authed/teams/$id/calendar'
 import { Route as AuthedProposalsNewBlankRouteImport } from './routes/_authed/proposals/new/blank'
-import { Route as AuthedEngagementsTaskSidReservationSidRouteImport } from './routes/_authed/engagements/$taskSid/$reservationSid'
-import { Route as AuthedContactsIdTicketsRouteImport } from './routes/_authed/contacts/$id/tickets'
-import { Route as AuthedContactsIdEngagementsRouteImport } from './routes/_authed/contacts/$id/engagements'
-import { Route as AuthedContactsIdConfigurationsRouteImport } from './routes/_authed/contacts/$id/configurations'
-import { Route as AuthedCompaniesIdTicketsRouteImport } from './routes/_authed/companies/$id/tickets'
-import { Route as AuthedCompaniesIdProposalsRouteImport } from './routes/_authed/companies/$id/proposals'
-import { Route as AuthedCompaniesIdContactsRouteImport } from './routes/_authed/companies/$id/contacts'
-import { Route as AuthedCompaniesIdConfigurationsRouteImport } from './routes/_authed/companies/$id/configurations'
-import { Route as AuthedCompaniesIdActivityRouteImport } from './routes/_authed/companies/$id/activity'
 import { Route as AuthedProposalsIdVersionRouteRouteImport } from './routes/_authed/proposals/$id/$version/route'
 import { Route as AuthedProposalsIdVersionIndexRouteImport } from './routes/_authed/proposals/$id/$version/index'
 import { Route as AuthedProposalsIdVersionWorkplanRouteImport } from './routes/_authed/proposals/$id/$version/workplan'
 import { Route as AuthedProposalsIdVersionSettingsRouteImport } from './routes/_authed/proposals/$id/$version/settings'
 import { Route as AuthedProposalsIdVersionProductsRouteImport } from './routes/_authed/proposals/$id/$version/products'
 import { ServerRoute as AuthCallbackServerRouteImport } from './routes/auth/callback'
-import { ServerRoute as ApiWorkerSyncServerRouteImport } from './routes/api/worker-sync'
-import { ServerRoute as ApiWebhookServerRouteImport } from './routes/api/webhook'
-import { ServerRoute as ApiTemplateServerRouteImport } from './routes/api/template'
-import { ServerRoute as ApiConversationsServerRouteImport } from './routes/api/conversations'
-import { ServerRoute as ApiTaskrouterLogEventServerRouteImport } from './routes/api/taskrouter/log-event'
-import { ServerRoute as ApiTaskrouterCreateTaskServerRouteImport } from './routes/api/taskrouter/create-task'
-import { ServerRoute as ApiProposalsCreateServerRouteImport } from './routes/api/proposals/create'
-import { ServerRoute as ApiProposalsConvertToManageServerRouteImport } from './routes/api/proposals/convert-to-manage'
 import { ServerRoute as ApiAuthEncryptServerRouteImport } from './routes/api/auth/encrypt'
 import { ServerRoute as ApiAuthDecryptServerRouteImport } from './routes/api/auth/decrypt'
-import { ServerRoute as ApiAuthCallbackServerRouteImport } from './routes/api/auth/callback'
 import { ServerRoute as RestV1EngagementsIndexServerRouteImport } from './routes/rest/v1/engagements/index'
 import { ServerRoute as RestV1SystemSearchNumberServerRouteImport } from './routes/rest/v1/system/search-number'
 import { ServerRoute as RestV1SystemIsOpenServerRouteImport } from './routes/rest/v1/system/is-open'
@@ -71,6 +38,7 @@ import { ServerRoute as RestV1SystemIsNumberBlacklistedServerRouteImport } from 
 import { ServerRoute as RestV1AuthCallbackServerRouteImport } from './routes/rest/v1/auth/callback'
 import { ServerRoute as RestV1TaskrouterBlacklistedPhoneNumberIndexServerRouteImport } from './routes/rest/v1/taskrouter/blacklisted-phone-number/index'
 import { ServerRoute as RestV1TaskrouterBlacklistedPhoneNumberIdServerRouteImport } from './routes/rest/v1/taskrouter/blacklisted-phone-number/$id'
+import { ServerRoute as RestV1ProposalsIdConvertToManageServerRouteImport } from './routes/rest/v1/proposals/$id/convert-to-manage'
 
 const rootServerRouteImport = createServerRootRoute()
 
@@ -103,16 +71,6 @@ const AuthAuthCodeErrorRoute = AuthAuthCodeErrorRouteImport.update({
   path: '/auth-code-error',
   getParentRoute: () => AuthRouteRoute,
 } as any)
-const AuthedWorkflowsIndexRoute = AuthedWorkflowsIndexRouteImport.update({
-  id: '/workflows/',
-  path: '/workflows/',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedTicketsIndexRoute = AuthedTicketsIndexRouteImport.update({
-  id: '/tickets/',
-  path: '/tickets/',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthedTeamsIndexRoute = AuthedTeamsIndexRouteImport.update({
   id: '/teams/',
   path: '/teams/',
@@ -128,50 +86,9 @@ const AuthedEngagementsIndexRoute = AuthedEngagementsIndexRouteImport.update({
   path: '/engagements/',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedCoordinatorViewIndexRoute =
-  AuthedCoordinatorViewIndexRouteImport.update({
-    id: '/coordinator-view/',
-    path: '/coordinator-view/',
-    getParentRoute: () => AuthedRoute,
-  } as any)
-const AuthedContactsIndexRoute = AuthedContactsIndexRouteImport.update({
-  id: '/contacts/',
-  path: '/contacts/',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedCompaniesIndexRoute = AuthedCompaniesIndexRouteImport.update({
-  id: '/companies/',
-  path: '/companies/',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedTicketsIdRoute = AuthedTicketsIdRouteImport.update({
-  id: '/tickets/$id',
-  path: '/tickets/$id',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedEngagementsNewRoute = AuthedEngagementsNewRouteImport.update({
-  id: '/engagements/new',
-  path: '/engagements/new',
-  getParentRoute: () => AuthedRoute,
-} as any)
 const AuthedEngagementsIdRoute = AuthedEngagementsIdRouteImport.update({
   id: '/engagements/$id',
   path: '/engagements/$id',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedTeamsIdRouteRoute = AuthedTeamsIdRouteRouteImport.update({
-  id: '/teams/$id',
-  path: '/teams/$id',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedContactsIdRouteRoute = AuthedContactsIdRouteRouteImport.update({
-  id: '/contacts/$id',
-  path: '/contacts/$id',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedCompaniesIdRouteRoute = AuthedCompaniesIdRouteRouteImport.update({
-  id: '/companies/$id',
-  path: '/companies/$id',
   getParentRoute: () => AuthedRoute,
 } as any)
 const ReviewIdVersionIndexRoute = ReviewIdVersionIndexRouteImport.update({
@@ -179,89 +96,11 @@ const ReviewIdVersionIndexRoute = ReviewIdVersionIndexRouteImport.update({
   path: '/review/$id/$version/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedWorkflowsIdIndexRoute = AuthedWorkflowsIdIndexRouteImport.update({
-  id: '/workflows/$id/',
-  path: '/workflows/$id/',
-  getParentRoute: () => AuthedRoute,
-} as any)
-const AuthedTeamsIdIndexRoute = AuthedTeamsIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedTeamsIdRouteRoute,
-} as any)
-const AuthedContactsIdIndexRoute = AuthedContactsIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedContactsIdRouteRoute,
-} as any)
-const AuthedCompaniesIdIndexRoute = AuthedCompaniesIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthedCompaniesIdRouteRoute,
-} as any)
-const AuthedTeamsIdCalendarRoute = AuthedTeamsIdCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
-  getParentRoute: () => AuthedTeamsIdRouteRoute,
-} as any)
 const AuthedProposalsNewBlankRoute = AuthedProposalsNewBlankRouteImport.update({
   id: '/proposals/new/blank',
   path: '/proposals/new/blank',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedEngagementsTaskSidReservationSidRoute =
-  AuthedEngagementsTaskSidReservationSidRouteImport.update({
-    id: '/engagements/$taskSid/$reservationSid',
-    path: '/engagements/$taskSid/$reservationSid',
-    getParentRoute: () => AuthedRoute,
-  } as any)
-const AuthedContactsIdTicketsRoute = AuthedContactsIdTicketsRouteImport.update({
-  id: '/tickets',
-  path: '/tickets',
-  getParentRoute: () => AuthedContactsIdRouteRoute,
-} as any)
-const AuthedContactsIdEngagementsRoute =
-  AuthedContactsIdEngagementsRouteImport.update({
-    id: '/engagements',
-    path: '/engagements',
-    getParentRoute: () => AuthedContactsIdRouteRoute,
-  } as any)
-const AuthedContactsIdConfigurationsRoute =
-  AuthedContactsIdConfigurationsRouteImport.update({
-    id: '/configurations',
-    path: '/configurations',
-    getParentRoute: () => AuthedContactsIdRouteRoute,
-  } as any)
-const AuthedCompaniesIdTicketsRoute =
-  AuthedCompaniesIdTicketsRouteImport.update({
-    id: '/tickets',
-    path: '/tickets',
-    getParentRoute: () => AuthedCompaniesIdRouteRoute,
-  } as any)
-const AuthedCompaniesIdProposalsRoute =
-  AuthedCompaniesIdProposalsRouteImport.update({
-    id: '/proposals',
-    path: '/proposals',
-    getParentRoute: () => AuthedCompaniesIdRouteRoute,
-  } as any)
-const AuthedCompaniesIdContactsRoute =
-  AuthedCompaniesIdContactsRouteImport.update({
-    id: '/contacts',
-    path: '/contacts',
-    getParentRoute: () => AuthedCompaniesIdRouteRoute,
-  } as any)
-const AuthedCompaniesIdConfigurationsRoute =
-  AuthedCompaniesIdConfigurationsRouteImport.update({
-    id: '/configurations',
-    path: '/configurations',
-    getParentRoute: () => AuthedCompaniesIdRouteRoute,
-  } as any)
-const AuthedCompaniesIdActivityRoute =
-  AuthedCompaniesIdActivityRouteImport.update({
-    id: '/activity',
-    path: '/activity',
-    getParentRoute: () => AuthedCompaniesIdRouteRoute,
-  } as any)
 const AuthedProposalsIdVersionRouteRoute =
   AuthedProposalsIdVersionRouteRouteImport.update({
     id: '/proposals/$id/$version',
@@ -297,50 +136,6 @@ const AuthCallbackServerRoute = AuthCallbackServerRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootServerRouteImport,
 } as any)
-const ApiWorkerSyncServerRoute = ApiWorkerSyncServerRouteImport.update({
-  id: '/api/worker-sync',
-  path: '/api/worker-sync',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiWebhookServerRoute = ApiWebhookServerRouteImport.update({
-  id: '/api/webhook',
-  path: '/api/webhook',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiTemplateServerRoute = ApiTemplateServerRouteImport.update({
-  id: '/api/template',
-  path: '/api/template',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiConversationsServerRoute = ApiConversationsServerRouteImport.update({
-  id: '/api/conversations',
-  path: '/api/conversations',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiTaskrouterLogEventServerRoute =
-  ApiTaskrouterLogEventServerRouteImport.update({
-    id: '/api/taskrouter/log-event',
-    path: '/api/taskrouter/log-event',
-    getParentRoute: () => rootServerRouteImport,
-  } as any)
-const ApiTaskrouterCreateTaskServerRoute =
-  ApiTaskrouterCreateTaskServerRouteImport.update({
-    id: '/api/taskrouter/create-task',
-    path: '/api/taskrouter/create-task',
-    getParentRoute: () => rootServerRouteImport,
-  } as any)
-const ApiProposalsCreateServerRoute =
-  ApiProposalsCreateServerRouteImport.update({
-    id: '/api/proposals/create',
-    path: '/api/proposals/create',
-    getParentRoute: () => rootServerRouteImport,
-  } as any)
-const ApiProposalsConvertToManageServerRoute =
-  ApiProposalsConvertToManageServerRouteImport.update({
-    id: '/api/proposals/convert-to-manage',
-    path: '/api/proposals/convert-to-manage',
-    getParentRoute: () => rootServerRouteImport,
-  } as any)
 const ApiAuthEncryptServerRoute = ApiAuthEncryptServerRouteImport.update({
   id: '/api/auth/encrypt',
   path: '/api/auth/encrypt',
@@ -349,11 +144,6 @@ const ApiAuthEncryptServerRoute = ApiAuthEncryptServerRouteImport.update({
 const ApiAuthDecryptServerRoute = ApiAuthDecryptServerRouteImport.update({
   id: '/api/auth/decrypt',
   path: '/api/auth/decrypt',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
-const ApiAuthCallbackServerRoute = ApiAuthCallbackServerRouteImport.update({
-  id: '/api/auth/callback',
-  path: '/api/auth/callback',
   getParentRoute: () => rootServerRouteImport,
 } as any)
 const RestV1EngagementsIndexServerRoute =
@@ -398,6 +188,12 @@ const RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute =
     path: '/rest/v1/taskrouter/blacklisted-phone-number/$id',
     getParentRoute: () => rootServerRouteImport,
   } as any)
+const RestV1ProposalsIdConvertToManageServerRoute =
+  RestV1ProposalsIdConvertToManageServerRouteImport.update({
+    id: '/rest/v1/proposals/$id/convert-to-manage',
+    path: '/rest/v1/proposals/$id/convert-to-manage',
+    getParentRoute: () => rootServerRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteRouteWithChildren
@@ -405,36 +201,12 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/token-setup': typeof AuthTokenSetupRoute
   '/': typeof AuthedIndexRoute
-  '/companies/$id': typeof AuthedCompaniesIdRouteRouteWithChildren
-  '/contacts/$id': typeof AuthedContactsIdRouteRouteWithChildren
-  '/teams/$id': typeof AuthedTeamsIdRouteRouteWithChildren
   '/engagements/$id': typeof AuthedEngagementsIdRoute
-  '/engagements/new': typeof AuthedEngagementsNewRoute
-  '/tickets/$id': typeof AuthedTicketsIdRoute
-  '/companies': typeof AuthedCompaniesIndexRoute
-  '/contacts': typeof AuthedContactsIndexRoute
-  '/coordinator-view': typeof AuthedCoordinatorViewIndexRoute
   '/engagements': typeof AuthedEngagementsIndexRoute
   '/proposals': typeof AuthedProposalsIndexRoute
   '/teams': typeof AuthedTeamsIndexRoute
-  '/tickets': typeof AuthedTicketsIndexRoute
-  '/workflows': typeof AuthedWorkflowsIndexRoute
   '/proposals/$id/$version': typeof AuthedProposalsIdVersionRouteRouteWithChildren
-  '/companies/$id/activity': typeof AuthedCompaniesIdActivityRoute
-  '/companies/$id/configurations': typeof AuthedCompaniesIdConfigurationsRoute
-  '/companies/$id/contacts': typeof AuthedCompaniesIdContactsRoute
-  '/companies/$id/proposals': typeof AuthedCompaniesIdProposalsRoute
-  '/companies/$id/tickets': typeof AuthedCompaniesIdTicketsRoute
-  '/contacts/$id/configurations': typeof AuthedContactsIdConfigurationsRoute
-  '/contacts/$id/engagements': typeof AuthedContactsIdEngagementsRoute
-  '/contacts/$id/tickets': typeof AuthedContactsIdTicketsRoute
-  '/engagements/$taskSid/$reservationSid': typeof AuthedEngagementsTaskSidReservationSidRoute
   '/proposals/new/blank': typeof AuthedProposalsNewBlankRoute
-  '/teams/$id/calendar': typeof AuthedTeamsIdCalendarRoute
-  '/companies/$id/': typeof AuthedCompaniesIdIndexRoute
-  '/contacts/$id/': typeof AuthedContactsIdIndexRoute
-  '/teams/$id/': typeof AuthedTeamsIdIndexRoute
-  '/workflows/$id': typeof AuthedWorkflowsIdIndexRoute
   '/review/$id/$version': typeof ReviewIdVersionIndexRoute
   '/proposals/$id/$version/products': typeof AuthedProposalsIdVersionProductsRoute
   '/proposals/$id/$version/settings': typeof AuthedProposalsIdVersionSettingsRoute
@@ -448,31 +220,10 @@ export interface FileRoutesByTo {
   '/auth/token-setup': typeof AuthTokenSetupRoute
   '/': typeof AuthedIndexRoute
   '/engagements/$id': typeof AuthedEngagementsIdRoute
-  '/engagements/new': typeof AuthedEngagementsNewRoute
-  '/tickets/$id': typeof AuthedTicketsIdRoute
-  '/companies': typeof AuthedCompaniesIndexRoute
-  '/contacts': typeof AuthedContactsIndexRoute
-  '/coordinator-view': typeof AuthedCoordinatorViewIndexRoute
   '/engagements': typeof AuthedEngagementsIndexRoute
   '/proposals': typeof AuthedProposalsIndexRoute
   '/teams': typeof AuthedTeamsIndexRoute
-  '/tickets': typeof AuthedTicketsIndexRoute
-  '/workflows': typeof AuthedWorkflowsIndexRoute
-  '/companies/$id/activity': typeof AuthedCompaniesIdActivityRoute
-  '/companies/$id/configurations': typeof AuthedCompaniesIdConfigurationsRoute
-  '/companies/$id/contacts': typeof AuthedCompaniesIdContactsRoute
-  '/companies/$id/proposals': typeof AuthedCompaniesIdProposalsRoute
-  '/companies/$id/tickets': typeof AuthedCompaniesIdTicketsRoute
-  '/contacts/$id/configurations': typeof AuthedContactsIdConfigurationsRoute
-  '/contacts/$id/engagements': typeof AuthedContactsIdEngagementsRoute
-  '/contacts/$id/tickets': typeof AuthedContactsIdTicketsRoute
-  '/engagements/$taskSid/$reservationSid': typeof AuthedEngagementsTaskSidReservationSidRoute
   '/proposals/new/blank': typeof AuthedProposalsNewBlankRoute
-  '/teams/$id/calendar': typeof AuthedTeamsIdCalendarRoute
-  '/companies/$id': typeof AuthedCompaniesIdIndexRoute
-  '/contacts/$id': typeof AuthedContactsIdIndexRoute
-  '/teams/$id': typeof AuthedTeamsIdIndexRoute
-  '/workflows/$id': typeof AuthedWorkflowsIdIndexRoute
   '/review/$id/$version': typeof ReviewIdVersionIndexRoute
   '/proposals/$id/$version/products': typeof AuthedProposalsIdVersionProductsRoute
   '/proposals/$id/$version/settings': typeof AuthedProposalsIdVersionSettingsRoute
@@ -487,36 +238,12 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/token-setup': typeof AuthTokenSetupRoute
   '/_authed/': typeof AuthedIndexRoute
-  '/_authed/companies/$id': typeof AuthedCompaniesIdRouteRouteWithChildren
-  '/_authed/contacts/$id': typeof AuthedContactsIdRouteRouteWithChildren
-  '/_authed/teams/$id': typeof AuthedTeamsIdRouteRouteWithChildren
   '/_authed/engagements/$id': typeof AuthedEngagementsIdRoute
-  '/_authed/engagements/new': typeof AuthedEngagementsNewRoute
-  '/_authed/tickets/$id': typeof AuthedTicketsIdRoute
-  '/_authed/companies/': typeof AuthedCompaniesIndexRoute
-  '/_authed/contacts/': typeof AuthedContactsIndexRoute
-  '/_authed/coordinator-view/': typeof AuthedCoordinatorViewIndexRoute
   '/_authed/engagements/': typeof AuthedEngagementsIndexRoute
   '/_authed/proposals/': typeof AuthedProposalsIndexRoute
   '/_authed/teams/': typeof AuthedTeamsIndexRoute
-  '/_authed/tickets/': typeof AuthedTicketsIndexRoute
-  '/_authed/workflows/': typeof AuthedWorkflowsIndexRoute
   '/_authed/proposals/$id/$version': typeof AuthedProposalsIdVersionRouteRouteWithChildren
-  '/_authed/companies/$id/activity': typeof AuthedCompaniesIdActivityRoute
-  '/_authed/companies/$id/configurations': typeof AuthedCompaniesIdConfigurationsRoute
-  '/_authed/companies/$id/contacts': typeof AuthedCompaniesIdContactsRoute
-  '/_authed/companies/$id/proposals': typeof AuthedCompaniesIdProposalsRoute
-  '/_authed/companies/$id/tickets': typeof AuthedCompaniesIdTicketsRoute
-  '/_authed/contacts/$id/configurations': typeof AuthedContactsIdConfigurationsRoute
-  '/_authed/contacts/$id/engagements': typeof AuthedContactsIdEngagementsRoute
-  '/_authed/contacts/$id/tickets': typeof AuthedContactsIdTicketsRoute
-  '/_authed/engagements/$taskSid/$reservationSid': typeof AuthedEngagementsTaskSidReservationSidRoute
   '/_authed/proposals/new/blank': typeof AuthedProposalsNewBlankRoute
-  '/_authed/teams/$id/calendar': typeof AuthedTeamsIdCalendarRoute
-  '/_authed/companies/$id/': typeof AuthedCompaniesIdIndexRoute
-  '/_authed/contacts/$id/': typeof AuthedContactsIdIndexRoute
-  '/_authed/teams/$id/': typeof AuthedTeamsIdIndexRoute
-  '/_authed/workflows/$id/': typeof AuthedWorkflowsIdIndexRoute
   '/review/$id/$version/': typeof ReviewIdVersionIndexRoute
   '/_authed/proposals/$id/$version/products': typeof AuthedProposalsIdVersionProductsRoute
   '/_authed/proposals/$id/$version/settings': typeof AuthedProposalsIdVersionSettingsRoute
@@ -531,36 +258,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/token-setup'
     | '/'
-    | '/companies/$id'
-    | '/contacts/$id'
-    | '/teams/$id'
     | '/engagements/$id'
-    | '/engagements/new'
-    | '/tickets/$id'
-    | '/companies'
-    | '/contacts'
-    | '/coordinator-view'
     | '/engagements'
     | '/proposals'
     | '/teams'
-    | '/tickets'
-    | '/workflows'
     | '/proposals/$id/$version'
-    | '/companies/$id/activity'
-    | '/companies/$id/configurations'
-    | '/companies/$id/contacts'
-    | '/companies/$id/proposals'
-    | '/companies/$id/tickets'
-    | '/contacts/$id/configurations'
-    | '/contacts/$id/engagements'
-    | '/contacts/$id/tickets'
-    | '/engagements/$taskSid/$reservationSid'
     | '/proposals/new/blank'
-    | '/teams/$id/calendar'
-    | '/companies/$id/'
-    | '/contacts/$id/'
-    | '/teams/$id/'
-    | '/workflows/$id'
     | '/review/$id/$version'
     | '/proposals/$id/$version/products'
     | '/proposals/$id/$version/settings'
@@ -574,31 +277,10 @@ export interface FileRouteTypes {
     | '/auth/token-setup'
     | '/'
     | '/engagements/$id'
-    | '/engagements/new'
-    | '/tickets/$id'
-    | '/companies'
-    | '/contacts'
-    | '/coordinator-view'
     | '/engagements'
     | '/proposals'
     | '/teams'
-    | '/tickets'
-    | '/workflows'
-    | '/companies/$id/activity'
-    | '/companies/$id/configurations'
-    | '/companies/$id/contacts'
-    | '/companies/$id/proposals'
-    | '/companies/$id/tickets'
-    | '/contacts/$id/configurations'
-    | '/contacts/$id/engagements'
-    | '/contacts/$id/tickets'
-    | '/engagements/$taskSid/$reservationSid'
     | '/proposals/new/blank'
-    | '/teams/$id/calendar'
-    | '/companies/$id'
-    | '/contacts/$id'
-    | '/teams/$id'
-    | '/workflows/$id'
     | '/review/$id/$version'
     | '/proposals/$id/$version/products'
     | '/proposals/$id/$version/settings'
@@ -612,36 +294,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/token-setup'
     | '/_authed/'
-    | '/_authed/companies/$id'
-    | '/_authed/contacts/$id'
-    | '/_authed/teams/$id'
     | '/_authed/engagements/$id'
-    | '/_authed/engagements/new'
-    | '/_authed/tickets/$id'
-    | '/_authed/companies/'
-    | '/_authed/contacts/'
-    | '/_authed/coordinator-view/'
     | '/_authed/engagements/'
     | '/_authed/proposals/'
     | '/_authed/teams/'
-    | '/_authed/tickets/'
-    | '/_authed/workflows/'
     | '/_authed/proposals/$id/$version'
-    | '/_authed/companies/$id/activity'
-    | '/_authed/companies/$id/configurations'
-    | '/_authed/companies/$id/contacts'
-    | '/_authed/companies/$id/proposals'
-    | '/_authed/companies/$id/tickets'
-    | '/_authed/contacts/$id/configurations'
-    | '/_authed/contacts/$id/engagements'
-    | '/_authed/contacts/$id/tickets'
-    | '/_authed/engagements/$taskSid/$reservationSid'
     | '/_authed/proposals/new/blank'
-    | '/_authed/teams/$id/calendar'
-    | '/_authed/companies/$id/'
-    | '/_authed/contacts/$id/'
-    | '/_authed/teams/$id/'
-    | '/_authed/workflows/$id/'
     | '/review/$id/$version/'
     | '/_authed/proposals/$id/$version/products'
     | '/_authed/proposals/$id/$version/settings'
@@ -655,153 +313,97 @@ export interface RootRouteChildren {
   ReviewIdVersionIndexRoute: typeof ReviewIdVersionIndexRoute
 }
 export interface FileServerRoutesByFullPath {
-  '/api/conversations': typeof ApiConversationsServerRoute
-  '/api/template': typeof ApiTemplateServerRoute
-  '/api/webhook': typeof ApiWebhookServerRoute
-  '/api/worker-sync': typeof ApiWorkerSyncServerRoute
   '/auth/callback': typeof AuthCallbackServerRoute
-  '/api/auth/callback': typeof ApiAuthCallbackServerRoute
   '/api/auth/decrypt': typeof ApiAuthDecryptServerRoute
   '/api/auth/encrypt': typeof ApiAuthEncryptServerRoute
-  '/api/proposals/convert-to-manage': typeof ApiProposalsConvertToManageServerRoute
-  '/api/proposals/create': typeof ApiProposalsCreateServerRoute
-  '/api/taskrouter/create-task': typeof ApiTaskrouterCreateTaskServerRoute
-  '/api/taskrouter/log-event': typeof ApiTaskrouterLogEventServerRoute
   '/rest/v1/auth/callback': typeof RestV1AuthCallbackServerRoute
   '/rest/v1/system/is-number-blacklisted': typeof RestV1SystemIsNumberBlacklistedServerRoute
   '/rest/v1/system/is-open': typeof RestV1SystemIsOpenServerRoute
   '/rest/v1/system/search-number': typeof RestV1SystemSearchNumberServerRoute
   '/rest/v1/engagements': typeof RestV1EngagementsIndexServerRoute
+  '/rest/v1/proposals/$id/convert-to-manage': typeof RestV1ProposalsIdConvertToManageServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/$id': typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number': typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
 export interface FileServerRoutesByTo {
-  '/api/conversations': typeof ApiConversationsServerRoute
-  '/api/template': typeof ApiTemplateServerRoute
-  '/api/webhook': typeof ApiWebhookServerRoute
-  '/api/worker-sync': typeof ApiWorkerSyncServerRoute
   '/auth/callback': typeof AuthCallbackServerRoute
-  '/api/auth/callback': typeof ApiAuthCallbackServerRoute
   '/api/auth/decrypt': typeof ApiAuthDecryptServerRoute
   '/api/auth/encrypt': typeof ApiAuthEncryptServerRoute
-  '/api/proposals/convert-to-manage': typeof ApiProposalsConvertToManageServerRoute
-  '/api/proposals/create': typeof ApiProposalsCreateServerRoute
-  '/api/taskrouter/create-task': typeof ApiTaskrouterCreateTaskServerRoute
-  '/api/taskrouter/log-event': typeof ApiTaskrouterLogEventServerRoute
   '/rest/v1/auth/callback': typeof RestV1AuthCallbackServerRoute
   '/rest/v1/system/is-number-blacklisted': typeof RestV1SystemIsNumberBlacklistedServerRoute
   '/rest/v1/system/is-open': typeof RestV1SystemIsOpenServerRoute
   '/rest/v1/system/search-number': typeof RestV1SystemSearchNumberServerRoute
   '/rest/v1/engagements': typeof RestV1EngagementsIndexServerRoute
+  '/rest/v1/proposals/$id/convert-to-manage': typeof RestV1ProposalsIdConvertToManageServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/$id': typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number': typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
-  '/api/conversations': typeof ApiConversationsServerRoute
-  '/api/template': typeof ApiTemplateServerRoute
-  '/api/webhook': typeof ApiWebhookServerRoute
-  '/api/worker-sync': typeof ApiWorkerSyncServerRoute
   '/auth/callback': typeof AuthCallbackServerRoute
-  '/api/auth/callback': typeof ApiAuthCallbackServerRoute
   '/api/auth/decrypt': typeof ApiAuthDecryptServerRoute
   '/api/auth/encrypt': typeof ApiAuthEncryptServerRoute
-  '/api/proposals/convert-to-manage': typeof ApiProposalsConvertToManageServerRoute
-  '/api/proposals/create': typeof ApiProposalsCreateServerRoute
-  '/api/taskrouter/create-task': typeof ApiTaskrouterCreateTaskServerRoute
-  '/api/taskrouter/log-event': typeof ApiTaskrouterLogEventServerRoute
   '/rest/v1/auth/callback': typeof RestV1AuthCallbackServerRoute
   '/rest/v1/system/is-number-blacklisted': typeof RestV1SystemIsNumberBlacklistedServerRoute
   '/rest/v1/system/is-open': typeof RestV1SystemIsOpenServerRoute
   '/rest/v1/system/search-number': typeof RestV1SystemSearchNumberServerRoute
   '/rest/v1/engagements/': typeof RestV1EngagementsIndexServerRoute
+  '/rest/v1/proposals/$id/convert-to-manage': typeof RestV1ProposalsIdConvertToManageServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/$id': typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   '/rest/v1/taskrouter/blacklisted-phone-number/': typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
   fullPaths:
-    | '/api/conversations'
-    | '/api/template'
-    | '/api/webhook'
-    | '/api/worker-sync'
     | '/auth/callback'
-    | '/api/auth/callback'
     | '/api/auth/decrypt'
     | '/api/auth/encrypt'
-    | '/api/proposals/convert-to-manage'
-    | '/api/proposals/create'
-    | '/api/taskrouter/create-task'
-    | '/api/taskrouter/log-event'
     | '/rest/v1/auth/callback'
     | '/rest/v1/system/is-number-blacklisted'
     | '/rest/v1/system/is-open'
     | '/rest/v1/system/search-number'
     | '/rest/v1/engagements'
+    | '/rest/v1/proposals/$id/convert-to-manage'
     | '/rest/v1/taskrouter/blacklisted-phone-number/$id'
     | '/rest/v1/taskrouter/blacklisted-phone-number'
   fileServerRoutesByTo: FileServerRoutesByTo
   to:
-    | '/api/conversations'
-    | '/api/template'
-    | '/api/webhook'
-    | '/api/worker-sync'
     | '/auth/callback'
-    | '/api/auth/callback'
     | '/api/auth/decrypt'
     | '/api/auth/encrypt'
-    | '/api/proposals/convert-to-manage'
-    | '/api/proposals/create'
-    | '/api/taskrouter/create-task'
-    | '/api/taskrouter/log-event'
     | '/rest/v1/auth/callback'
     | '/rest/v1/system/is-number-blacklisted'
     | '/rest/v1/system/is-open'
     | '/rest/v1/system/search-number'
     | '/rest/v1/engagements'
+    | '/rest/v1/proposals/$id/convert-to-manage'
     | '/rest/v1/taskrouter/blacklisted-phone-number/$id'
     | '/rest/v1/taskrouter/blacklisted-phone-number'
   id:
     | '__root__'
-    | '/api/conversations'
-    | '/api/template'
-    | '/api/webhook'
-    | '/api/worker-sync'
     | '/auth/callback'
-    | '/api/auth/callback'
     | '/api/auth/decrypt'
     | '/api/auth/encrypt'
-    | '/api/proposals/convert-to-manage'
-    | '/api/proposals/create'
-    | '/api/taskrouter/create-task'
-    | '/api/taskrouter/log-event'
     | '/rest/v1/auth/callback'
     | '/rest/v1/system/is-number-blacklisted'
     | '/rest/v1/system/is-open'
     | '/rest/v1/system/search-number'
     | '/rest/v1/engagements/'
+    | '/rest/v1/proposals/$id/convert-to-manage'
     | '/rest/v1/taskrouter/blacklisted-phone-number/$id'
     | '/rest/v1/taskrouter/blacklisted-phone-number/'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
-  ApiConversationsServerRoute: typeof ApiConversationsServerRoute
-  ApiTemplateServerRoute: typeof ApiTemplateServerRoute
-  ApiWebhookServerRoute: typeof ApiWebhookServerRoute
-  ApiWorkerSyncServerRoute: typeof ApiWorkerSyncServerRoute
   AuthCallbackServerRoute: typeof AuthCallbackServerRoute
-  ApiAuthCallbackServerRoute: typeof ApiAuthCallbackServerRoute
   ApiAuthDecryptServerRoute: typeof ApiAuthDecryptServerRoute
   ApiAuthEncryptServerRoute: typeof ApiAuthEncryptServerRoute
-  ApiProposalsConvertToManageServerRoute: typeof ApiProposalsConvertToManageServerRoute
-  ApiProposalsCreateServerRoute: typeof ApiProposalsCreateServerRoute
-  ApiTaskrouterCreateTaskServerRoute: typeof ApiTaskrouterCreateTaskServerRoute
-  ApiTaskrouterLogEventServerRoute: typeof ApiTaskrouterLogEventServerRoute
   RestV1AuthCallbackServerRoute: typeof RestV1AuthCallbackServerRoute
   RestV1SystemIsNumberBlacklistedServerRoute: typeof RestV1SystemIsNumberBlacklistedServerRoute
   RestV1SystemIsOpenServerRoute: typeof RestV1SystemIsOpenServerRoute
   RestV1SystemSearchNumberServerRoute: typeof RestV1SystemSearchNumberServerRoute
   RestV1EngagementsIndexServerRoute: typeof RestV1EngagementsIndexServerRoute
+  RestV1ProposalsIdConvertToManageServerRoute: typeof RestV1ProposalsIdConvertToManageServerRoute
   RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute: typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute
   RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute: typeof RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute
 }
@@ -850,20 +452,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAuthCodeErrorRouteImport
       parentRoute: typeof AuthRouteRoute
     }
-    '/_authed/workflows/': {
-      id: '/_authed/workflows/'
-      path: '/workflows'
-      fullPath: '/workflows'
-      preLoaderRoute: typeof AuthedWorkflowsIndexRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/tickets/': {
-      id: '/_authed/tickets/'
-      path: '/tickets'
-      fullPath: '/tickets'
-      preLoaderRoute: typeof AuthedTicketsIndexRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/teams/': {
       id: '/_authed/teams/'
       path: '/teams'
@@ -885,67 +473,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedEngagementsIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/coordinator-view/': {
-      id: '/_authed/coordinator-view/'
-      path: '/coordinator-view'
-      fullPath: '/coordinator-view'
-      preLoaderRoute: typeof AuthedCoordinatorViewIndexRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/contacts/': {
-      id: '/_authed/contacts/'
-      path: '/contacts'
-      fullPath: '/contacts'
-      preLoaderRoute: typeof AuthedContactsIndexRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/companies/': {
-      id: '/_authed/companies/'
-      path: '/companies'
-      fullPath: '/companies'
-      preLoaderRoute: typeof AuthedCompaniesIndexRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/tickets/$id': {
-      id: '/_authed/tickets/$id'
-      path: '/tickets/$id'
-      fullPath: '/tickets/$id'
-      preLoaderRoute: typeof AuthedTicketsIdRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/engagements/new': {
-      id: '/_authed/engagements/new'
-      path: '/engagements/new'
-      fullPath: '/engagements/new'
-      preLoaderRoute: typeof AuthedEngagementsNewRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/engagements/$id': {
       id: '/_authed/engagements/$id'
       path: '/engagements/$id'
       fullPath: '/engagements/$id'
       preLoaderRoute: typeof AuthedEngagementsIdRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/teams/$id': {
-      id: '/_authed/teams/$id'
-      path: '/teams/$id'
-      fullPath: '/teams/$id'
-      preLoaderRoute: typeof AuthedTeamsIdRouteRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/contacts/$id': {
-      id: '/_authed/contacts/$id'
-      path: '/contacts/$id'
-      fullPath: '/contacts/$id'
-      preLoaderRoute: typeof AuthedContactsIdRouteRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/companies/$id': {
-      id: '/_authed/companies/$id'
-      path: '/companies/$id'
-      fullPath: '/companies/$id'
-      preLoaderRoute: typeof AuthedCompaniesIdRouteRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/review/$id/$version/': {
@@ -955,110 +487,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewIdVersionIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authed/workflows/$id/': {
-      id: '/_authed/workflows/$id/'
-      path: '/workflows/$id'
-      fullPath: '/workflows/$id'
-      preLoaderRoute: typeof AuthedWorkflowsIdIndexRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/teams/$id/': {
-      id: '/_authed/teams/$id/'
-      path: '/'
-      fullPath: '/teams/$id/'
-      preLoaderRoute: typeof AuthedTeamsIdIndexRouteImport
-      parentRoute: typeof AuthedTeamsIdRouteRoute
-    }
-    '/_authed/contacts/$id/': {
-      id: '/_authed/contacts/$id/'
-      path: '/'
-      fullPath: '/contacts/$id/'
-      preLoaderRoute: typeof AuthedContactsIdIndexRouteImport
-      parentRoute: typeof AuthedContactsIdRouteRoute
-    }
-    '/_authed/companies/$id/': {
-      id: '/_authed/companies/$id/'
-      path: '/'
-      fullPath: '/companies/$id/'
-      preLoaderRoute: typeof AuthedCompaniesIdIndexRouteImport
-      parentRoute: typeof AuthedCompaniesIdRouteRoute
-    }
-    '/_authed/teams/$id/calendar': {
-      id: '/_authed/teams/$id/calendar'
-      path: '/calendar'
-      fullPath: '/teams/$id/calendar'
-      preLoaderRoute: typeof AuthedTeamsIdCalendarRouteImport
-      parentRoute: typeof AuthedTeamsIdRouteRoute
-    }
     '/_authed/proposals/new/blank': {
       id: '/_authed/proposals/new/blank'
       path: '/proposals/new/blank'
       fullPath: '/proposals/new/blank'
       preLoaderRoute: typeof AuthedProposalsNewBlankRouteImport
       parentRoute: typeof AuthedRoute
-    }
-    '/_authed/engagements/$taskSid/$reservationSid': {
-      id: '/_authed/engagements/$taskSid/$reservationSid'
-      path: '/engagements/$taskSid/$reservationSid'
-      fullPath: '/engagements/$taskSid/$reservationSid'
-      preLoaderRoute: typeof AuthedEngagementsTaskSidReservationSidRouteImport
-      parentRoute: typeof AuthedRoute
-    }
-    '/_authed/contacts/$id/tickets': {
-      id: '/_authed/contacts/$id/tickets'
-      path: '/tickets'
-      fullPath: '/contacts/$id/tickets'
-      preLoaderRoute: typeof AuthedContactsIdTicketsRouteImport
-      parentRoute: typeof AuthedContactsIdRouteRoute
-    }
-    '/_authed/contacts/$id/engagements': {
-      id: '/_authed/contacts/$id/engagements'
-      path: '/engagements'
-      fullPath: '/contacts/$id/engagements'
-      preLoaderRoute: typeof AuthedContactsIdEngagementsRouteImport
-      parentRoute: typeof AuthedContactsIdRouteRoute
-    }
-    '/_authed/contacts/$id/configurations': {
-      id: '/_authed/contacts/$id/configurations'
-      path: '/configurations'
-      fullPath: '/contacts/$id/configurations'
-      preLoaderRoute: typeof AuthedContactsIdConfigurationsRouteImport
-      parentRoute: typeof AuthedContactsIdRouteRoute
-    }
-    '/_authed/companies/$id/tickets': {
-      id: '/_authed/companies/$id/tickets'
-      path: '/tickets'
-      fullPath: '/companies/$id/tickets'
-      preLoaderRoute: typeof AuthedCompaniesIdTicketsRouteImport
-      parentRoute: typeof AuthedCompaniesIdRouteRoute
-    }
-    '/_authed/companies/$id/proposals': {
-      id: '/_authed/companies/$id/proposals'
-      path: '/proposals'
-      fullPath: '/companies/$id/proposals'
-      preLoaderRoute: typeof AuthedCompaniesIdProposalsRouteImport
-      parentRoute: typeof AuthedCompaniesIdRouteRoute
-    }
-    '/_authed/companies/$id/contacts': {
-      id: '/_authed/companies/$id/contacts'
-      path: '/contacts'
-      fullPath: '/companies/$id/contacts'
-      preLoaderRoute: typeof AuthedCompaniesIdContactsRouteImport
-      parentRoute: typeof AuthedCompaniesIdRouteRoute
-    }
-    '/_authed/companies/$id/configurations': {
-      id: '/_authed/companies/$id/configurations'
-      path: '/configurations'
-      fullPath: '/companies/$id/configurations'
-      preLoaderRoute: typeof AuthedCompaniesIdConfigurationsRouteImport
-      parentRoute: typeof AuthedCompaniesIdRouteRoute
-    }
-    '/_authed/companies/$id/activity': {
-      id: '/_authed/companies/$id/activity'
-      path: '/activity'
-      fullPath: '/companies/$id/activity'
-      preLoaderRoute: typeof AuthedCompaniesIdActivityRouteImport
-      parentRoute: typeof AuthedCompaniesIdRouteRoute
     }
     '/_authed/proposals/$id/$version': {
       id: '/_authed/proposals/$id/$version'
@@ -1106,62 +540,6 @@ declare module '@tanstack/react-start/server' {
       preLoaderRoute: typeof AuthCallbackServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
-    '/api/worker-sync': {
-      id: '/api/worker-sync'
-      path: '/api/worker-sync'
-      fullPath: '/api/worker-sync'
-      preLoaderRoute: typeof ApiWorkerSyncServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/webhook': {
-      id: '/api/webhook'
-      path: '/api/webhook'
-      fullPath: '/api/webhook'
-      preLoaderRoute: typeof ApiWebhookServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/template': {
-      id: '/api/template'
-      path: '/api/template'
-      fullPath: '/api/template'
-      preLoaderRoute: typeof ApiTemplateServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/conversations': {
-      id: '/api/conversations'
-      path: '/api/conversations'
-      fullPath: '/api/conversations'
-      preLoaderRoute: typeof ApiConversationsServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/taskrouter/log-event': {
-      id: '/api/taskrouter/log-event'
-      path: '/api/taskrouter/log-event'
-      fullPath: '/api/taskrouter/log-event'
-      preLoaderRoute: typeof ApiTaskrouterLogEventServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/taskrouter/create-task': {
-      id: '/api/taskrouter/create-task'
-      path: '/api/taskrouter/create-task'
-      fullPath: '/api/taskrouter/create-task'
-      preLoaderRoute: typeof ApiTaskrouterCreateTaskServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/proposals/create': {
-      id: '/api/proposals/create'
-      path: '/api/proposals/create'
-      fullPath: '/api/proposals/create'
-      preLoaderRoute: typeof ApiProposalsCreateServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/proposals/convert-to-manage': {
-      id: '/api/proposals/convert-to-manage'
-      path: '/api/proposals/convert-to-manage'
-      fullPath: '/api/proposals/convert-to-manage'
-      preLoaderRoute: typeof ApiProposalsConvertToManageServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
     '/api/auth/encrypt': {
       id: '/api/auth/encrypt'
       path: '/api/auth/encrypt'
@@ -1174,13 +552,6 @@ declare module '@tanstack/react-start/server' {
       path: '/api/auth/decrypt'
       fullPath: '/api/auth/decrypt'
       preLoaderRoute: typeof ApiAuthDecryptServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
-    '/api/auth/callback': {
-      id: '/api/auth/callback'
-      path: '/api/auth/callback'
-      fullPath: '/api/auth/callback'
-      preLoaderRoute: typeof ApiAuthCallbackServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
     '/rest/v1/engagements/': {
@@ -1232,6 +603,13 @@ declare module '@tanstack/react-start/server' {
       preLoaderRoute: typeof RestV1TaskrouterBlacklistedPhoneNumberIdServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
+    '/rest/v1/proposals/$id/convert-to-manage': {
+      id: '/rest/v1/proposals/$id/convert-to-manage'
+      path: '/rest/v1/proposals/$id/convert-to-manage'
+      fullPath: '/rest/v1/proposals/$id/convert-to-manage'
+      preLoaderRoute: typeof RestV1ProposalsIdConvertToManageServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
   }
 }
 
@@ -1250,62 +628,6 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
 )
-
-interface AuthedCompaniesIdRouteRouteChildren {
-  AuthedCompaniesIdActivityRoute: typeof AuthedCompaniesIdActivityRoute
-  AuthedCompaniesIdConfigurationsRoute: typeof AuthedCompaniesIdConfigurationsRoute
-  AuthedCompaniesIdContactsRoute: typeof AuthedCompaniesIdContactsRoute
-  AuthedCompaniesIdProposalsRoute: typeof AuthedCompaniesIdProposalsRoute
-  AuthedCompaniesIdTicketsRoute: typeof AuthedCompaniesIdTicketsRoute
-  AuthedCompaniesIdIndexRoute: typeof AuthedCompaniesIdIndexRoute
-}
-
-const AuthedCompaniesIdRouteRouteChildren: AuthedCompaniesIdRouteRouteChildren =
-  {
-    AuthedCompaniesIdActivityRoute: AuthedCompaniesIdActivityRoute,
-    AuthedCompaniesIdConfigurationsRoute: AuthedCompaniesIdConfigurationsRoute,
-    AuthedCompaniesIdContactsRoute: AuthedCompaniesIdContactsRoute,
-    AuthedCompaniesIdProposalsRoute: AuthedCompaniesIdProposalsRoute,
-    AuthedCompaniesIdTicketsRoute: AuthedCompaniesIdTicketsRoute,
-    AuthedCompaniesIdIndexRoute: AuthedCompaniesIdIndexRoute,
-  }
-
-const AuthedCompaniesIdRouteRouteWithChildren =
-  AuthedCompaniesIdRouteRoute._addFileChildren(
-    AuthedCompaniesIdRouteRouteChildren,
-  )
-
-interface AuthedContactsIdRouteRouteChildren {
-  AuthedContactsIdConfigurationsRoute: typeof AuthedContactsIdConfigurationsRoute
-  AuthedContactsIdEngagementsRoute: typeof AuthedContactsIdEngagementsRoute
-  AuthedContactsIdTicketsRoute: typeof AuthedContactsIdTicketsRoute
-  AuthedContactsIdIndexRoute: typeof AuthedContactsIdIndexRoute
-}
-
-const AuthedContactsIdRouteRouteChildren: AuthedContactsIdRouteRouteChildren = {
-  AuthedContactsIdConfigurationsRoute: AuthedContactsIdConfigurationsRoute,
-  AuthedContactsIdEngagementsRoute: AuthedContactsIdEngagementsRoute,
-  AuthedContactsIdTicketsRoute: AuthedContactsIdTicketsRoute,
-  AuthedContactsIdIndexRoute: AuthedContactsIdIndexRoute,
-}
-
-const AuthedContactsIdRouteRouteWithChildren =
-  AuthedContactsIdRouteRoute._addFileChildren(
-    AuthedContactsIdRouteRouteChildren,
-  )
-
-interface AuthedTeamsIdRouteRouteChildren {
-  AuthedTeamsIdCalendarRoute: typeof AuthedTeamsIdCalendarRoute
-  AuthedTeamsIdIndexRoute: typeof AuthedTeamsIdIndexRoute
-}
-
-const AuthedTeamsIdRouteRouteChildren: AuthedTeamsIdRouteRouteChildren = {
-  AuthedTeamsIdCalendarRoute: AuthedTeamsIdCalendarRoute,
-  AuthedTeamsIdIndexRoute: AuthedTeamsIdIndexRoute,
-}
-
-const AuthedTeamsIdRouteRouteWithChildren =
-  AuthedTeamsIdRouteRoute._addFileChildren(AuthedTeamsIdRouteRouteChildren)
 
 interface AuthedProposalsIdVersionRouteRouteChildren {
   AuthedProposalsIdVersionProductsRoute: typeof AuthedProposalsIdVersionProductsRoute
@@ -1332,48 +654,23 @@ const AuthedProposalsIdVersionRouteRouteWithChildren =
 
 interface AuthedRouteChildren {
   AuthedIndexRoute: typeof AuthedIndexRoute
-  AuthedCompaniesIdRouteRoute: typeof AuthedCompaniesIdRouteRouteWithChildren
-  AuthedContactsIdRouteRoute: typeof AuthedContactsIdRouteRouteWithChildren
-  AuthedTeamsIdRouteRoute: typeof AuthedTeamsIdRouteRouteWithChildren
   AuthedEngagementsIdRoute: typeof AuthedEngagementsIdRoute
-  AuthedEngagementsNewRoute: typeof AuthedEngagementsNewRoute
-  AuthedTicketsIdRoute: typeof AuthedTicketsIdRoute
-  AuthedCompaniesIndexRoute: typeof AuthedCompaniesIndexRoute
-  AuthedContactsIndexRoute: typeof AuthedContactsIndexRoute
-  AuthedCoordinatorViewIndexRoute: typeof AuthedCoordinatorViewIndexRoute
   AuthedEngagementsIndexRoute: typeof AuthedEngagementsIndexRoute
   AuthedProposalsIndexRoute: typeof AuthedProposalsIndexRoute
   AuthedTeamsIndexRoute: typeof AuthedTeamsIndexRoute
-  AuthedTicketsIndexRoute: typeof AuthedTicketsIndexRoute
-  AuthedWorkflowsIndexRoute: typeof AuthedWorkflowsIndexRoute
   AuthedProposalsIdVersionRouteRoute: typeof AuthedProposalsIdVersionRouteRouteWithChildren
-  AuthedEngagementsTaskSidReservationSidRoute: typeof AuthedEngagementsTaskSidReservationSidRoute
   AuthedProposalsNewBlankRoute: typeof AuthedProposalsNewBlankRoute
-  AuthedWorkflowsIdIndexRoute: typeof AuthedWorkflowsIdIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedIndexRoute: AuthedIndexRoute,
-  AuthedCompaniesIdRouteRoute: AuthedCompaniesIdRouteRouteWithChildren,
-  AuthedContactsIdRouteRoute: AuthedContactsIdRouteRouteWithChildren,
-  AuthedTeamsIdRouteRoute: AuthedTeamsIdRouteRouteWithChildren,
   AuthedEngagementsIdRoute: AuthedEngagementsIdRoute,
-  AuthedEngagementsNewRoute: AuthedEngagementsNewRoute,
-  AuthedTicketsIdRoute: AuthedTicketsIdRoute,
-  AuthedCompaniesIndexRoute: AuthedCompaniesIndexRoute,
-  AuthedContactsIndexRoute: AuthedContactsIndexRoute,
-  AuthedCoordinatorViewIndexRoute: AuthedCoordinatorViewIndexRoute,
   AuthedEngagementsIndexRoute: AuthedEngagementsIndexRoute,
   AuthedProposalsIndexRoute: AuthedProposalsIndexRoute,
   AuthedTeamsIndexRoute: AuthedTeamsIndexRoute,
-  AuthedTicketsIndexRoute: AuthedTicketsIndexRoute,
-  AuthedWorkflowsIndexRoute: AuthedWorkflowsIndexRoute,
   AuthedProposalsIdVersionRouteRoute:
     AuthedProposalsIdVersionRouteRouteWithChildren,
-  AuthedEngagementsTaskSidReservationSidRoute:
-    AuthedEngagementsTaskSidReservationSidRoute,
   AuthedProposalsNewBlankRoute: AuthedProposalsNewBlankRoute,
-  AuthedWorkflowsIdIndexRoute: AuthedWorkflowsIdIndexRoute,
 }
 
 const AuthedRouteWithChildren =
@@ -1388,25 +685,17 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
-  ApiConversationsServerRoute: ApiConversationsServerRoute,
-  ApiTemplateServerRoute: ApiTemplateServerRoute,
-  ApiWebhookServerRoute: ApiWebhookServerRoute,
-  ApiWorkerSyncServerRoute: ApiWorkerSyncServerRoute,
   AuthCallbackServerRoute: AuthCallbackServerRoute,
-  ApiAuthCallbackServerRoute: ApiAuthCallbackServerRoute,
   ApiAuthDecryptServerRoute: ApiAuthDecryptServerRoute,
   ApiAuthEncryptServerRoute: ApiAuthEncryptServerRoute,
-  ApiProposalsConvertToManageServerRoute:
-    ApiProposalsConvertToManageServerRoute,
-  ApiProposalsCreateServerRoute: ApiProposalsCreateServerRoute,
-  ApiTaskrouterCreateTaskServerRoute: ApiTaskrouterCreateTaskServerRoute,
-  ApiTaskrouterLogEventServerRoute: ApiTaskrouterLogEventServerRoute,
   RestV1AuthCallbackServerRoute: RestV1AuthCallbackServerRoute,
   RestV1SystemIsNumberBlacklistedServerRoute:
     RestV1SystemIsNumberBlacklistedServerRoute,
   RestV1SystemIsOpenServerRoute: RestV1SystemIsOpenServerRoute,
   RestV1SystemSearchNumberServerRoute: RestV1SystemSearchNumberServerRoute,
   RestV1EngagementsIndexServerRoute: RestV1EngagementsIndexServerRoute,
+  RestV1ProposalsIdConvertToManageServerRoute:
+    RestV1ProposalsIdConvertToManageServerRoute,
   RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute:
     RestV1TaskrouterBlacklistedPhoneNumberIdServerRoute,
   RestV1TaskrouterBlacklistedPhoneNumberIndexServerRoute:

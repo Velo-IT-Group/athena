@@ -3,13 +3,15 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "bunx --bun vite",
+		"dev": "bunx --bun vite --host",
 		"build": "bunx --bun vite build",
 		"start": "node .output/server/index.mjs",
 		"clean": "git clean -xdf .turbo .tanstack .nitro .output node_modules",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"deploy": "bun run build && bunx wrangler deploy",
+		"cf-typegen": "bunx wrangler types --env-interface Env"
 	},
 	"dependencies": {
 		"@athena/utils": "workspace:*",

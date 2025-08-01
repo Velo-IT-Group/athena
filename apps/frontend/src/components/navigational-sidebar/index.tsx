@@ -1,4 +1,6 @@
-import React from 'react';
+import { BookA, Search } from 'lucide-react';
+import type React from 'react';
+import { Button } from '@/components/ui/button';
 import {
 	Sidebar,
 	SidebarContent,
@@ -9,11 +11,10 @@ import {
 	SidebarMenu,
 	SidebarRail,
 } from '@/components/ui/sidebar';
-import NavigationSection from './navigation-section';
-import type { NavSection } from '@/types/nav';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { BookA, Search } from 'lucide-react';
+import type { NavSection } from '@/types/nav';
+import NavigationSection from './navigation-section';
+
 interface NavigationalSidebarProps
 	extends React.ComponentProps<typeof Sidebar> {
 	sections: NavSection[];

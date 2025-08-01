@@ -1,4 +1,5 @@
 'use client';
+import { Check } from 'lucide-react';
 import {
 	Command,
 	CommandEmpty,
@@ -8,7 +9,6 @@ import {
 	CommandList,
 } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
 
 interface OtherProps<T> {
 	items: T[];
@@ -51,13 +51,9 @@ export function ListSelector<T>({
 									heading={key}
 									key={key}
 								>
-									{items?.map((item) => (
+									{items?.map((item, index) => (
 										<CommandItem
-											key={
-												value
-													? value(item)
-													: crypto.randomUUID()
-											}
+											key={value?.(item) ?? index}
 											value={value?.(item)}
 											onSelect={() => onSelect?.(item)}
 										>
@@ -79,9 +75,9 @@ export function ListSelector<T>({
 					</>
 				) : (
 					<CommandGroup>
-						{items?.map((item) => (
+						{items?.map((item, index) => (
 							<CommandItem
-								key={value ? value(item) : crypto.randomUUID()}
+								key={value?.(item) ?? index}
 								value={value?.(item)}
 								onSelect={() => onSelect?.(item)}
 							>

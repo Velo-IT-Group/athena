@@ -1,24 +1,26 @@
-import { createClient } from "@/utils/twilio";
-import { type WorkerListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/worker";
-import { env } from "@/lib/utils";
 import { createServerFn } from "@tanstack/react-start";
+import type { IncomingPhoneNumberListInstanceOptions } from "twilio/lib/rest/api/v2010/account/incomingPhoneNumber";
+import type { MessageListInstanceOptions } from "twilio/lib/rest/api/v2010/account/message";
+import type { ParticipantConversationListInstanceOptions } from "twilio/lib/rest/conversations/v1/participantConversation";
 import type { TaskListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/task";
 import type { ReservationListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/task/reservation";
-import type { IncomingPhoneNumberListInstanceOptions } from "twilio/lib/rest/api/v2010/account/incomingPhoneNumber";
-import type { WorkerStatisticsContextFetchOptions } from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
-import type { WorkerStatisticsInstance } from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
-import type { MessageListInstanceOptions } from "twilio/lib/rest/api/v2010/account/message";
+import type { TaskQueueListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/taskQueue";
+import type { WorkerListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/worker";
+import type {
+	WorkerStatisticsContextFetchOptions,
+	WorkerStatisticsInstance,
+} from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
 import { z } from "zod";
-import { ParticipantConversationListInstanceOptions } from "twilio/lib/rest/conversations/v1/participantConversation";
-import { TaskQueueListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/taskQueue";
+import { env } from "@/lib/utils";
+import { createClient } from "@/utils/twilio";
 
 export const getConversations = createServerFn()
 	.validator((params: ParticipantConversationListInstanceOptions) => params)
 	.handler(async ({ data }) => {
 		const client = await createClient();
 
-		const conversations =
-			await client.conversations.v1.participantConversations.list(data);
+		const conversations = await client.conversations.v1
+			.participantConversations.list(data);
 
 		return conversations.map((c) => c.toJSON());
 	});
@@ -45,7 +47,7 @@ export const getPhoneNumbers = createServerFn()
 	.handler(async ({ data }) => {
 		const client = await createClient();
 		return (await client.incomingPhoneNumbers.list(data)).map((w) =>
-			w.toJSON(),
+			w.toJSON()
 		);
 	});
 
@@ -266,8 +268,20 @@ export const getConferenceParticipants = createServerFn()
 	.handler(async ({ data }) => {
 		const client = await createClient();
 		return (await client.conferences(data).participants.list()).map((p) =>
-			p.toJSON(),
+			p.toJSON()
 		);
+	});
+
+export const getConferenceParticipant = createServerFn()
+	.validator(z.object({
+		conferenceSid: z.string(),
+		participantSid: z.string(),
+	}))
+	.handler(async ({ data }) => {
+		const client = await createClient();
+		return (await client.conferences(data.conferenceSid).participants(
+			data.participantSid,
+		).fetch()).toJSON();
 	});
 
 export const getWorkspace = createServerFn()

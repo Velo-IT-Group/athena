@@ -1,13 +1,13 @@
 'use client';
-import { Button, buttonVariants } from '../ui/button';
+import { UseMutationResult } from '@tanstack/react-query';
 import { CircleMinus, Loader2, Pause, Play, User } from 'lucide-react';
+import {
+	ParticipantContextUpdateOptions,
+	ParticipantInstance,
+} from 'twilio/lib/rest/api/v2010/account/conference/participant';
 import { cn } from '@/lib/utils';
+import { Button, buttonVariants } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { Task } from 'twilio-taskrouter';
-import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
-import { useTwilio } from '@/contexts/twilio-provider';
-import { VoiceAttributes } from '@athena/utils';
 
 export type Participant =
 	| 'worker'
@@ -15,33 +15,52 @@ export type Participant =
 	| 'external'
 	| 'transferredWorker';
 
-type Props = {
+export type ConferenceParticipant = {
 	participantType: Participant;
 	sid: string;
-	// name: string;
-	// isYou: boolean;
-	showRemoval: boolean;
-	attributes: VoiceAttributes;
+	name: string;
+	isOnHold: boolean;
+};
+
+type Props = {
+	participant: ConferenceParticipant;
+	onHoldToggle?: (isOnHold: boolean) => void;
+	handleParticipantUpdate: UseMutationResult<
+		{},
+		Error,
+		{
+			participantSid: string;
+			options: ParticipantContextUpdateOptions;
+		},
+		{
+			previousItems: ParticipantInstance[];
+			newItems: ParticipantInstance[];
+		}
+	>;
+	handleParticipantRemoval: UseMutationResult<
+		boolean,
+		Error,
+		{
+			participantSid: string;
+		},
+		{
+			previousItems: ParticipantInstance[];
+			newItems: ParticipantInstance[];
+		}
+	>;
+	// participantType: Participant;
+	// sid: string;
+	// showRemoval: boolean;
+	// attributes: VoiceAttributes;
 };
 
 const ParticipantListItem = ({
-	participantType,
-	sid,
-	showRemoval,
-	attributes,
+	participant,
+	onHoldToggle,
+	handleParticipantRemoval,
+	handleParticipantUpdate,
 }: Props) => {
-	const { activeEngagement } = useTwilio();
-	const [isOnHold, setIsOnHold] = useState(false);
-
-	const toggleHold = useMutation({
-		mutationKey: ['participant', 'update', sid],
-		mutationFn: async () => {
-			activeEngagement?.reservation.task.updateParticipant({
-				hold: !isOnHold,
-			});
-		},
-		onSuccess: () => setIsOnHold((prev) => !prev),
-	});
+	const { sid, name, isOnHold } = participant;
 
 	return (
 		<div
@@ -50,30 +69,15 @@ const ParticipantListItem = ({
 					variant: 'secondary',
 					size: 'sm',
 				}),
-				'flex items-center justify-between h-9 hover:bg-transparent relative'
-				// isOnHold && 'opacity-50'
+				'flex items-center justify-between h-9 hover:bg-transparent relative',
+				isOnHold && 'opacity-50'
 			)}
 		>
 			<div className='mr-1.5 relative'>
 				<User />
 			</div>
 
-			<p className='text-sm'>
-				<span>
-					{participantType === 'worker' && 'You'}
-					{participantType === 'customer' &&
-						(attributes.name ?? attributes.from)}
-					{/* {participantType === 'worker' &&
-						worker?.attributes.full_name}
-					{participantType === 'customer' &&
-						(task?.attributes.name ??
-							parsePhoneNumber(task?.attributes.from)
-								.formattedNumber)}
-					{participantType === 'external' &&
-						task?.attributes?.externalContact}
-					{participantType === 'transferredWorker' && sid} */}
-				</span>
-			</p>
+			<p className='text-sm'>{name}</p>
 
 			<Tooltip>
 				<TooltipTrigger asChild>
@@ -81,10 +85,19 @@ const ParticipantListItem = ({
 						variant={isOnHold ? 'secondary' : 'ghost'}
 						size='icon'
 						className='ml-auto'
-						onClick={() => toggleHold.mutate()}
-						disabled={toggleHold.isPending}
+						onClick={() =>
+							handleParticipantUpdate.mutate({
+								participantSid: participant.sid,
+								options: {
+									hold: !isOnHold,
+								},
+							})
+						}
+						disabled={handleParticipantUpdate.isPending}
 					>
-						{toggleHold.isPending ? (
+						{handleParticipantUpdate.isPending &&
+						handleParticipantUpdate.variables?.participantSid ===
+							participant.sid ? (
 							<Loader2 className='animate-spin' />
 						) : isOnHold ? (
 							<Play />
@@ -95,31 +108,33 @@ const ParticipantListItem = ({
 				</TooltipTrigger>
 
 				<TooltipContent>
-					{/* {participant?.hold ? 'Remove From Hold' : 'Put On Hold'} */}
+					{isOnHold ? 'Remove From Hold' : 'Put On Hold'}
 				</TooltipContent>
 			</Tooltip>
 
-			{showRemoval && (
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button
-							variant='ghost'
-							size='icon'
-							// onClick={() => {
-							// 	removeParticipant.mutate();
-							// 	removeParticipantByName(participantType);
-							// 	if (participantType === 'worker') {
-							// 		wrapUpTask?.mutate('Left conference');
-							// 	}
-							// }}
-						>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<Button
+						variant='ghost'
+						size='icon'
+						onClick={() => {
+							handleParticipantRemoval.mutate({
+								participantSid: participant.sid,
+							});
+						}}
+					>
+						{handleParticipantRemoval.isPending &&
+						handleParticipantRemoval.variables?.participantSid ===
+							participant.sid ? (
+							<Loader2 className='animate-spin' />
+						) : (
 							<CircleMinus />
-						</Button>
-					</TooltipTrigger>
+						)}
+					</Button>
+				</TooltipTrigger>
 
-					<TooltipContent>Remove</TooltipContent>
-				</Tooltip>
-			)}
+				<TooltipContent>Remove</TooltipContent>
+			</Tooltip>
 		</div>
 	);
 };

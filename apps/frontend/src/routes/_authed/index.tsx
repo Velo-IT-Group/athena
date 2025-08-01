@@ -1,11 +1,8 @@
-import { formatDate } from 'date-fns';
-
 import { createFileRoute } from '@tanstack/react-router';
-
-import PrivateNotepad from '@/components/widgets/private-notepad';
-import TimeEntriesProgress from '@/components/time-entries-progress';
+import { formatDate } from 'date-fns';
 import MetricTrackerHeader from '@/components/metric-tracker-header';
-import { useAuth } from '@/hooks/use-auth';
+import TimeEntriesProgress from '@/components/time-entries-progress';
+import PrivateNotepad from '@/components/widgets/private-notepad';
 
 export const Route = createFileRoute('/_authed/')({
 	component: Home,
@@ -13,7 +10,7 @@ export const Route = createFileRoute('/_authed/')({
 });
 
 function Home() {
-	const { user } = useAuth();
+	const { user } = Route.useRouteContext();
 
 	const today = new Date();
 	const isAfternoon = today.getHours() >= 12 && today.getHours() < 18;
@@ -36,11 +33,9 @@ function Home() {
 						: isMorning
 							? 'morning'
 							: 'evening'}
-					,{' '}
-					{user?.user_metadata?.full_name.split(' ')?.[0] ??
-						user?.email ??
-						'there'}
-					!
+					{user?.user_metadata?.full_name.split(' ')?.[0]
+						? ` , ${user?.user_metadata?.full_name.split(' ')?.[0]}`
+						: '!'}
 				</h3>
 
 				<TimeEntriesProgress user={user!} />

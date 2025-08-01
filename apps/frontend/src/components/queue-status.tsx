@@ -32,7 +32,7 @@ const QueueStatus = ({ token }: Props) => {
 			console.log(event.data);
 			setQueueStatus(event.data as QueueStatus);
 		},
-		[queueStatus, document]
+		[]
 	);
 
 	useEffect(() => {
@@ -45,7 +45,7 @@ const QueueStatus = ({ token }: Props) => {
 		return () => {
 			document.off('updated', handleQueueStatusUpdate);
 		};
-	}, [document, client]);
+	}, [document, handleQueueStatusUpdate]);
 
 	return (
 		<Link

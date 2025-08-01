@@ -638,7 +638,7 @@ import {
 	endOfDay,
 	endOfMonth,
 	endOfWeek,
-	FormatRelativeToken,
+	type FormatRelativeToken,
 	formatRelative,
 	startOfDay,
 	startOfMonth,
@@ -646,7 +646,7 @@ import {
 	startOfYesterday,
 	subWeeks,
 } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AvatarStack } from '@/components/avatar-stack';
 import { LiveModeButton } from '@/components/live-mode-button';
@@ -663,7 +663,6 @@ import {
 } from '@/components/ui/form';
 import { ListGroup, ListItem } from '@/components/ui/list';
 import { Skeleton } from '@/components/ui/skeleton';
-import { createClient } from '@/lib/supabase/client';
 import type { EngagementQueryOptions } from '@/lib/supabase/read';
 import { voiceAttributesSchema } from '@/types/twilio';
 

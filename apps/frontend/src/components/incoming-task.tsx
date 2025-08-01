@@ -1,4 +1,7 @@
+import type { VoiceAttributes } from '@athena/utils';
+import { PopoverClose } from '@radix-ui/react-popover';
 import { Rocket, User, Voicemail, X } from 'lucide-react';
+import type { Reservation } from 'twilio-taskrouter';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,14 +12,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { PopoverClose } from '@radix-ui/react-popover';
 import { useTwilio } from '@/contexts/twilio-provider';
 import { useCall } from '@/hooks/use-call';
-import { VoiceAttributes } from '@athena/utils';
 
 const IncomingTask = ({
+	reservation,
 	attributes,
 }: {
+	reservation: Reservation;
 	attributes: VoiceAttributes & {
 		direction: 'inbound';
 	};
@@ -99,7 +102,10 @@ const IncomingTask = ({
 					size={'sm'}
 					className='text-sm'
 					onClick={async () => {
-						if (call) {
+						if (isVoicemail) {
+							// Handle voicemail acceptance
+							await reservation.accept();
+						} else if (call) {
 							acceptCall.mutate();
 						}
 					}}

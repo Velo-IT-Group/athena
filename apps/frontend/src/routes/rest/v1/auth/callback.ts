@@ -1,4 +1,5 @@
-import { User } from "@supabase/supabase-js";
+import type { WorkerAttributes } from "@athena/utils";
+import type { User } from "@supabase/supabase-js";
 import {
 	createServerFileRoute,
 	deleteCookie,
@@ -10,7 +11,6 @@ import { createWorker } from "@/lib/twilio/create";
 import { getWorkers } from "@/lib/twilio/read";
 import { updateWorker } from "@/lib/twilio/update";
 import { env } from "@/lib/utils";
-import { WorkerAttributes } from "@/types/twilio";
 
 const handleAuthenticatedUser = async (user: User) => {
 	const supabase = createClient();
@@ -69,9 +69,8 @@ const handleAuthenticatedUser = async (user: User) => {
 		work_phone: member.officePhone || "",
 		mobile_phone: member.mobilePhone || "",
 		security_role_id: member.securityRole?.id || -1,
+		worker_sid: user.user_metadata?.worker_sid || "",
 	};
-
-	console.log("USER ID ", user.id);
 
 	if (!workers.length) {
 		const worker = await createWorker({
@@ -94,6 +93,8 @@ const handleAuthenticatedUser = async (user: User) => {
 		const parsedAttributes = JSON.parse(worker.attributes);
 		user_metadata.on_call = parsedAttributes.on_call ?? false;
 
+		console.log(parsedAttributes, user_metadata);
+
 		await updateWorker({
 			data: {
 				workerSid: worker.sid,
@@ -103,13 +104,13 @@ const handleAuthenticatedUser = async (user: User) => {
 			},
 		});
 
-		console.log(worker);
+		// console.log(worker);
 
 		const {
-			data,
+			// data,
 			error: profileUpdateError,
-			statusText,
-			status,
+			// statusText,
+			// status,
 		} = await supabase
 			.from("profiles")
 			.update({
@@ -119,7 +120,7 @@ const handleAuthenticatedUser = async (user: User) => {
 			.select()
 			.maybeSingle();
 
-		console.error(data, profileUpdateError, statusText, status);
+		// console.error(data, profileUpdateError, statusText, status);
 
 		if (profileUpdateError) throw profileUpdateError;
 	}
@@ -134,6 +135,8 @@ export const ServerRoute = createServerFileRoute(
 		const { searchParams, origin } = new URL(request.url);
 		const code = searchParams.get("code");
 		const next = searchParams.get("next") ?? "/";
+
+		console.log(searchParams, origin, code, next);
 
 		if (code) {
 			const supabase = createClient();
@@ -184,13 +187,13 @@ export const ServerRoute = createServerFileRoute(
 				return Response.redirect(`${origin}/auth/auth-code-error`);
 			}
 
-			if (isLocalEnv) {
-				return Response.redirect(`${origin}${next}`);
-			} else if (forwardedHost) {
-				return Response.redirect(`${origin}${next}`);
-			} else {
-				return Response.redirect(`${origin}${next}`);
-			}
+			// if (isLocalEnv) {
+			// 	return Response.redirect(`${origin}${next}`);
+			// } else if (forwardedHost) {
+			// 	return Response.redirect(`${origin}${next}`);
+			// } else {
+			// }
+			return Response.redirect(`${origin}${next}`);
 		}
 
 		// return the user to an error page with instructions

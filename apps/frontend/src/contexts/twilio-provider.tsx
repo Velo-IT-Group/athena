@@ -1,26 +1,26 @@
 'use client';
+import type { createEngagementSchema } from '@athena/utils';
 import {
-	createContext,
-	useContext,
-	useState,
-	ReactNode,
-	useCallback,
-} from 'react';
-import { Device, Call, type TwilioError } from '@twilio/voice-sdk';
-import { useDevice } from '@/hooks/use-device';
-import { useWorker } from '@/hooks/use-worker';
-import { Reservation, Supervisor, Worker } from 'twilio-taskrouter';
-import {
+	type UseMutationResult,
 	useMutation,
-	UseMutationResult,
 	useQueryClient,
 } from '@tanstack/react-query';
-import z from 'zod';
-import { attributeIdentifier, Direction } from '@/types/twilio';
-import { lookupPhoneNumber } from '@/lib/twilio/phoneNumbers';
-import { getAccessTokenQuery } from '@/lib/twilio/api';
+import type { Call, Device, TwilioError } from '@twilio/voice-sdk';
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useState,
+} from 'react';
 import { toast } from 'sonner';
-import { createEngagementSchema } from '@athena/utils';
+import type { Reservation, Supervisor, Worker } from 'twilio-taskrouter';
+import type z from 'zod';
+import { useDevice } from '@/hooks/use-device';
+import { useWorker } from '@/hooks/use-worker';
+import { getAccessTokenQuery } from '@/lib/twilio/api';
+import { lookupPhoneNumber } from '@/lib/twilio/phoneNumbers';
+import { attributeIdentifier, Direction } from '@/types/twilio';
 
 interface TwilioVoiceContextType {
 	device: Device | null;
@@ -93,7 +93,7 @@ export const TwilioProvider = ({
 	}, [waitingReservation]);
 
 	const handleTokenExpiration = useCallback(
-		async (device: Device) => {
+		async (device: Device | Supervisor) => {
 			console.log('Token is expiring, updating device...');
 			const query = getAccessTokenQuery({
 				identity,
@@ -104,7 +104,8 @@ export const TwilioProvider = ({
 			client.invalidateQueries({ queryKey: query.queryKey });
 			client.setQueryData(query.queryKey, newToken);
 			device.updateToken(newToken);
-			console.log('handleTokenExpiration AFTER UPDATE: ', device.token);
+
+			console.log('handleTokenExpiration AFTER UPDATE: ', device);
 			toast.success('Token successfully updated');
 		},
 		[token, identity, workerSid]
@@ -147,7 +148,7 @@ export const TwilioProvider = ({
 				record: 'record-from-start',
 				conferenceRecord: 'record-from-start',
 				startConferenceOnEnter: true,
-				endConferenceOnExit: false,
+				endConferenceOnExit: true,
 				endConferenceOnCustomerExit: true,
 				transcribe: true,
 				transcriptionConfiguration: 'Athena',
@@ -164,7 +165,7 @@ export const TwilioProvider = ({
 				});
 			}
 		},
-		[device.isRegistered]
+		[device.isRegistered, device.device]
 	);
 
 	const handleWorkerReady = useCallback((worker: Worker) => {
@@ -203,7 +204,9 @@ export const TwilioProvider = ({
 			}
 			handleReservationConference(reservation);
 		},
+		onReservationTimeout: () => setActiveEngagement(undefined),
 		onWorkerReady: handleWorkerReady,
+		onTokenExpiration: handleTokenExpiration,
 	});
 
 	const createEngagement = useMutation({

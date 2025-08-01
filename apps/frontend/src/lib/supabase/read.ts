@@ -187,9 +187,7 @@ export const getEngagement = createServerFn()
 
 		if (error) {
 			throw new Error(
-				"Error in getting engagement for id " +
-					id +
-					" " +
+				"Error in getting engagement for id " + id + " " +
 					error.message,
 				{
 					cause: error,
@@ -402,9 +400,7 @@ export const getConversations = createServerFn()
 	.handler(async ({ data: { contactId, companyId, workerId, limit } }) => {
 		const supabase = createClient();
 
-		const query = supabase
-			.schema("reporting")
-			.from("conversations")
+		const query = supabase.schema("reporting").from("conversations")
 			.select();
 
 		if (contactId) {
@@ -612,13 +608,12 @@ export const getPhase = createServerFn()
 
 export const getPhases = createServerFn()
 	.validator(
-		({
-			versionId,
-			proposalId,
-		}: {
-			versionId: string;
-			proposalId: string;
-		}) => ({
+		(
+			{ versionId, proposalId }: {
+				versionId: string;
+				proposalId: string;
+			},
+		) => ({
 			versionId,
 			proposalId,
 		}),
@@ -633,26 +628,22 @@ export const getPhases = createServerFn()
 				version: versionId,
 			})
 			.order("order")
-			.order("order", { referencedTable: "tickets" });
+			.order("order", { referencedTable: "tickets" })
+			.throwOnError();
 
-		if (!data || error) {
-			throw Error("Error in getting phases " + error.message, {
-				cause: error,
-			});
-		}
+		console.log(data);
 
 		return data;
 	});
 
 export const getSections = createServerFn()
 	.validator(
-		({
-			versionId,
-			proposalId,
-		}: {
-			versionId: string;
-			proposalId: string;
-		}) => ({
+		(
+			{ versionId, proposalId }: {
+				versionId: string;
+				proposalId: string;
+			},
+		) => ({
 			proposalId,
 			versionId,
 		}),
@@ -779,9 +770,9 @@ export const getStorageFiles = createServerFn()
 	.handler(async ({ data: { bucketName, path } }) => {
 		const supabase = createClient();
 
-		const { data, error } = await supabase.storage
-			.from(bucketName)
-			.list(path);
+		const { data, error } = await supabase.storage.from(bucketName).list(
+			path,
+		);
 
 		if (error) {
 			throw new Error("Error in getting files" + error.message, {

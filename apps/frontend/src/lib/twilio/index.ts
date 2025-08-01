@@ -1,7 +1,15 @@
-import Twilio from "twilio";
-import { env } from "@/lib/utils";
-import { createServerFn } from "@tanstack/react-start";
+// import Twilio from "twilio";
+const AccessToken = require("twilio").jwt.AccessToken;
+
+import { createIsomorphicFn, createServerFn } from "@tanstack/react-start";
+import { getWebRequest } from "@tanstack/react-start/server";
 import z from "zod";
+import { env } from "@/lib/utils";
+
+createIsomorphicFn().client(() => {
+	// import Twilio from "twilio";
+	return require("twilio");
+});
 
 export const createAccessToken = createServerFn()
 	.validator(
@@ -11,7 +19,11 @@ export const createAccessToken = createServerFn()
 		}),
 	)
 	.handler(async ({ data: { workerSid, identity } }) => {
-		const AccessToken = Twilio.jwt.AccessToken;
+		const request = getWebRequest();
+
+		console.log(request);
+
+		// const AccessToken = Twilio.jwt.AccessToken;
 		const VoiceGrant = AccessToken.VoiceGrant;
 		const TaskRouterGrant = AccessToken.TaskRouterGrant;
 		const SyncGrant = AccessToken.SyncGrant;

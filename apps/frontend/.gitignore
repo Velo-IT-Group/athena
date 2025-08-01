@@ -30,6 +30,8 @@ dist/
 .env
 .env.*
 
+.wrangler
+
 .src-tauri/gen/*
 .src-tauri/target/*
 .src-tauri/Cargo.lock

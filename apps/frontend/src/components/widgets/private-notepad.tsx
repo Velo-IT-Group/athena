@@ -1,22 +1,24 @@
 'use client';
+import { EditorEvents } from '@tiptap/react';
 import { Lock } from 'lucide-react';
+import { useCallback } from 'react';
 import Tiptap from '@/components/tip-tap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import WidgetOptions from '@/components/widgets/widget-options';
 import useWidget from '@/hooks/use-widget';
-import { useCallback } from 'react';
-import type { EditorEvents } from '@tiptap/react';
 
 export default function PrivateNotepad() {
-	const { halfSize, toggleHalfSize } = useWidget({
+	const { halfSize } = useWidget({
 		widgetName: 'private-notepad',
 	});
 
-	// const handleBlur = useCallback(({ editor }: EditorEvents['blur']) => {
-	// 	if (typeof localStorage !== 'undefined') {
-	// 		localStorage.setItem('private-notepad', JSON.stringify(editor.getJSON()));
-	// 	}
-	// }, []);
+	const handleBlur = useCallback(({ editor }: EditorEvents['blur']) => {
+		if (typeof localStorage !== 'undefined') {
+			localStorage.setItem(
+				'private-notepad',
+				JSON.stringify(editor.getJSON())
+			);
+		}
+	}, []);
 
 	return (
 		<Card
@@ -40,9 +42,11 @@ export default function PrivateNotepad() {
 
 			<CardContent className='relative p-0 flex flex-col h-full'>
 				<Tiptap
-					// content={JSON.parse(localStorage.getItem('private-notepad') ?? '{}')}
+					content={JSON.parse(
+						localStorage.getItem('private-notepad') ?? '{}'
+					)}
 					placeholder='Type something...'
-					// onBlur={handleBlur}
+					onBlur={handleBlur}
 					className='h-[344px] overflow-y-auto !mx-0'
 					editorClassName='min-h-96'
 				/>

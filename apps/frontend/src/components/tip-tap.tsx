@@ -1,18 +1,9 @@
 // src/Tiptap.tsx
-import {
-	BubbleMenu,
-	useEditor,
-	EditorContent,
-	type EditorOptions,
-	useEditorState,
-} from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import LinkExtension from '@tiptap/extension-link';
 import PlaceHolderExtension from '@tiptap/extension-placeholder';
 import UnderlineExtension from '@tiptap/extension-underline';
-import LinkExtension from '@tiptap/extension-link';
-import { Markdown } from 'tiptap-markdown';
-import { Document } from '@tiptap/extension-document';
-import { Button } from '@/components/ui/button';
+import { EditorContent, type EditorOptions, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import {
 	BoldIcon,
 	Code,
@@ -26,6 +17,8 @@ import {
 	Underline,
 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
+import { Markdown } from 'tiptap-markdown';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface TiptapProps extends Partial<Omit<EditorOptions, 'extensions'>> {

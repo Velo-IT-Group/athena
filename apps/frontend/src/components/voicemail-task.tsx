@@ -1,3 +1,7 @@
+import { PopoverClose } from '@radix-ui/react-popover';
+import { Phone, Voicemail, X } from 'lucide-react';
+import type { Reservation } from 'twilio-taskrouter';
+import { Button } from '@/components/ui/button';
 import {
 	Card,
 	CardContent,
@@ -6,19 +10,15 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { Phone, Voicemail, X } from 'lucide-react';
-import { PopoverClose } from '@radix-ui/react-popover';
-import { Button } from '@/components/ui/button';
-import { Task } from 'twilio-taskrouter';
-import { env } from '@/lib/utils';
 import { useTwilio } from '@/contexts/twilio-provider';
+import { env } from '@/lib/utils';
 
 interface Props {
-	task: Task;
+	reservation: Reservation;
 }
 
-const VoicemailTask = ({ task }: Props) => {
-	const { worker } = useTwilio();
+const VoicemailTask = ({ reservation }: Props) => {
+	const { createEngagement } = useTwilio();
 
 	return (
 		<Card className='shadow-none border-none'>
@@ -44,9 +44,8 @@ const VoicemailTask = ({ task }: Props) => {
 
 			<CardContent className='flex flex-col items-center p-3 space-y-3'>
 				<audio
-					data-s='recording-instance-player'
 					className='w-full'
-					src={task.attributes.conversations.segment_link}
+					src={reservation.task.attributes.conversations.segment_link}
 					controls
 				/>
 			</CardContent>
@@ -56,21 +55,22 @@ const VoicemailTask = ({ task }: Props) => {
 					variant='destructive'
 					className='text-sm'
 					onClick={async () => {
-						worker?.createTask(
-							task.attributes.from,
-							task.attributes.to ?? env.VITE_TWILIO_PHONE_NUMBER,
-							env.VITE_TWILIO_WORKFLOW_SID!,
-							env.VITE_TWILIO_TASK_QUEUE_SID!,
-							{
-								attributes: {
-									direction: 'outbound',
-									name: task.attributes.name,
-									companyId: task.attributes.companyId,
-									userId: task.attributes.userId,
-								},
-								taskChannelUniqueName: 'voice',
-							}
-						);
+						await Promise.all([
+							createEngagement.mutateAsync({
+								to: reservation.task.attributes?.from,
+								from:
+									reservation.task.attributes.to ??
+									env.VITE_TWILIO_PHONE_NUMBER,
+								channel: 'voice',
+								direction: 'outbound',
+								name: reservation.task.attributes?.name,
+								territoryName: '',
+								companyId:
+									reservation.task.attributes?.companyId,
+								userId: reservation.task.attributes?.userId,
+							}),
+							reservation.complete(),
+						]);
 					}}
 				>
 					<Phone className='mr-1.5' />
@@ -81,7 +81,7 @@ const VoicemailTask = ({ task }: Props) => {
 					variant='destructive'
 					className='text-sm'
 					onClick={() => {
-						task?.wrapUp({ reason: 'Wrapped up' });
+						reservation.task?.wrapUp({ reason: 'Wrapped up' });
 					}}
 				>
 					<span>Wrapup Voicemail</span>

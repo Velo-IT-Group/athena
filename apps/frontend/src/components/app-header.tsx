@@ -19,6 +19,7 @@ import z from 'zod';
 import ActivitySelector from '@/components/activity-selector';
 import DevicePicker from '@/components/device-picker';
 import { ListSelector } from '@/components/list-selector';
+import QueueStatus from '@/components/queue-status';
 // import QueueStatus from '@/components/queue-status';
 import TaskNotification from '@/components/task-notification';
 import {
@@ -50,7 +51,6 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { PROVIDER_KEY, PROVIDER_REFRESH_KEY } from '@/config';
 import { linksConfig } from '@/config/links';
 import { useTwilio } from '@/contexts/twilio-provider';
-import { useAuth } from '@/hooks/use-auth';
 import { getEngagementReservationsQuery } from '@/lib/supabase/api';
 import { env } from '@/lib/utils';
 import { voiceAttributesSchema } from '@/types/twilio';
@@ -90,7 +90,9 @@ export function SiteHeader({
 	title?: string;
 	hideVoice?: boolean;
 }) {
-	const { workerSid, user, accessToken } = useAuth();
+	const { workerSid, user, accessToken } = useRouteContext({
+		from: '/_authed',
+	});
 	const { activeEngagement } = useTwilio();
 	const pathname = useLocation({ select: (l) => l.pathname });
 	const router = useRouter();
@@ -204,7 +206,7 @@ export function SiteHeader({
 
 			<div className='overflow-visible shrink-0 flex items-center'>
 				<div className='flex items-center justify-center gap-2'>
-					{/* <QueueStatus token={accessToken ?? ''} /> */}
+					<QueueStatus token={accessToken ?? ''} />
 
 					<Separator
 						orientation='vertical'

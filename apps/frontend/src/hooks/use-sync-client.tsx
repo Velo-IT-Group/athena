@@ -1,43 +1,66 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ConnectionState } from '@twilio/conversations';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { SyncClient } from 'twilio-sync';
 
 export default function useSyncClient(token: string) {
 	const [status, setStatus] = useState('Connecting...');
 	const [errorMessage, setErrorMessage] = useState('');
+	const client = useQueryClient();
+	const clientRef = useRef<SyncClient>(null);
 
-	const clientRef = useRef<SyncClient | null>(null);
+	const handleTokenExpiring = useCallback(() => {
+		setTimeout(() => {
+			const newToken = client.getQueryData<string>(['access-token']);
+			clientRef.current?.updateToken(newToken || '');
+		}, 1000);
+	}, [client]);
+
+	const handleTokenExpiration = useCallback(() => {
+		// delaying slightly to make sure data is updated
+		setTimeout(() => {
+			const newToken = client.getQueryData<string>(['access-token']);
+			clientRef.current?.updateToken(newToken || '');
+		}, 1000);
+	}, [client]);
+
+	const handleConnectionStateChange = useCallback(
+		(state: ConnectionState) => {
+			if (state === 'connected') {
+				setStatus('connected');
+				setErrorMessage('');
+			} else {
+				setStatus('error');
+				setErrorMessage(
+					`Error: expected connected status but got ${state}`
+				);
+			}
+		},
+		[client]
+	);
 
 	useEffect(() => {
 		if (!token) return;
-		// let client = clientRef.current;
 
-		function createSyncClient(token: string) {
-			const newClient = new SyncClient(token, { logLevel: 'info' });
+		const newClient = new SyncClient(token, { logLevel: 'info' });
 
-			newClient.on('connectionStateChanged', (state) => {
-				if (state === 'connected') {
-					clientRef.current = newClient;
-					// client = newClient;
-					setStatus('connected');
-					setErrorMessage('');
-				} else {
-					setStatus('error');
-					setErrorMessage(
-						`Error: expected connected status but got ${state}`
-					);
-				}
-			});
+		newClient.on('connectionStateChanged', handleConnectionStateChange);
 
-			newClient.on('tokenAboutToExpire', () => {
-				console.log('token about to expire');
-			});
-			newClient.on('tokenExpired', () => {
-				console.log('token expired');
-			});
-		}
+		newClient.on('tokenAboutToExpire', handleTokenExpiring);
 
-		createSyncClient(token);
+		newClient.on('tokenExpired', handleTokenExpiration);
+
+		clientRef.current = newClient;
+
+		return () => {
+			newClient.off(
+				'connectionStateChanged',
+				handleConnectionStateChange
+			);
+			newClient.off('tokenAboutToExpire', handleTokenExpiring);
+			newClient.off('tokenExpired', handleTokenExpiration);
+		};
 	}, [token]);
 
 	return { client: clientRef.current, status, errorMessage };

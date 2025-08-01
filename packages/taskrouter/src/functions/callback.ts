@@ -7,7 +7,6 @@ import {
 	ServerlessEventObject,
 	ServerlessFunctionSignature,
 } from "@twilio-labs/serverless-runtime-types/types";
-import type { TaskInstance } from "twilio/lib/rest/taskrouter/v1/workspace/task";
 import z from "zod";
 
 const { notifyWorker } = require(
@@ -16,7 +15,7 @@ const { notifyWorker } = require(
 const { getTicket } = require(
 	Runtime.getFunctions()["helpers/manage/ticket_functions"].path,
 );
-const { syncTaskrouterWorkers, syncTaskrouterTasks } = require(
+const { syncTaskrouterWorkers } = require(
 	Runtime.getFunctions()[
 		"helpers/twilio/sync/sync_operations"
 	].path,
@@ -30,13 +29,6 @@ type MyEvent = {
 	WorkerName?: string;
 	WorkerSid?: string;
 	WorkflowName?: string;
-};
-
-type QueueStatus = {
-	calls_in_queue: number;
-	status: string;
-	voicemails_in_queue: number;
-	workers_available: number;
 };
 
 export const eventCallbackSchema = z.discriminatedUnion("EventType", [

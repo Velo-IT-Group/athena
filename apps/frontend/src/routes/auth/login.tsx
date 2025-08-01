@@ -1,20 +1,11 @@
-import LabeledInput from '@/components/labeled-input';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/hooks/use-auth';
-import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
 import { useMutation } from '@tanstack/react-query';
-import {
-	createFileRoute,
-	redirect,
-	useNavigate,
-	useRouteContext,
-} from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 import z from 'zod';
+import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/auth/login')({
 	component: RouteComponent,
@@ -23,15 +14,64 @@ export const Route = createFileRoute('/auth/login')({
 			redirect: z.string().optional(),
 		})
 	),
+	ssr: 'data-only',
 });
 
 function RouteComponent() {
-	const { handleSocialLogin } = useAuth();
+	const supabase = createClient();
+	const search = Route.useSearch();
+
+	console.log(window.location.origin);
+
+	const handleSocialLogin = useMutation({
+		mutationFn: async () => {
+			const params = new URLSearchParams();
+
+			if (search.redirect) {
+				params.set('next', search.redirect);
+			}
+
+			const { error } = await supabase.auth.signInWithOAuth({
+				provider: 'azure',
+				options: {
+					scopes: 'offline_access openid profile email User.Read Calendars.ReadBasic Calendars.Read Calendars.ReadWrite',
+					redirectTo:
+						`https://athena.velo-it-group.workers.dev/rest/v1/auth/callback` +
+						`?${params.toString()}`,
+				},
+			});
+
+			if (error) throw error;
+		},
+	});
+
+	// call this function when you want to authenticate the user
+	// const handlePassswordLogin = useMutation({
+	// 	mutationFn: async (e: React.FormEvent<HTMLFormElement>) => {
+	// 		e.preventDefault();
+
+	// 		const { data, error } = await supabase.auth.signInWithPassword({
+	// 			email: 'nicholas.black98@icloud.com',
+	// 			password: 'Bl@ck1998!',
+	// 		});
+
+	// 		if (error) throw error;
+
+	// 		// redirect({ to: '/' });
+	// 	},
+	// 	onError(error) {
+	// 		console.log(error);
+	// 		toast.error(error.message);
+	// 	},
+	// 	onSuccess(data, variables, context) {
+	// 		navigate({ to: '/' });
+	// 	},
+	// });
 
 	return (
 		<form
 			className={cn('flex flex-col gap-6')}
-			// onSubmit={handlePassswordLogin.mutate}
+			// onSubmit={(e) => handlePassswordLogin?.mutate(e)}
 		>
 			<div className='flex flex-col items-center gap-3 text-center'>
 				<h1 className='text-2xl font-bold'>Welcome to Athena</h1>
@@ -41,13 +81,13 @@ function RouteComponent() {
 			</div>
 
 			<div className='grid gap-6'>
-				<LabeledInput
+				{/* <LabeledInput
 					name='email'
 					type='email'
 					label='Email'
 					autoComplete='email'
 					placeholder='Enter your email'
-					required
+					// required
 				/>
 
 				<LabeledInput
@@ -56,15 +96,15 @@ function RouteComponent() {
 					label='Password'
 					autoComplete='current-password'
 					placeholder='••••••••'
-					required
+					// required
 				/>
 
-				{/* <Button disabled={handlePassswordLogin.isPending}>
+				<Button disabled={handlePassswordLogin.isPending}>
 					{handlePassswordLogin.isPending && (
 						<Loader2 className='animate-spin' />
 					)}
 					{handlePassswordLogin.isPending ? 'Logging in...' : 'Login'}
-				</Button> */}
+				</Button>
 
 				<div className='flex items-center gap-3'>
 					<Separator
@@ -78,13 +118,14 @@ function RouteComponent() {
 						orientation='horizontal'
 						className='flex-1'
 					/>
-				</div>
+				</div> */}
 
 				<Button
 					variant='outline'
 					className='w-full text-base font-medium'
 					size='lg'
-					onClick={() => handleSocialLogin?.mutate()}
+					type='button'
+					onClick={() => handleSocialLogin.mutate()}
 					disabled={handleSocialLogin?.isPending}
 				>
 					{handleSocialLogin?.isPending ? (

@@ -17,6 +17,7 @@ interface Props {
 	onReservationTimeout?: (res: Reservation) => void;
 	onReservationWrapup?: (res: Reservation) => void;
 	onWorkerReady?: (w: Worker) => void;
+	onTokenExpiration?: (w: Supervisor) => void;
 }
 
 export const useWorker = ({
@@ -36,6 +37,7 @@ export const useWorker = ({
 	onReservationTimeout,
 	onReservationWrapup,
 	onWorkerReady,
+	onTokenExpiration,
 }: Props) => {
 	const workerRef = useRef<Supervisor>(null);
 	const worker = workerRef.current;
@@ -198,7 +200,8 @@ export const useWorker = ({
 	}, []);
 
 	const handleTokenUpdate = useCallback(() => {
-		console.error('Worker token updated');
+		if (!workerRef.current) return;
+		onTokenExpiration?.(workerRef.current);
 	}, []);
 
 	useEffect(() => {

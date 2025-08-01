@@ -1,11 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Device, Call } from '@twilio/voice-sdk';
-import { useOnInteraction } from '@/hooks/use-on-interaction';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAccessTokenQuery } from '@/lib/twilio/api';
 import { useRouteContext } from '@tanstack/react-router';
+import { type Call, Device } from '@twilio/voice-sdk';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/use-auth';
+import { useOnInteraction } from '@/hooks/use-on-interaction';
+import { getAccessTokenQuery } from '@/lib/twilio/api';
 
 interface UseTwilioVoiceProps {
 	accessToken?: string;
@@ -26,7 +25,7 @@ export const useTwilioVoice = ({
 	);
 	const [updateTokenAfterCall, setUpdateTokenAfterCall] = useState(false);
 
-	const { workerSid, user, identity } = useAuth(); // Adjust the path as needed
+	const { workerSid, user, identity } = useRouteContext({ from: '/_authed' }); // Adjust the path as needed
 
 	const interacted = useOnInteraction();
 
@@ -106,7 +105,7 @@ export const useTwilioVoice = ({
 				// 	reservationSid: call.parameters.ReservationSid, // TaskRouter passes this
 				// };
 
-				call.on('disconnect', async (call) => {
+				call.on('disconnect', async (call: Call) => {
 					if (!updateTokenAfterCall) return;
 
 					console.log('The call has been disconnected.');
@@ -153,6 +152,9 @@ export const useTwilioVoice = ({
 	const setupCallListeners = useCallback((call: Call, callSid: string) => {
 		call.on('accept', () => {
 			console.log('Call accepted:', callSid);
+			if (call.connectToken) {
+				localStorage.setItem('reconnectToken', call.connectToken);
+			}
 			setActiveCalls((prev) => {
 				const updated = new Map(prev);
 				const callData = updated.get(callSid);

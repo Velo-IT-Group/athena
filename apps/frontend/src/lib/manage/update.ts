@@ -1,10 +1,11 @@
+import { createServerFn } from "@tanstack/react-start";
 import axios, { AxiosHeaders, type AxiosRequestConfig } from "axios";
 import { env } from "@/lib/utils";
 import type { PatchOperation } from "@/types";
-import { createServerFn } from "@tanstack/react-start";
-import { baseHeaders } from "@/utils/manage/params";
 import type { Project } from "@/types/manage";
-import authMiddleware from "@/lib/supabase/middleware";
+import { baseHeaders } from "@/utils/manage/params";
+
+// import authMiddleware from "@/lib/supabase/middleware";
 
 const headers = new AxiosHeaders(baseHeaders);
 
@@ -17,7 +18,7 @@ headers.set(
 );
 
 export const updateTicket = createServerFn()
-	.middleware([authMiddleware])
+	// .middleware([authMiddleware])
 	.validator(
 		({
 			id,

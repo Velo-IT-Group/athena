@@ -1,53 +1,57 @@
-import { useState } from 'react';
-
-import {
-	BetweenHorizontalEnd,
-	CalendarIcon,
-	CalendarSync,
-	ChartBarIncreasing,
-	CircleDollarSign,
-	Copy,
-	Loader2,
-	PenLine,
-	Trash,
-	Undo2,
-	ChevronDown,
-	DollarSign,
-	LetterText,
-} from 'lucide-react';
-
-import { formatDate, formatRelative } from 'date-fns';
 import NumberFlow from '@number-flow/react';
-
-import { createFileRoute, Outlet } from '@tanstack/react-router';
-import TabsList from '@/components/tabs-list';
-import { ProposalActions } from '@/components/proposal-actions';
-
-import { Button } from '@/components/ui/button';
-import {
-	Editable,
-	EditableArea,
-	EditableInput,
-	EditablePreview,
-} from '@/components/ui/editable';
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
-import { ColoredBadge } from '@/components/ui/badge';
-
-import { ListSelector } from '@/components/list-selector';
-import useProposal from '@/hooks/use-proposal';
-import { cn, updateCacheItem } from '@/lib/utils';
 import {
 	useMutation,
 	useQuery,
 	useQueryClient,
 	useSuspenseQueries,
 } from '@tanstack/react-query';
-import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { formatDate, formatRelative } from 'date-fns';
+import { enUS } from 'date-fns/locale/en-US';
+import {
+	BetweenHorizontalEnd,
+	CalendarIcon,
+	CalendarSync,
+	ChartBarIncreasing,
+	ChevronDown,
+	CircleDollarSign,
+	Copy,
+	DollarSign,
+	LetterText,
+	Loader2,
+	PenLine,
+	Trash,
+	Undo2,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import type Stripe from 'stripe';
+import AppRecordShell from '@/components/app-record-shell';
+import CurrencyInput from '@/components/currency-input';
+import LabeledInput from '@/components/labeled-input';
+
+import { ListSelector } from '@/components/list-selector';
+import { formatRelativeLocale } from '@/components/overview-right';
+import { ProposalActions } from '@/components/proposal-actions';
+import type { RecordDetailProps } from '@/components/record-detail';
+import TabsList from '@/components/tabs-list';
+import Tiptap from '@/components/tip-tap';
+import { ColoredBadge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
+// import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -59,53 +63,36 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-	Dialog,
-	DialogClose,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog';
-import { createVersion } from '@/lib/supabase/create';
-import { useProposals } from '@/hooks/use-proposals';
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+	Editable,
+	EditableArea,
+	EditableInput,
+	EditablePreview,
+} from '@/components/ui/editable';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover';
 import { linksConfig } from '@/config/links';
+import useProposal from '@/hooks/use-proposal';
+import { useProposals } from '@/hooks/use-proposals';
+import useServiceTicket from '@/hooks/use-service-ticket';
 import {
 	getProposalQuery,
 	getProposalSettingsQuery,
 	getProposalTotalsQuery,
 	getVersionsQuery,
 } from '@/lib/supabase/api';
-import LabeledInput from '@/components/labeled-input';
-import { formatRelativeLocale } from '@/components/overview-right';
-import CurrencyInput from '@/components/currency-input';
-import { Calendar } from '@/components/ui/calendar';
-import { enUS } from 'date-fns/locale/en-US';
-import useServiceTicket from '@/hooks/use-service-ticket';
-import { createClient } from '@/lib/stripe';
-import Stripe from 'stripe';
-import { toast } from 'sonner';
-import AppRecordShell from '@/components/app-record-shell';
-import { RecordDetailProps } from '@/components/record-detail';
+import { createVersion } from '@/lib/supabase/create';
+import { cn } from '@/lib/utils';
 import { getCurrencyString } from '@/utils/money';
-import Tiptap from '@/components/tip-tap';
 
 export const Route = createFileRoute('/_authed/proposals/$id/$version')({
 	component: RouteComponent,
-	beforeLoad: async ({ params }) => {
-		const stripe = createClient();
-		return {
-			invoice: await stripe.invoices.retrieve(''),
-		};
-	},
 });
 
 function RouteComponent() {
 	const { id, version } = Route.useParams();
-	const { invoice } = Route.useRouteContext();
 
 	const [
 		{ data: initialData },
@@ -161,50 +148,9 @@ function RouteComponent() {
 			},
 		});
 
-	const selectedStatus = proposalStatuses.find(
-		(status) => status.value === proposal?.status
-	);
-
-	const { data } = useQuery({
-		queryKey: ['invoices', 'in_1RlCQrI6Q4ne5nTqXIElgw2S'],
-		queryFn: async () => {
-			const stripe = createClient();
-			return await stripe.invoices.retrieve(
-				'in_1RlCQrI6Q4ne5nTqXIElgw2S'
-			);
-		},
-		throwOnError(error, query) {
-			console.error('Error fetching products:', error);
-			throw error;
-		},
-		initialData: invoice,
-	});
-
-	const updateInvoice = useMutation({
-		mutationFn: async (
-			params?: Stripe.InvoiceUpdateParams,
-			options?: Stripe.RequestOptions
-		) => {
-			const stripe = createClient();
-
-			return await stripe.invoices.update(
-				'in_1RlCQrI6Q4ne5nTqXIElgw2S',
-				params,
-				options
-			);
-		},
-		onMutate(variables) {
-			updateCacheItem(
-				queryClient,
-				['invoices', 'in_1RlCQrI6Q4ne5nTqXIElgw2S'],
-				variables
-			);
-		},
-		onError(error, variables, context) {
-			toast.error('Error updating invoice ' + error.message);
-		},
-		// onMutate: (s, b, s) =>
-	});
+	// const selectedStatus = proposalStatuses.find(
+	// 	(status) => status.value === proposal?.status
+	// );
 
 	const { proposalTabs } = linksConfig;
 
@@ -218,7 +164,7 @@ function RouteComponent() {
 		{
 			icon: DollarSign,
 			title: 'Amount',
-			value: getCurrencyString((invoice.total ?? 0) / 100),
+			value: getCurrencyString(totals.total_price ?? 0),
 		},
 		{
 			icon: CalendarIcon,
@@ -253,9 +199,9 @@ function RouteComponent() {
 							</div>
 
 							<span className='whitespace-nowrap overflow-hidden text-ellipsis text-base font-medium'>
-								{invoice?.due_date
+								{proposal?.expiration_date
 									? formatDate(
-											invoice.due_date,
+											proposal.expiration_date,
 											'MMM d, yyyy'
 										)
 									: 'No due date'}
@@ -270,13 +216,13 @@ function RouteComponent() {
 						<Calendar
 							mode='single'
 							defaultMonth={
-								invoice?.due_date
-									? new Date(invoice?.due_date)
+								proposal?.expiration_date
+									? new Date(proposal?.expiration_date)
 									: undefined
 							}
 							selected={
-								invoice?.due_date
-									? new Date(invoice?.due_date)
+								proposal?.expiration_date
+									? new Date(proposal?.expiration_date)
 									: undefined
 							}
 							// onSelect={(date) =>

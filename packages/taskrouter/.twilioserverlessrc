@@ -1,6 +1,13 @@
 {
 	"commands": {},
-	"environments": {},
+	"environments": {
+		"*": {
+			"env": ".env.production"
+		},
+		"staging": {
+			"env": ".env.staging"
+		}
+	},
 	"projects": {},
 	"assetsFolder": "./dist/assets",
 	"functionsFolder": "./dist/functions",

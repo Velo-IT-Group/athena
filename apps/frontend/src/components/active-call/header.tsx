@@ -1,11 +1,11 @@
 'use client';
-import { CardHeader, CardTitle } from '../ui/card';
-import { Filter, Rocket, SquareArrowOutUpRight, X } from 'lucide-react';
-import { Button, buttonVariants } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import Timer from '../timer';
 import { PopoverClose } from '@radix-ui/react-popover';
+import { Filter, Rocket, SquareArrowOutUpRight, X } from 'lucide-react';
 import { getDateOffset } from '@/utils/date';
+import Timer from '../timer';
+import { Button, buttonVariants } from '../ui/button';
+import { CardHeader, CardTitle } from '../ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 type Props = {
 	queueName: string;

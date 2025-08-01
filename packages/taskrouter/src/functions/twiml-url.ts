@@ -53,8 +53,9 @@ export const handler: ServerlessFunctionSignature = async function (
 
     const urlencoded = new URLSearchParams();
     urlencoded.append("RoutingTarget", event.workerSid ?? "");
-    urlencoded.append("TaskQueueSid", "WQ3c90735094691877cdfc293bba42a06e");
+    urlencoded.append("TaskQueueSid", "WQ54b5a1ea6521d9ae425bf421e407810f");
     urlencoded.append("Attributes", JSON.stringify(event));
+    urlencoded.append("WorkflowSid", "WW5eb5a86b4c1603593ab18da34115b7dc");
 
     const requestOptions = {
         method: "POST",
@@ -69,6 +70,8 @@ export const handler: ServerlessFunctionSignature = async function (
         );
 
         const task = (await res.json()) as TaskInstance;
+
+        console.log("Task created: ", task);
 
         const dial = response.dial();
 
@@ -102,9 +105,9 @@ export const handler: ServerlessFunctionSignature = async function (
                 from: event.from ?? "",
                 to: event.to ?? "",
                 beep: "true",
-                // record: true,
+                record: true,
                 earlyMedia: true,
-                // conferenceRecord: "record-from-start",
+                conferenceRecord: "record-from-start",
                 startConferenceOnEnter: true,
                 endConferenceOnExit: true,
                 label: "customer",
@@ -113,7 +116,6 @@ export const handler: ServerlessFunctionSignature = async function (
                 conferenceStatusCallbackMethod: "POST",
                 // eventCallbackUrl:
                 //     "http://localhost:3001/conference/status-callback",
-
                 // endConferenceOnCustomerExit: true,
                 // transcribe: true,
                 // transcriptionConfiguration: 'Athena',
@@ -129,8 +131,8 @@ export const handler: ServerlessFunctionSignature = async function (
                     conference: {
                         sid: participant.conferenceSid,
                         participants: {
-                            worker: event.CallSid,
-                            customer: participant.callSid,
+                            worker: event?.CallSid,
+                            customer: participant?.callSid,
                         },
                     },
                 }),

@@ -1,26 +1,24 @@
-import { Building, Calendar, User } from 'lucide-react';
+import { debounce } from '@tanstack/pacer';
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-
-import { Button } from '@/components/ui/button';
-
-import { getProposalsQuery } from '@/lib/supabase/api';
 import { zodValidator } from '@tanstack/zod-adapter';
+// import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
+import { format } from 'date-fns';
+import { Building, Calendar, User } from 'lucide-react';
+import { useState } from 'react';
 import { z } from 'zod';
-import { cn, filterSchema } from '@/lib/utils';
+import { Badge, ColoredBadge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Expandable from '@/components/ui/expandable';
+import { ListGroup, ListItem } from '@/components/ui/list';
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover';
-import Expandable from '@/components/ui/expandable';
-import { ListGroup, ListItem } from '@/components/ui/list';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useQuery } from '@tanstack/react-query';
-import { Badge, ColoredBadge } from '@/components/ui/badge';
-import { proposalStatuses } from '@/routes/_authed/proposals/$id/$version/settings';
-import { format } from 'date-fns';
-import { debounce } from '@tanstack/pacer';
-import { useState } from 'react';
+import { getProposalsQuery } from '@/lib/supabase/api';
+import { cn, filterSchema } from '@/lib/utils';
 
 export const Route = createFileRoute('/_authed/proposals/')({
 	component: Proposals,
@@ -157,18 +155,16 @@ function Proposals() {
 						{/* @ts-ignore */}
 						{Object.entries(groupedProposals).map(
 							([status, proposals]) => {
-								{
-									/* @ts-ignore */
-								}
-								const selectedStatus = proposalStatuses.find(
-									(s) => s.value === status
-								);
+								// const selectedStatus = proposalStatuses.find(
+								// 	(s) => s.value === status
+								// );
 
 								return (
 									<ListGroup
-										key={selectedStatus?.label ?? status}
+										key={status}
 										heading={
-											selectedStatus?.label ?? status
+											// selectedStatus?.label ?? status
+											status
 										}
 										className='top-0'
 									>

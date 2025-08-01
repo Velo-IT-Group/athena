@@ -1,15 +1,8 @@
 'use client';
-import React, { useEffect, useState, useTransition } from 'react';
-import { CardFooter } from '@/components/ui/card';
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
+import type { VoiceAttributes } from '@athena/utils';
+import { UseMutationResult, useQueries } from '@tanstack/react-query';
 import {
 	ArrowRightFromLine,
-	Check,
 	Grip,
 	Headset,
 	Loader2,
@@ -17,22 +10,34 @@ import {
 	Phone,
 	UserPlus2,
 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import type {
+	ParticipantInstance,
+	ParticipantListInstanceCreateOptions,
+	ParticipantStatus,
+} from 'twilio/lib/rest/api/v2010/account/conference/participant';
+import type { OutgoingTransfer } from 'twilio-taskrouter';
+import z from 'zod';
+import DevicePicker from '@/components/device-picker';
+import { Dialpad } from '@/components/dialpad';
+import { ListSelector } from '@/components/list-selector';
+import { Button } from '@/components/ui/button';
+import { CardFooter } from '@/components/ui/card';
 import {
 	Popover,
-	PopoverTrigger,
 	PopoverContent,
+	PopoverTrigger,
 } from '@/components/ui/popover';
-import { Dialpad } from '@/components/dialpad';
-import DevicePicker from '@/components/device-picker';
-import { Engagement, useTwilio } from '@/contexts/twilio-provider';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '@/components/ui/tooltip';
+import type { Engagement } from '@/contexts/twilio-provider';
 import { useCall } from '@/hooks/use-call';
-import { ListSelector } from '@/components/list-selector';
-import { useQueries, useQuery } from '@tanstack/react-query';
-import { getWorkersQuery } from '@/lib/twilio/api';
 import { useConference } from '@/hooks/use-conference';
 import { getMembersQuery } from '@/lib/manage/api';
-import z, { number } from 'zod';
-import { VoiceAttributes, workerAttributesSchema } from '@athena/utils';
+import { getWorkersQuery } from '@/lib/twilio/api';
 
 const transferParticipantSchema = z.discriminatedUnion('type', [
 	z.object({
@@ -50,24 +55,69 @@ const transferParticipantSchema = z.discriminatedUnion('type', [
 const ActiveCallFooter = ({
 	engagement,
 	attributes,
+
+	onTransferInitiated,
+	onTransferCompleted,
+	onTransferFailed,
+	onTransferCanceled,
+	onTransferAttemptFailed,
 }: {
 	engagement: Engagement;
 	attributes: VoiceAttributes;
+	handleParticipantCreation: UseMutationResult<
+		| {
+				accountSid: string;
+				callSid: string;
+				label: string;
+				callSidToCoach: string;
+				coaching: boolean;
+				conferenceSid: string;
+				dateCreated: Date;
+				dateUpdated: Date;
+				endConferenceOnExit: boolean;
+				muted: boolean;
+				hold: boolean;
+				startConferenceOnEnter: boolean;
+				status: ParticipantStatus;
+				queueTime: string;
+				uri: string;
+		  }
+		| undefined,
+		Error,
+		{
+			options: ParticipantListInstanceCreateOptions;
+		},
+		{
+			previousItems: ParticipantInstance[];
+			newItems: ParticipantInstance[];
+		}
+	>;
+	onTransferInitiated?: (transfer: OutgoingTransfer) => void;
+	onTransferCompleted?: (transfer: OutgoingTransfer) => void;
+	onTransferFailed?: (transfer: OutgoingTransfer) => void;
+	onTransferCanceled?: (transfer: OutgoingTransfer) => void;
+	onTransferAttemptFailed?: (transfer: OutgoingTransfer) => void;
 }) => {
 	const { call, disconnectCall, toggleMute, sendDigits } = useCall({
-		call: engagement.call!,
+		call: engagement.call,
 	});
+
+	const [transferTab, setTransferTab] = useState(false);
 	const {
 		participantsQuery: { data: participants },
 		handleParticipantCreation,
 		handleParticipantRemoval,
+		handleParticipantUpdate,
 	} = useConference({
 		sid: attributes?.conference?.sid,
 	});
 
 	const [{ data: workers }, { data: members }] = useQueries({
 		queries: [
-			{ ...getWorkersQuery({ available: '1' }), refetchInterval: 1000 },
+			{
+				...getWorkersQuery({ available: '1' }),
+				refetchInterval: transferTab ? 1000 : false,
+			},
 			getMembersQuery({
 				fields: [
 					'officePhone',
@@ -85,8 +135,9 @@ const ActiveCallFooter = ({
 	>[] = [
 		...(workers?.map((worker) => ({
 			type: 'internal' as const,
-			name: workerAttributesSchema.parse(JSON.parse(worker.attributes))
-				.full_name,
+			name: JSON.parse(worker.attributes).full_name,
+			// workerAttributesSchema.safeParse(JSON.parse(worker.attributes))
+			// 	?.data?.full_name ?? '',
 			sid: worker.sid,
 		})) || []),
 		...(members
@@ -97,6 +148,53 @@ const ActiveCallFooter = ({
 				number: (member.officePhone || member.mobilePhone)!,
 			})) || []),
 	];
+
+	const handleTransferInitiation = useCallback(
+		(transfer: OutgoingTransfer) => {
+			onTransferInitiated?.(transfer);
+
+			transfer.on('completed', (transferCompleted) => {
+				// Handle transfer completed event
+				onTransferCompleted?.(transferCompleted);
+			});
+
+			transfer.on('failed', (transferFailed) => {
+				// Handle transfer failed event
+				onTransferFailed?.(transferFailed);
+			});
+
+			transfer.on('canceled', (transferCanceled) => {
+				// Handle transfer canceled event
+				onTransferCanceled?.(transferCanceled);
+			});
+
+			transfer.on('attemptFailed', (transferAttemptFailed) => {
+				// Handle transfer attempt failed event
+				onTransferAttemptFailed?.(transferAttemptFailed);
+			});
+		},
+		[
+			onTransferInitiated,
+			onTransferCompleted,
+			onTransferFailed,
+			onTransferCanceled,
+			onTransferAttemptFailed,
+		]
+	);
+
+	useEffect(() => {
+		engagement.reservation.task.on(
+			'transferInitiated',
+			handleTransferInitiation
+		);
+
+		return () => {
+			engagement.reservation.task.off(
+				'transferInitiated',
+				handleTransferInitiation
+			);
+		};
+	}, [engagement.reservation.task, handleTransferInitiation]);
 
 	return (
 		<CardFooter className='p-3 space-x-1.5 justify-between'>
@@ -122,7 +220,10 @@ const ActiveCallFooter = ({
 			<div className='flex items-center gap-1.5'>
 				<Tooltip>
 					<TooltipTrigger asChild>
-						<Popover>
+						<Popover
+							open={transferTab}
+							onOpenChange={setTransferTab}
+						>
 							<PopoverTrigger asChild>
 								<Button
 									variant='outline'
@@ -138,26 +239,64 @@ const ActiveCallFooter = ({
 									itemView={(item) => (
 										<span>{item.name}</span>
 									)}
-									onSelect={(item) => {
+									onSelect={async (item) => {
 										if (item.type === 'internal') {
 											engagement.reservation.task.transfer(
 												item.sid,
-												{ mode: 'WARM' }
+												{
+													mode: 'WARM',
+													attributes: {
+														...engagement
+															.reservation.task
+															.attributes,
+														transferee: {
+															name: item.name,
+															sid: item.sid,
+														},
+													},
+												}
 											);
 										} else {
+											handleParticipantUpdate.mutate({
+												participantSid:
+													engagement.reservation.task
+														.attributes.conference
+														.participants.worker,
+												options: {
+													endConferenceOnExit: false,
+												},
+											});
+
 											handleParticipantCreation.mutate({
 												options: {
 													to: item.number,
-													from: attributes.from,
+													from:
+														attributes.direction ===
+														'inbound'
+															? attributes.called
+															: attributes.from,
+													label: item.name,
 												},
 											});
+
+											await engagement.reservation.task.setAttributes(
+												{
+													...engagement.reservation
+														.task.attributes,
+													transferee: {
+														name: item.name,
+														sid: handleParticipantCreation
+															.data?.callSid,
+													},
+												}
+											);
 										}
 										// Handle the selected item
 									}}
 									value={(item) =>
 										item.type === 'internal'
 											? item.sid
-											: item.number
+											: `${item.name}-${item.number}`
 									}
 									groupedBy={(item) =>
 										item.type === 'internal'
@@ -268,7 +407,10 @@ const ActiveCallFooter = ({
 						<Button
 							variant='destructive'
 							size='icon'
-							onClick={() => disconnectCall.mutate()}
+							onClick={async () => {
+								disconnectCall.mutate();
+								await engagement.reservation.wrap();
+							}}
 							disabled={disconnectCall.isPending}
 						>
 							{disconnectCall.isPending ? (

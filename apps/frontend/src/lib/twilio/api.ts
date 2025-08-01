@@ -4,7 +4,6 @@ import type {
 	MessageInstance,
 	MessageListInstanceOptions,
 } from "twilio/lib/rest/api/v2010/account/message";
-import { WorkspaceInstance } from "twilio/lib/rest/taskrouter/v1/workspace";
 import type {
 	ActivityInstance,
 	ActivityListInstanceOptions,
@@ -17,20 +16,21 @@ import type {
 	ReservationInstance,
 	ReservationListInstanceOptions,
 } from "twilio/lib/rest/taskrouter/v1/workspace/task/reservation";
-import { TaskQueueListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/taskQueue";
-import {
-	type WorkerInstance,
-	type WorkerListInstanceOptions,
+import type { TaskQueueListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/taskQueue";
+import type {
+	WorkerInstance,
+	WorkerListInstanceOptions,
 } from "twilio/lib/rest/taskrouter/v1/workspace/worker";
 import type {
 	WorkerStatisticsContextFetchOptions,
 	WorkerStatisticsInstance,
 } from "twilio/lib/rest/taskrouter/v1/workspace/worker/workerStatistics";
-import { WorkflowListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/workflow";
-// import { SyncClient } from "twilio-sync";
+import type { WorkflowListInstanceOptions } from "twilio/lib/rest/taskrouter/v1/workspace/workflow";
+import { SyncClient } from "twilio-sync";
 import { createAccessToken } from "@/lib/twilio";
 import {
 	getChannels,
+	getConferenceParticipant,
 	getConferenceParticipants,
 	getMessages,
 	getTask,
@@ -148,6 +148,23 @@ export const getConferenceParticipantsQuery = (sid?: string) =>
 		enabled: !!sid,
 	});
 
+export const getConferenceParticipantQuery = (
+	conferenceSid?: string,
+	participantSid?: string,
+) => queryOptions({
+	queryKey: ["conferences", conferenceSid, "participants", participantSid],
+	queryFn: () =>
+		getConferenceParticipant({
+			data: {
+				conferenceSid: conferenceSid ?? "",
+				participantSid: participantSid ?? "",
+			},
+		}) as Promise<
+			ParticipantInstance
+		>,
+	enabled: !!conferenceSid && !!participantSid,
+});
+
 export const getAccessTokenQuery = ({
 	identity,
 	workerSid,
@@ -252,22 +269,22 @@ export const getWorkerStatsQuery = (
 	staleTime: Infinity,
 });
 
-// export const getSyncMapQuery = ({
-// 	mapKey,
-// 	token,
-// }: {
-// 	mapKey: string;
-// 	token: string;
-// }) => {
-// 	const syncMapClient = new SyncClient(token);
+export const getSyncMapQuery = ({
+	mapKey,
+	token,
+}: {
+	mapKey: string;
+	token: string;
+}) => {
+	const syncMapClient = new SyncClient(token);
 
-// 	return queryOptions({
-// 		queryKey: ["syncMapClient", mapKey, token],
-// 		queryFn: async () => {
-// 			const map = await syncMapClient.map(mapKey);
-// 			const { items } = await map.getItems();
-// 			return { client: syncMapClient, map, items };
-// 		},
-// 		enabled: !!token && !!mapKey,
-// 	});
-// };
+	return queryOptions({
+		queryKey: ["syncMapClient", mapKey, token],
+		queryFn: async () => {
+			const map = await syncMapClient.map(mapKey);
+			const { items } = await map.getItems();
+			return { client: syncMapClient, map, items };
+		},
+		enabled: !!token && !!mapKey,
+	});
+};

@@ -1,14 +1,15 @@
-import { getConferenceParticipantsQuery } from '@/lib/twilio/api';
-import { updateParticipant as updateParticipantMutation } from '@/lib/twilio/update';
-import { createParticipant } from '@/lib/twilio/create';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Call } from '@twilio/voice-sdk';
+import { toast } from 'sonner';
 import type {
 	ParticipantContextUpdateOptions,
 	ParticipantInstance,
 	ParticipantListInstanceCreateOptions,
 } from 'twilio/lib/rest/api/v2010/account/conference/participant';
-import { toast } from 'sonner';
+import { getConferenceParticipantsQuery } from '@/lib/twilio/api';
+import { createParticipant } from '@/lib/twilio/create';
 import { deleteParticipant } from '@/lib/twilio/delete';
+import { updateParticipant as updateParticipantMutation } from '@/lib/twilio/update';
 
 interface Props {
 	sid?: string;
@@ -30,12 +31,14 @@ export const useConference = ({ sid }: Props) => {
 			options: ParticipantContextUpdateOptions;
 		}) =>
 			updateParticipantMutation({
-				data: { sid, participantSid, options },
+				data: { sid: sid ?? '', participantSid, options },
 			}),
 		onMutate: async ({ participantSid, options }) => {
 			let newItems: ParticipantInstance[] = [];
 			const previousItems =
 				queryClient.getQueryData<ParticipantInstance[]>(queryKey) ?? [];
+
+			console.log(previousItems);
 
 			// Cancel any outgoing refetches
 			// (so they don't overwrite our optimistic update)
@@ -56,6 +59,8 @@ export const useConference = ({ sid }: Props) => {
 				newItemTest as ParticipantInstance,
 			];
 
+			console.log(newItems);
+
 			// Optimistically update to the new value
 			queryClient.setQueryData(queryKey, newItems);
 
@@ -66,8 +71,10 @@ export const useConference = ({ sid }: Props) => {
 			console.error(error);
 			queryClient.setQueryData(queryKey, context?.previousItems);
 		},
-		onSuccess: (x, y, z) => {
-			queryClient.invalidateQueries(query);
+		onSettled: async () => {
+			await queryClient.invalidateQueries({
+				queryKey,
+			});
 		},
 	});
 
@@ -81,10 +88,11 @@ export const useConference = ({ sid }: Props) => {
 				data: { sid, options },
 			}),
 		onMutate: async ({ options }) => {
-			console.log(options);
 			let newItems: ParticipantInstance[] = [];
 			const previousItems =
 				queryClient.getQueryData<ParticipantInstance[]>(queryKey) ?? [];
+
+			console.log(previousItems);
 
 			// Cancel any outgoing refetches
 			// (so they don't overwrite our optimistic update)
@@ -94,24 +102,57 @@ export const useConference = ({ sid }: Props) => {
 
 			newItems = [
 				...previousItems,
-				options as unknown as ParticipantInstance,
+				{
+					label: options.label ?? '',
+					hold: false,
+					callSid: '',
+				} as ParticipantInstance,
 			];
 
 			console.log(newItems);
 
 			// Optimistically update to the new value
-			queryClient.setQueryData(queryKey, newItems);
+			console.log(queryClient.setQueryData(queryKey, newItems));
 
 			/// Returning context for optimistic updates
 			return { previousItems, newItems };
+			// let newItems: ParticipantInstance[] = [];
+			// const previousItems =
+			// 	queryClient.getQueryData<ParticipantInstance[]>(queryKey) ?? [];
+
+			// // Cancel any outgoing refetches
+			// // (so they don't overwrite our optimistic update)
+			// await queryClient.cancelQueries({
+			// 	queryKey,
+			// });
+
+			// newItems = [
+			// 	...previousItems,
+			// 	{
+			// 		label: options.label ?? '',
+			// 		callSid: '',
+			// 		hold: false,
+			// 	} as unknown as ParticipantInstance,
+			// ];
+
+			// console.log(newItems);
+
+			// // Optimistically update to the new value
+			// queryClient.setQueryData(queryKey, newItems);
+
+			// /// Returning context for optimistic updates
+			// return { previousItems, newItems };
 		},
 		onError: (error, variables, context) => {
 			console.error(error);
 			toast.error(error.message);
 			queryClient.setQueryData(queryKey, context?.previousItems);
 		},
-		onSuccess: (x, y, z) => {
-			queryClient.invalidateQueries(query);
+		onSettled: async (d, e, v, context) => {
+			await queryClient.invalidateQueries({
+				queryKey,
+			});
+			queryClient.setQueryData(queryKey, context?.newItems);
 		},
 	});
 

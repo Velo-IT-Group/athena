@@ -66,7 +66,7 @@ export const getMediaDevicesQuery = () =>
                     ) ?? null,
             };
         },
-        throwOnError: true,
+        // throwOnError: true,
     });
 
 export const changeInputDevice = () => {

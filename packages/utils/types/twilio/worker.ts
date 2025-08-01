@@ -14,6 +14,7 @@ export const workerAttributesSchema = z.object({
     contact_id: z.number(),
     team_name: z.string(),
     security_role_id: z.number(),
+    worker_sid: z.string(),
 });
 
 export type WorkerAttributes = z.infer<typeof workerAttributesSchema>;

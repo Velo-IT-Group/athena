@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
 import ActivityListItem from '@/components/activity-list-item';
 import DevicePicker from '@/components/device-picker';
 import { ListSelector } from '@/components/list-selector';
@@ -20,8 +22,6 @@ import {
 } from '@/components/ui/popover';
 import { useTwilio } from '@/contexts/twilio-provider';
 import { getActivitiesQuery } from '@/lib/twilio/api';
-import { useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
 
 type Props = {};
 
@@ -35,15 +35,13 @@ const ActivitySelector = () => {
 
 	if (isLoading || !worker?.activity)
 		return (
-			<>
-				<Button
-					variant='outline'
-					size='sm'
-					disabled
-				>
-					<ActivityListItem activityName='Offline' />
-				</Button>
-			</>
+			<Button
+				variant='outline'
+				size='sm'
+				disabled
+			>
+				<ActivityListItem activityName='Offline' />
+			</Button>
 		);
 
 	return (
